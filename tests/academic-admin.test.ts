@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031203740_coursepulse_academic_admin_lifecycle.sql'),'utf8');
-const departmentMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101100000_coursepulse_admin_user_department_assignment.sql'),'utf8');
+const departmentMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031214742_coursepulse_admin_user_department_assignment.sql'),'utf8');
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'app/dashboard/page.tsx'),'utf8');
 const dashboardUi=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');

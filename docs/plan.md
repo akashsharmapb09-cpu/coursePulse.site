@@ -20,7 +20,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
-- [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters. User department assignment and full archival/lifecycle controls remain open.
+- [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters; users can be assigned/cleared from departments through an MFA-protected, audited RPC. Full archival/lifecycle controls remain open.
 - [x] DONE: student course enrollments and instructor-course assignments with scoped RLS.
 - [x] DONE: MFA-protected user role/suspension API and console; last-active-admin guard.
 - [x] PARTIAL: course create/edit/archive/republish and feedback create/edit/open/close/deadline enforcement implemented; immutable version history, delete/restore and scheduling remain open.
