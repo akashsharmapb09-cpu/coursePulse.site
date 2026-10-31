@@ -19,14 +19,16 @@ export async function GET(request: NextRequest, context: Context) {
   const params=request.nextUrl.searchParams;
   const courseId=params.get('course_id');
   const semesterId=params.get('semester_id');
+  const departmentId=params.get('department_id');
   const fromDate=params.get('from_date');
   const toDate=params.get('to_date');
   if(courseId&&!/^[0-9a-f-]{36}$/i.test(courseId)) return jsonError('Invalid course ID.');
   if(semesterId&&!/^[0-9a-f-]{36}$/i.test(semesterId)) return jsonError('Invalid semester ID.');
+  if(departmentId&&!/^[0-9a-f-]{36}$/i.test(departmentId)) return jsonError('Invalid department ID.');
   const validDate=(value:string|null)=>{if(!value)return true;if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return false;const parsed=new Date(value+'T00:00:00.000Z');return !Number.isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===value;};
   if(!validDate(fromDate)||!validDate(toDate)) return jsonError('Dates must use YYYY-MM-DD format.');
   if(fromDate&&toDate&&fromDate>toDate) return jsonError('Start date must be on or before end date.');
-  const { data, error } = await supabase.rpc('get_instructor_aggregates_filtered', { p_course_id: courseId, p_from_date: fromDate, p_to_date: toDate, p_semester_id: semesterId });
+  const { data, error } = await supabase.rpc('get_instructor_aggregates_filtered', { p_course_id: courseId, p_from_date: fromDate, p_to_date: toDate, p_semester_id: semesterId, p_department_id: departmentId });
   if (error) return jsonError('Could not prepare aggregate report.', 403);
   const rows = aggregateExportRows((data ?? []) as AggregateRow[]);
   const date = new Date().toISOString().slice(0, 10);
