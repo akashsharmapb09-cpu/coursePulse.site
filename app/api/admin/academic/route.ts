@@ -12,6 +12,11 @@ const inputSchema=z.discriminatedUnion('action',[
   z.object({action:z.literal('course_academic'),course_id:z.string().uuid(),department_id:z.string().uuid().nullable(),semester_id:z.string().uuid().nullable()}).strict()
 ]);
 
+const updateSchema=z.discriminatedUnion('action',[
+  z.object({action:z.literal('department_update'),department_id:z.string().uuid(),name:z.string().trim().min(2).max(120),code:z.string().trim().min(2).max(20)}).strict(),
+  z.object({action:z.literal('semester_update'),semester_id:z.string().uuid(),name:z.string().trim().min(2).max(100),start_date:z.string().date(),end_date:z.string().date(),is_active:z.boolean()}).strict()
+]);
+
 async function adminAuth(){
   const supabase=await createClient();
   const auth=await getCurrentUser(supabase);
@@ -82,4 +87,44 @@ export async function POST(request:NextRequest){
   const {error:auditError}=await supabase.rpc('admin_record_audit',{p_action:auditAction,p_target_type:input.action,p_target_id:targetId,p_details:{performed_by:auth.user.id}});
   if(auditError) return jsonError('The change was saved, but its audit record could not be written. Contact the system administrator.',500);
   return NextResponse.json({success:true,id:targetId},{status:201,headers:{'Cache-Control':'no-store'}});
+}
+
+
+export async function PATCH(request:NextRequest){
+  const {supabase,auth}=await adminAuth();
+  if(!auth) return jsonError('Administrator authentication with MFA is required.',401);
+  const protection=await protectMutation(request,supabase,'admin:user-update',20,3600);
+  if(protection) return protection;
+  let body:unknown;
+  try{body=await request.json();}catch{return jsonError('Invalid JSON body.');}
+  const parsed=updateSchema.safeParse(body);
+  if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid academic update.');
+  const input=parsed.data;
+  let targetId:string|null=null;
+  let auditAction='';
+  let targetType='';
+  let auditDetails:Record<string,unknown>={performed_by:auth.user.id};
+
+  if(input.action==='department_update'){
+    const {data,error}=await supabase.from('departments').update({name:input.name,code:input.code}).eq('id',input.department_id).select('id').maybeSingle();
+    if(error) return jsonError(error.code==='23505'?'Department name or code already exists.':'Department could not be updated.',error.code==='23505'?409:400);
+    if(!data) return jsonError('Department not found.',404);
+    targetId=data.id;
+    auditAction='department.updated';
+    targetType='department';
+    auditDetails={...auditDetails,name:input.name,code:input.code};
+  }else{
+    if(input.end_date<input.start_date) return jsonError('Semester end date must be on or after the start date.');
+    const {data,error}=await supabase.from('semesters').update({name:input.name,start_date:input.start_date,end_date:input.end_date,is_active:input.is_active}).eq('id',input.semester_id).select('id').maybeSingle();
+    if(error) return jsonError(error.code==='23505'?'Semester name already exists.':'Semester could not be updated.',error.code==='23505'?409:400);
+    if(!data) return jsonError('Semester not found.',404);
+    targetId=data.id;
+    auditAction='semester.updated';
+    targetType='semester';
+    auditDetails={...auditDetails,name:input.name,start_date:input.start_date,end_date:input.end_date,is_active:input.is_active};
+  }
+
+  const {error:auditError}=await supabase.rpc('admin_record_audit',{p_action:auditAction,p_target_type:targetType,p_target_id:targetId,p_details:auditDetails});
+  if(auditError) return jsonError('The academic change was saved, but its audit record could not be written. Contact the system administrator.',500);
+  return NextResponse.json({success:true,id:targetId},{headers:{'Cache-Control':'no-store'}});
 }
