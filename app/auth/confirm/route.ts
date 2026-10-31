@@ -6,6 +6,7 @@ const ALLOWED_TYPES: EmailOtpType[] = ['signup', 'invite', 'magiclink', 'recover
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
+  const code = url.searchParams.get('code');
   const tokenHash = url.searchParams.get('token_hash');
   const rawType = url.searchParams.get('type');
   const rawNext = url.searchParams.get('next');
@@ -13,15 +14,18 @@ export async function GET(request: NextRequest) {
     ? rawNext
     : '/dashboard';
 
-  if (!tokenHash || !rawType || !ALLOWED_TYPES.includes(rawType as EmailOtpType)) {
+  const hasTokenHash = Boolean(tokenHash && rawType && ALLOWED_TYPES.includes(rawType as EmailOtpType));
+  if (!code && !hasTokenHash) {
     return NextResponse.redirect(new URL('/login?error=confirmation', url.origin));
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: rawType as EmailOtpType
-  });
+  const { error } = code
+    ? await supabase.auth.exchangeCodeForSession(code)
+    : await supabase.auth.verifyOtp({
+        token_hash: tokenHash!,
+        type: rawType as EmailOtpType
+      });
 
   if (error) {
     return NextResponse.redirect(new URL('/login?error=confirmation', url.origin));
