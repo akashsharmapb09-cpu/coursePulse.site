@@ -1,39 +1,21 @@
 # CoursePulse
 
-Production-ready course feedback and aggregate analytics application.
+CoursePulse is a role-isolated course feedback application built with Next.js App Router, TypeScript, Supabase Auth/Postgres, Prisma schema tooling, and aggregate-only reporting.
 
 ## Stack
 
-- Next.js App Router, TypeScript, React
-- Supabase Auth + PostgreSQL with row-level security
-- Prisma schema and Postgres model contract
-- Zod request validation
-- CSV, Excel-compatible XLS, native XLSX, and PDF aggregate exports
+- Next.js `15.5.28` (patched Maintenance LTS), React `19.1.10`, TypeScript
+- Supabase Auth + Postgres RLS (`@supabase/ssr`, `@supabase/supabase-js`)
+- Prisma schema/client generation for typed Postgres models
+- Zod validation, ExcelJS (`.xlsx`), PDFKit (PDF), CSV
 
-The app uses request-scoped Supabase clients so the authenticated user's JWT reaches PostgreSQL and RLS remains active. It does not use the service-role key for ordinary application queries.
+The requested Next.js 14 baseline was intentionally moved to 15.5.28 because Next.js 14 has no patched release for the critical October 2026 advisories. The Next.js security notice identifies 15.5.28 as patched: https://nextjs.org/blog/nextjs-security-update-october-14-2026. A national cyber authority independently lists versions 10.x-15.x before 15.5.28 as affected: https://www.csa.gov.sg/alerts-and-advisories/alerts/al-2026-148/.
 
-## Database
-
-Supabase project: `fwmovyitmtpnwhqmvrgh`
-
-Applied migrations:
-- `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
-- `20261031162429_coursepulse_fix_numeric_aggregation`
-- `20261031162901_coursepulse_private_helpers_cron_hardening`
-- `20261031164000_coursepulse_feedback_creator_index`
-
-Tables `users`, `courses`, `feedback`, and `responses` all have RLS enabled. Instructors cannot select raw response rows. Instructor reporting uses an aggregate RPC with a minimum group size of five and omits free-text answers. Supabase security advisor returned zero findings after hardening.
-
-Retention cleanup is scheduled in Supabase pg_cron as `coursepulse-retention-cleanup`.
-
-## Local setup
-
-1. Copy `.env.example` to `.env.local`.
-2. Set the Supabase URL and publishable/anon key.
-3. Set `DATABASE_URL` and `DIRECT_URL` from Supabase database connection details for Prisma tooling.
-4. Run:
+## Quick start
 
 ```bash
+cp .env.example .env.local
+# Fill the values from Supabase Dashboard > Project Settings > API and Database.
 npm install
 npx prisma generate
 npx prisma validate
@@ -42,30 +24,60 @@ npm test
 npm run dev
 ```
 
-New signups default to `STUDENT`. Promote instructor/admin roles only from the Supabase SQL Editor using the reviewed statements in `scripts/promote-role.sql`.
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabase publishable key) for Auth/Data API. Set `DATABASE_URL` and `DIRECT_URL` to the project's Postgres connection strings for Prisma tooling. The web application uses the signed-in Supabase session client for request-scoped data access so RLS is evaluated as the real user, rather than using a service-role client for ordinary queries.
 
-## Exports
+## Database project
 
-Instructors and admins can export CSV, XLS, XLSX, and PDF. Exports contain only aggregate rows and suppress groups below five responses. Individual student answers and identities are not exported.
+The migrations under `supabase/migrations/` correspond to the three applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database now has `users`, `courses`, `feedback`, and `responses`, all with RLS enabled. Its migration history is:
+
+- `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
+- `20261031162429_coursepulse_fix_numeric_aggregation`
+- `20261031162901_coursepulse_private_helpers_cron_hardening`
+
+Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
+
+## First admin / instructor setup
+
+New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a reviewed statement from `scripts/promote-role.sql` to assign `INSTRUCTOR` or the first `ADMIN`. The application intentionally has no self-service role escalation endpoint.
+
+## Reports
+
+Instructors and admins can export CSV, Excel-compatible XLS, XLSX and PDF. The `.xls` route is an HTML Spreadsheet document labelled as Excel MIME type for interoperability; `.xlsx` is a native Office Open XML workbook. Every format reads from `public.get_instructor_aggregates()`, which enforces role/course scope and suppresses groups under five responses. Text answers are not returned from the RPC. Instructors cannot select the `responses` table.
+
+## Retention
+
+A daily Supabase Cron job named `coursepulse-retention-cleanup` runs at 20:17 UTC (01:47 India time) and executes `public.cleanup_expired_responses()`. Inspect the Supabase Cron UI/job run history to confirm each execution.
+
+## Deploy to Vercel
+
+Import the GitHub repository into Vercel or run `vercel link` after creating it. Set these Vercel env vars for Production, Preview and Development as appropriate:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `DATABASE_URL` (server-only Postgres URL)
+- `DIRECT_URL` (server-only direct Postgres URL)
+
+Do not configure `SUPABASE_SERVICE_ROLE_KEY` for normal app functionality; the app does not need it. Select Node.js 20.9+ and Next.js framework defaults. Set Supabase Auth site URL and allowed redirect URLs to the Vercel production domain.
 
 ## GitHub
 
-Repository: https://github.com/akashsharmapb09-cpu/coursePulse.site
-
-The `main` branch has been initialized. To add the downloaded CoursePulse source bundle to this repository, clone it, extract the bundle contents into the clone, then commit and push:
+The connected GitHub integration in this workspace can write files into existing repositories but does not expose repository creation. Create `CoursePulse.site` once with GitHub CLI, then push this project:
 
 ```bash
-git clone https://github.com/akashsharmapb09-cpu/coursePulse.site.git
-cd coursePulse.site
-# Extract the CoursePulse source bundle into this directory.
-git add -A
-git commit -m "feat: add CoursePulse production application"
-git push origin main
+git init
+git add .
+git commit -m "feat: initial CoursePulse production application"
+gh repo create CoursePulse.site --private --source=. --remote=origin --push
 ```
 
-## Security notes
+If the repository already exists, use:
 
-- Do not add `.env.local`, Postgres passwords, service-role keys, or Vercel tokens to Git.
-- Keep `DATABASE_URL` and `DIRECT_URL` server-side only.
-- Set Supabase Auth Site URL and redirect URLs to the deployed Vercel domain.
-- Admin/instructor role assignment is an operator action, never a self-service API.
+```bash
+git remote add origin https://github.com/<YOUR_GITHUB_OWNER>/CoursePulse.site.git
+git branch -M main
+git push -u origin main
+```
+
+## Note on Prisma and RLS
+
+Prisma schema is maintained as the typed model contract and client generation target. App request paths intentionally use the Supabase session client, not a global Prisma connection, so the caller's JWT reaches PostgreSQL RLS. This avoids an application-wide privileged database connection accidentally bypassing student/instructor boundaries.

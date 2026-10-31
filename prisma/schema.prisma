@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AppRole {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+  @@map("app_role")
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  @@map("course_status")
+}
+
+model User {
+  id        String   @id @db.Uuid
+  email     String?
+  fullName  String   @default("") @map("full_name")
+  role      AppRole  @default(STUDENT)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  courses   Course[] @relation("CourseInstructor")
+  feedback  Feedback[] @relation("FeedbackCreator")
+  responses Response[]
+  @@map("users")
+}
+
+model Course {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instructorId String       @map("instructor_id") @db.Uuid
+  title        String
+  description  String       @default("")
+  status       CourseStatus @default(DRAFT)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+  instructor   User         @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Restrict)
+  feedback     Feedback[]
+  @@index([instructorId])
+  @@index([status])
+  @@map("courses")
+}
+
+model Feedback {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId     String     @map("course_id") @db.Uuid
+  createdBy    String     @map("created_by") @db.Uuid
+  title        String
+  description  String     @default("")
+  formSchema   Json       @map("form_schema")
+  isOpen       Boolean    @default(true) @map("is_open")
+  retentionDays Int       @default(365) @map("retention_days")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @default(now()) @map("updated_at") @db.Timestamptz(6)
+  course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator      User       @relation("FeedbackCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  responses    Response[]
+  @@index([courseId])
+  @@map("feedback")
+}
+
+model Response {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackId  String   @map("feedback_id") @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  answers     Json
+  submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  feedback    Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  @@unique([feedbackId, studentId])
+  @@index([feedbackId])
+  @@index([studentId])
+  @@index([submittedAt])
+  @@map("responses")
+}
