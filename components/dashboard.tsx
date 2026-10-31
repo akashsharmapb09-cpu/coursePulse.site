@@ -10,6 +10,8 @@ type Feedback = { id: string; course_id: string; title: string; description: str
 type Question = { id: string; label: string; type: 'rating'|'single_choice'|'multiple_choice'|'text'|'textarea'|'number'; required: boolean; options?: string[] };
 type AdminUser = { id:string; email:string|null; full_name:string; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean; created_at:string; department_id:string|null };
 type AuditEvent = { id:string; action:string; target_type:string; target_id:string|null; details:Record<string,unknown>; created_at:string };
+type AcademicData = { departments:{id:string;name:string;code:string}[]; semesters:{id:string;name:string;start_date:string;end_date:string;is_active:boolean}[]; courses:{id:string;title:string;department_id:string|null;semester_id:string|null;status:string}[]; students:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; instructors:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; enrollments:{id:string;course_id:string;student_id:string;enrolled_at:string}[]; assignments:{id:string;course_id:string;instructor_id:string;created_at:string}[] };
+type AcademicAction = {action:'department';name:string;code:string}|{action:'semester';name:string;start_date:string;end_date:string}|{action:'enroll';course_id:string;student_id:string}|{action:'assign';course_id:string;instructor_id:string}|{action:'course_academic';course_id:string;department_id:string|null;semester_id:string|null};
 
 export function Dashboard({ profile }: { profile: Profile }) {
   const router = useRouter();
@@ -32,6 +34,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [adminUsers,setAdminUsers] = useState<AdminUser[]>([]);
   const [adminAudit,setAdminAudit] = useState<AuditEvent[]>([]);
+  const [adminAcademic,setAdminAcademic] = useState<AcademicData>({departments:[],semesters:[],courses:[],students:[],instructors:[],enrollments:[],assignments:[]});
 
   async function load() {
     setLoading(true); setError('');
@@ -62,11 +65,12 @@ export function Dashboard({ profile }: { profile: Profile }) {
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
   async function loadAdmin() {
-    const [usersRes,auditRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'})]);
-    const usersData=await usersRes.json(); const auditData=await auditRes.json();
+    const [usersRes,auditRes,academicRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'}),fetch('/api/admin/academic',{cache:'no-store'})]);
+    const usersData=await usersRes.json(); const auditData=await auditRes.json(); const academicData=await academicRes.json();
     if(!usersRes.ok) throw new Error(usersData.error??'Could not load administrator users.');
     if(!auditRes.ok) throw new Error(auditData.error??'Could not load audit history.');
-    setAdminUsers(usersData.users??[]); setAdminAudit(auditData.events??[]);
+    if(!academicRes.ok) throw new Error(academicData.error??'Could not load academic administration data.');
+    setAdminUsers(usersData.users??[]); setAdminAudit(auditData.events??[]); setAdminAcademic(academicData);
   }
   async function updateAdminUser(userId:string,role:AdminUser['role'],isActive:boolean) {
     setBusy(true); setError('');
@@ -75,6 +79,15 @@ export function Dashboard({ profile }: { profile: Profile }) {
       const data=await res.json(); if(!res.ok) throw new Error(data.error??'Could not update account access.');
       setNotice('Account access updated and audit logged.'); await loadAdmin();
     } catch(e) { setError(e instanceof Error?e.message:'Could not update account.'); }
+    finally { setBusy(false); }
+  }
+  async function createAcademic(payload:AcademicAction) {
+    setBusy(true); setError('');
+    try {
+      const res=await fetch('/api/admin/academic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data=await res.json(); if(!res.ok) throw new Error(data.error??'Academic update failed.');
+      setNotice('Academic workspace updated and audit logged.'); await loadAdmin();
+    } catch(e) { setError(e instanceof Error?e.message:'Academic update failed.'); }
     finally { setBusy(false); }
   }
   async function fetchAnalytics() { setError(''); const res=await fetch('/api/analytics',{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); }
@@ -106,7 +119,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
         </>}
         {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div>{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div><CourseList courses={courses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}}/></>}
         {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>Respond to an open form or manage forms you own.</p></div>{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div><FeedbackList feedback={feedback} role={profile.role} onRespond={setResponseModal}/></>}
-        {tab==='admin' && <AdminConsole users={adminUsers} audit={adminAudit} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser}/>}
+        {tab==='admin' && <AdminConsole users={adminUsers} audit={adminAudit} academic={adminAcademic} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser} onAcademicCreate={createAcademic}/>}
         {tab==='analytics' && <><div className="section-heading"><div><h3>Aggregate insights</h3><p>Only groups with at least five submissions are shown. Written answers are never included.</p></div><div className="export-actions"><a className="button subtle" href="/api/exports/csv"><ArrowDownToLine size={15}/> CSV</a><a className="button subtle" href="/api/exports/xls"><ArrowDownToLine size={15}/> XLS</a><a className="button subtle" href="/api/exports/xlsx"><ArrowDownToLine size={15}/> XLSX</a><a className="button subtle" href="/api/exports/pdf"><ArrowDownToLine size={15}/> PDF</a></div></div><div className="privacy-banner"><ShieldCheck size={18}/><span><b>Aggregate-only reporting</b><small>Response identities and free-text answers are excluded. Suppressed groups contain fewer than five responses.</small></span></div><div className="analytics-grid">{analytics.length?analytics.map((r,i)=><article className="analytics-card" key={`${r.feedback_id}-${r.question_id}-${r.option_value}-${i}`}><span className="eyebrow">{r.course_title}</span><h4>{r.question_label}</h4><p>{r.feedback_title}</p><div className="analytic-value">{r.avg_numeric_value!=null?Number(r.avg_numeric_value).toFixed(2):r.response_count}<small>{r.avg_numeric_value!=null?' average score':` responses${r.option_value?` · ${r.option_value}`:''}`}</small></div></article>):<Empty icon={<FileBarChart/>} title="No reportable groups yet" text="Reports appear once at least five students have answered a question."/>}</div></>}
       </section>
     </main>
@@ -160,6 +173,39 @@ function AdminConsole({users,audit,currentUserId,busy,onUpdate}:{users:AdminUser
   return <div className="space-y-8">
     <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
     {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
-    <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator role and access changes will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replaceAll('.',' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
+    <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator role and access changes will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replace(/\\./g,' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
   </div>;
+}
+
+function AdminConsole({users,audit,academic,currentUserId,busy,onUpdate,onAcademicCreate}:{users:AdminUser[];audit:AuditEvent[];academic:AcademicData;currentUserId:string;busy:boolean;onUpdate:(id:string,role:AdminUser['role'],active:boolean)=>void;onAcademicCreate:(payload:AcademicAction)=>void}) {
+  return <div className="space-y-8">
+    <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
+    {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
+    <AdminAcademicManager data={academic} busy={busy} onCreate={onAcademicCreate}/>
+    <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account and academic actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator actions will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replace(/\\./g,' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
+  </div>;
+}
+
+function AdminAcademicManager({data,busy,onCreate}:{data:AcademicData;busy:boolean;onCreate:(payload:AcademicAction)=>void}) {
+  const [departmentName,setDepartmentName]=useState('');
+  const [departmentCode,setDepartmentCode]=useState('');
+  const [semesterName,setSemesterName]=useState('');
+  const [semesterStart,setSemesterStart]=useState('');
+  const [semesterEnd,setSemesterEnd]=useState('');
+  const [enrollCourse,setEnrollCourse]=useState('');
+  const [enrollStudent,setEnrollStudent]=useState('');
+  const [assignCourse,setAssignCourse]=useState('');
+  const [assignInstructor,setAssignInstructor]=useState('');
+  const [academicCourse,setAcademicCourse]=useState('');
+  const [academicDepartment,setAcademicDepartment]=useState('');
+  const [academicSemester,setAcademicSemester]=useState('');
+  return <section className="space-y-5"><div className="section-heading"><div><h3>Academic structure</h3><p>Manage departments, terms, student enrollments and instructor course assignments.</p></div></div>
+    <div className="grid gap-5 lg:grid-cols-2">
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'department',name:departmentName,code:departmentCode});setDepartmentName('');setDepartmentCode('');}}><h4 className="font-extrabold">Create department</h4><label>Department name<input required minLength={2} maxLength={120} value={departmentName} onChange={e=>setDepartmentName(e.target.value)} placeholder="Computer Science"/></label><label>Department code<input required minLength={2} maxLength={20} value={departmentCode} onChange={e=>setDepartmentCode(e.target.value)} placeholder="CSE"/></label><button className="button primary" disabled={busy}>Add department</button><p className="fine-print">{data.departments.length} departments configured</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'semester',name:semesterName,start_date:semesterStart,end_date:semesterEnd});setSemesterName('');setSemesterStart('');setSemesterEnd('');}}><h4 className="font-extrabold">Create academic semester</h4><label>Semester name<input required minLength={2} maxLength={100} value={semesterName} onChange={e=>setSemesterName(e.target.value)} placeholder="Fall 2026"/></label><label>Start date<input type="date" required value={semesterStart} onChange={e=>setSemesterStart(e.target.value)}/></label><label>End date<input type="date" required min={semesterStart||undefined} value={semesterEnd} onChange={e=>setSemesterEnd(e.target.value)}/></label><button className="button primary" disabled={busy}>Add semester</button><p className="fine-print">{data.semesters.length} semesters configured</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'enroll',course_id:enrollCourse,student_id:enrollStudent});}}><h4 className="font-extrabold">Enroll student in course</h4><label>Course<select required value={enrollCourse} onChange={e=>setEnrollCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Student<select required value={enrollStudent} onChange={e=>setEnrollStudent(e.target.value)}><option value="">Select student</option>{data.students.map(student=><option key={student.id} value={student.id}>{student.full_name||student.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.students.length||!data.courses.length}>Enroll student</button><p className="fine-print">{data.enrollments.length} course enrollments</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'assign',course_id:assignCourse,instructor_id:assignInstructor});}}><h4 className="font-extrabold">Assign instructor</h4><label>Course<select required value={assignCourse} onChange={e=>setAssignCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Instructor<select required value={assignInstructor} onChange={e=>setAssignInstructor(e.target.value)}><option value="">Select instructor</option>{data.instructors.map(instructor=><option key={instructor.id} value={instructor.id}>{instructor.full_name||instructor.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.instructors.length||!data.courses.length}>Assign instructor</button><p className="fine-print">{data.assignments.length} instructor assignments</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5 lg:col-span-2" onSubmit={e=>{e.preventDefault();onCreate({action:'course_academic',course_id:academicCourse,department_id:academicDepartment||null,semester_id:academicSemester||null});}}><h4 className="font-extrabold">Set course department and semester</h4><label>Course<select required value={academicCourse} onChange={e=>setAcademicCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label>Department<select value={academicDepartment} onChange={e=>setAcademicDepartment(e.target.value)}><option value="">No department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><label>Semester<select value={academicSemester} onChange={e=>setAcademicSemester(e.target.value)}><option value="">No semester</option>{data.semesters.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><button className="button primary self-start" disabled={busy||!academicCourse}>Save course structure</button></form>
+    </div>
+  </section>;
 }
