@@ -96,6 +96,10 @@ returns public.app_role
 language sql stable security definer set search_path = ''
 as $$ select u.role from public.users u where u.id=(select auth.uid()) and u.is_active=true limit 1 $$;
 
+create or replace function private.is_admin()
+returns boolean language sql stable security definer set search_path = ''
+as $ select coalesce(private.current_app_role()='ADMIN'::public.app_role and (auth.jwt()->>'aal')='aal2',false) $;
+
 create or replace function private.is_course_owner(p_course_id uuid)
 returns boolean
 language sql stable security definer set search_path = ''
@@ -122,6 +126,15 @@ using ((select private.is_admin()) or (select private.is_course_owner(course_id)
   (is_open=true and (select private.current_app_role())='STUDENT'::public.app_role
    and exists(select 1 from public.course_enrollments e where e.course_id=feedback.course_id and e.student_id=(select auth.uid()))
    and exists(select 1 from public.courses c where c.id=feedback.course_id and c.status='PUBLISHED'::public.course_status)));
+
+do $
+declare v_definition text;
+begin
+  select pg_get_functiondef('private.get_instructor_aggregates(uuid)'::regprocedure) into v_definition;
+  v_definition := replace(v_definition, 'c.instructor_id = (select auth.uid())', 'private.is_course_owner(c.id)');
+  execute v_definition;
+end;
+$;
 
 -- The RPC is the only path from identity-based eligibility to identity-free answers.
 create or replace function private.submit_anonymous_feedback(p_feedback_id uuid, p_answers jsonb)
@@ -187,7 +200,7 @@ declare
   v_old_role public.app_role;
   v_old_active boolean;
 begin
-  if not private.is_admin() then raise exception 'Administrator role required' using errcode='42501'; end if;
+  if not private.is_admin() or (auth.jwt()->>'aal') <> 'aal2' then raise exception 'Administrator role with MFA is required' using errcode='42501'; end if;
   select role,is_active into v_old_role,v_old_active from public.users where id=p_user_id for update;
   if not found then raise exception 'User not found' using errcode='P0002'; end if;
   if p_user_id=(select auth.uid()) and (p_role<>'ADMIN'::public.app_role or p_is_active=false) then
