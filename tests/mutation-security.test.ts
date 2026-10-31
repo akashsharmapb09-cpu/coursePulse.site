@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const rateLimitMigration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20261101012000_coursepulse_mutation_rate_limits.sql'),
+  resolve(process.cwd(), 'supabase/migrations/20261031202848_coursepulse_mutation_rate_limits.sql'),
   'utf8'
 );
 const http = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
