@@ -12,19 +12,19 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## P1 — Identity and security
 - [ ] Password recovery/reset and password change.
-- [ ] Session invalidation and account suspension.
-- [ ] Admin MFA policy and privileged-action audit.
+- [x] DONE: account suspension blocks application access through active-profile checks and role helper. Global token revocation remains outstanding.
+- [x] DONE: admin workspace and admin RPCs require TOTP AAL2; user and academic actions write audit events.
 - [x] DONE: database-backed user/action rate limits and same-origin checks for course, form and response mutations. Auth-provider rate limits still require dashboard verification.
 - [x] DONE: baseline Content-Security-Policy added; nonce-based strict CSP and browser validation remain open.
 - [ ] Generic authentication errors, password recovery/change and session revocation.
 - [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
-- [ ] Departments and semesters.
-- [ ] Student enrollment and instructor-course assignments.
-- [ ] Admin user/role management and account lifecycle.
+- [x] DONE: departments, semesters, course department/semester relations created.
+- [x] DONE: student course enrollments and instructor-course assignments with scoped RLS.
+- [x] DONE: MFA-protected user role/suspension API and console; last-active-admin guard.
 - [ ] Course and form/question lifecycle, deadlines and versioning.
-- [ ] Append-only admin audit log.
+- [x] DONE: admin audit table and privileged audit RPC. Append-only Data API grants (no direct INSERT/UPDATE/DELETE).
 
 ## P3 — Student experience
 - [ ] Eligible, pending and completed forms.
@@ -46,7 +46,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Custom not-found/error pages and navigation audit.
 
 ## P6 — QA and operations
-- [ ] Integration and E2E tests for all roles.
+- [ ] Integration and E2E tests for all roles (unit/static contract tests only so far).
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests.
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
