@@ -23,7 +23,9 @@ export async function GET(request:NextRequest){
       supabase.from('users').select('id,full_name,email,role').ilike('email',pattern).limit(10)
     ]);
     if(names.error||emails.error) return jsonError('User search is temporarily unavailable.',500);
-    users=Array.from(new Map([...(names.data??[]),...(emails.data??[])].map(user=>[user.id,user])).values()).slice(0,10);
+    const uniqueUsers=new Map<string,{id:string;full_name:string;email:string|null;role:string}>();
+    for(const user of [...(names.data??[]),...(emails.data??[])]) uniqueUsers.set(user.id,user);
+    users=Array.from(uniqueUsers.values()).slice(0,10);
   }
   return NextResponse.json({courses:courses.data??[],feedback:feedback.data??[],users},{headers:{'Cache-Control':'no-store'}});
 }
