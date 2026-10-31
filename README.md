@@ -47,6 +47,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031204847_coursepulse_rls_policy_optimization`
 - `20261101019000_coursepulse_feedback_deadlines_and_completed_visibility`
 - `20261101020000_coursepulse_filtered_analytics`
+- `20261101021000_coursepulse_rating_distributions`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
@@ -56,7 +57,7 @@ New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a r
 
 ## Reports
 
-Instructors and admins can export CSV, Excel-compatible XLS, XLSX and PDF. The `.xls` route is an HTML Spreadsheet document labelled as Excel MIME type for interoperability; `.xlsx` is a native Office Open XML workbook. Every format reads from `public.get_instructor_aggregates_filtered()`, which enforces role/course scope, optional course/semester/date filters and suppresses groups under five responses. Anonymous submissions receive a timestamp for date-bounded reporting. Text answers are not returned from the RPC. Instructors and administrators cannot select raw rows from either response store. New submissions have no student identifier or eligibility reference in the answer table; the separate eligibility ledger is inaccessible through the Data API. Students can see pending/completed forms only for courses in which they are explicitly enrolled. The legacy `responses` table remains for compatibility and retention, but had zero rows when the migration was applied. A database transaction smoke test confirmed the new RPC accepts a valid student submission and rejects a duplicate.
+Instructors and admins can export CSV, Excel-compatible XLS, XLSX and PDF. The `.xls` route is an HTML Spreadsheet document labelled as Excel MIME type for interoperability; `.xlsx` is a native Office Open XML workbook. Every format reads from `public.get_instructor_aggregates_filtered()`, which enforces role/course scope, optional course/semester/date filters and suppresses groups under five responses. Rating-distribution buckets are separately aggregated and each bucket below five is suppressed. Anonymous submissions receive a timestamp for date-bounded reporting. Text answers are not returned from the RPC. Instructors and administrators cannot select raw rows from either response store. New submissions have no student identifier or eligibility reference in the answer table; the separate eligibility ledger is inaccessible through the Data API. Students can see pending/completed forms only for courses in which they are explicitly enrolled. The legacy `responses` table remains for compatibility and retention, but had zero rows when the migration was applied. A database transaction smoke test confirmed the new RPC accepts a valid student submission and rejects a duplicate.
 
 ## Retention
 
