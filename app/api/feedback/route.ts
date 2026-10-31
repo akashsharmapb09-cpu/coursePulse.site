@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { feedbackInput } from '@/lib/validation';
+import { feedbackInput, questionSchema } from '@/lib/validation';
 import { z } from 'zod';
 import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 
@@ -46,7 +46,14 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ feedback: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
 
-const lifecycleInput = z.object({id:z.string().uuid(),is_open:z.boolean()}).strict();
+const lifecycleInput = z.object({
+  id:z.string().uuid(),
+  is_open:z.boolean().optional(),
+  title:z.string().trim().min(2).max(160).optional(),
+  description:z.string().trim().max(3000).optional(),
+  form_schema:z.array(questionSchema).min(1).max(30).optional(),
+  due_at:z.string().datetime().nullable().optional()
+}).strict().refine(input=>Object.keys(input).length>1,'Provide at least one field to update.');
 
 export async function PATCH(request:NextRequest) {
   const supabase=await createClient();
@@ -59,7 +66,8 @@ export async function PATCH(request:NextRequest) {
   try{body=await request.json();}catch{return jsonError('Invalid JSON body.');}
   const parsed=lifecycleInput.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid feedback update.');
-  const {data,error}=await supabase.from('feedback').update({is_open:parsed.data.is_open}).eq('id',parsed.data.id).select('id,is_open').single();
+  const {id,...updates}=parsed.data;
+  const {data,error}=await supabase.from('feedback').update(updates).eq('id',id).select('id,course_id,title,description,form_schema,is_open,due_at,created_at').single();
   if(error||!data) return jsonError('Feedback form could not be updated. Check course ownership.',403);
   return NextResponse.json({feedback:data},{headers:{'Cache-Control':'no-store'}});
 }
