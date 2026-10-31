@@ -93,6 +93,7 @@ model Response {
   feedbackId  String   @map("feedback_id") @db.Uuid
   studentId   String   @map("student_id") @db.Uuid
   answers     Json
+  submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
   feedback    Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
   student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   @@unique([feedbackId, studentId])
