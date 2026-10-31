@@ -1,3 +1,6 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 import { LoginForm } from '@/components/login-form';
 
 export default function LoginPage() {
