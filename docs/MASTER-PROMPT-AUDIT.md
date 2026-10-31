@@ -17,7 +17,7 @@ This section supersedes the historical baseline further down this document. The 
 
 - Latest reviewed feature commit: `17097af2c80b5e58287e9cd86b339a8134abe571` on `feat/master-prompt-completion`.
 - GitHub CI run #210 passed dependency audit (0 reported npm vulnerabilities), Prisma validation, TypeScript, 13 Vitest files / 47 tests, and Next.js production build.
-- Supabase project has 23 migration-history entries. Repository migration filenames now match all 23 remote version/name entries; the local SQL source is preserved and the student-completion RPC migration is represented.
+- Supabase project has 24 migration-history entries. Repository migration filenames now match all 24 remote version/name entries; the local SQL source is preserved and the student-completion RPC migration is represented.
 - Supabase smoke checks passed for filtered aggregate analytics, rating distributions, response trends, anonymous date precision and expired-deadline enforcement.
 - Supabase Security Advisor currently reports one warning: leaked-password protection is disabled. Performance Advisor reports unused-index INFO notices; do not drop indexes without workload evidence.
 - Exposed app tables use RLS and scoped policies; private answer-eligibility storage is not directly accessible through the Data API.

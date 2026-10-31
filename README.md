@@ -53,6 +53,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031211404_coursepulse_anonymous_date_precision`
 - `20261031211443_coursepulse_remove_obsolete_analytics_overloads`
 - `20261031214742_coursepulse_admin_user_department_assignment`
+- `20261031215225_coursepulse_account_password_rate_limit`
 
 The version list is aligned to the live Supabase migration ledger. Some management-applied versions are represented remotely with `select 1;` placeholder statements even though the corresponding SQL is preserved in the local migration files. For example, the duplicate academic-admin and assignment-policy entries are explicit no-op files because those policies are already included in the primary academic-admin migration; the student completion RPC is preserved in `20261031204219`. Before any CLI `db push`, compare `supabase migration list` and the live schema; do not reset or blindly replay the production project.\n\nDefault public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const route=readFileSync(resolve(process.cwd(),'app/api/account/password/route.ts'),'utf8');
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101110000_coursepulse_account_password_rate_limit.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031215225_coursepulse_account_password_rate_limit.sql'),'utf8');
 
 describe('account password change security contract',()=>{
   it('requires an active authenticated account and a dedicated same-origin rate limit',()=>{
