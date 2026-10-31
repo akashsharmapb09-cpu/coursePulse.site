@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (auth.profile.role === 'STUDENT') {
     const { data: statuses, error: statusError } = await supabase.rpc('get_student_feedback_status');
     if (statusError) return jsonError('Unable to load feedback completion status.', 500);
-    const submittedByForm = new Map((statuses ?? []).map(status => [status.feedback_id, status.submitted]));
+    const submittedByForm = new Map((statuses ?? []).map((status: { feedback_id: string; submitted: boolean }) => [status.feedback_id, status.submitted]));
     forms = forms.map(form => ({ ...form, submitted: submittedByForm.get(form.id) ?? false }));
   }
   return NextResponse.json(id ? { feedback: forms.find(form => form.id === id) ?? null } : { feedback: forms }, { headers: { 'Cache-Control': 'no-store' } });
