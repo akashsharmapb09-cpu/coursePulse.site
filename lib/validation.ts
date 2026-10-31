@@ -22,6 +22,7 @@ export const feedbackInput = z.object({
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().max(3000).default(''),
   retention_days: z.number().int().min(30).max(730).default(365),
+  due_at: z.string().datetime().nullable().optional(),
   form_schema: z.array(questionSchema).min(1).max(30)
 }).strict().superRefine((input, ctx) => {
   const ids = input.form_schema.map(q => q.id);
