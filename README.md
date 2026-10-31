@@ -28,13 +28,16 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabas
 
 ## Database project
 
-The migrations under `supabase/migrations/` correspond to the five applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Its migration history is:
+The migrations under `supabase/migrations/` correspond to the applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Its migration history is:
 
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
 - `20261031162901_coursepulse_private_helpers_cron_hardening`
 - `20261031164000_coursepulse_feedback_creator_index`
 - `20261031195323_coursepulse_data_api_privilege_hardening`
+- `20261101010000_coursepulse_anonymous_feedback_storage`
+- `20261101011000_coursepulse_anonymous_storage_policy_hardening`
+- `20261101012000_coursepulse_mutation_rate_limits`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
