@@ -1,0 +1,32 @@
+name: Install CoursePulse source
+on:
+  push:
+    branches:
+      - coursepulse-bootstrap
+permissions:
+  contents: write
+jobs:
+  install-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out bootstrap branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Expand application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/coursepulse-source
+          cat _bootstrap/part-*.b64 | base64 -d > /tmp/coursepulse-source.tar.gz
+          tar -xzf /tmp/coursepulse-source.tar.gz -C /tmp/coursepulse-source
+          test -f /tmp/coursepulse-source/coursepulse-site/package.json
+          cp -a /tmp/coursepulse-source/coursepulse-site/. .
+          rm -rf _bootstrap
+      - name: Commit source to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add full CoursePulse application"
+          git push origin HEAD:main
