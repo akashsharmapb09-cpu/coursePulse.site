@@ -1,7 +1,7 @@
 'use client';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, ShieldCheck, Users, X } from 'lucide-react';
+import { Activity, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
@@ -11,6 +11,7 @@ type Question = { id: string; label: string; type: 'rating'|'single_choice'|'mul
 type AdminUser = { id:string; email:string|null; full_name:string; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean; created_at:string; department_id:string|null };
 type AuditEvent = { id:string; action:string; target_type:string; target_id:string|null; details:Record<string,unknown>; created_at:string };
 type AcademicData = { departments:{id:string;name:string;code:string}[]; semesters:{id:string;name:string;start_date:string;end_date:string;is_active:boolean}[]; courses:{id:string;title:string;department_id:string|null;semester_id:string|null;status:string}[]; students:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; instructors:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; enrollments:{id:string;course_id:string;student_id:string;enrolled_at:string}[]; assignments:{id:string;course_id:string;instructor_id:string;created_at:string}[] };
+type SearchResults = {courses:Pick<Course,'id'|'title'|'description'|'status'>[];feedback:Pick<Feedback,'id'|'course_id'|'title'|'description'|'is_open'>[];users:Pick<AdminUser,'id'|'full_name'|'email'|'role'>[]};
 type AcademicAction = {action:'department';name:string;code:string}|{action:'semester';name:string;start_date:string;end_date:string}|{action:'enroll';course_id:string;student_id:string}|{action:'assign';course_id:string;instructor_id:string}|{action:'course_academic';course_id:string;department_id:string|null;semester_id:string|null};
 
 export function Dashboard({ profile }: { profile: Profile }) {
@@ -35,6 +36,8 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [adminUsers,setAdminUsers] = useState<AdminUser[]>([]);
   const [adminAudit,setAdminAudit] = useState<AuditEvent[]>([]);
   const [adminAcademic,setAdminAcademic] = useState<AcademicData>({departments:[],semesters:[],courses:[],students:[],instructors:[],enrollments:[],assignments:[]});
+  const [searchQuery,setSearchQuery]=useState('');
+  const [searchResults,setSearchResults]=useState<SearchResults|null>(null);
 
   async function load() {
     setLoading(true); setError('');
@@ -90,6 +93,12 @@ export function Dashboard({ profile }: { profile: Profile }) {
     } catch(e) { setError(e instanceof Error?e.message:'Academic update failed.'); }
     finally { setBusy(false); }
   }
+  async function runSearch(event:FormEvent) {
+    event.preventDefault(); setError('');
+    if(searchQuery.trim().length<2){setError('Enter at least two characters to search.');return;}
+    try { const res=await fetch('/api/search?q='+encodeURIComponent(searchQuery.trim()),{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error??'Search failed.'); setSearchResults(data); }
+    catch(e){setError(e instanceof Error?e.message:'Search failed.');}
+  }
   async function fetchAnalytics() { setError(''); const res=await fetch('/api/analytics',{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); }
   async function changeTab(next: typeof tab) { setTab(next); if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
@@ -106,8 +115,9 @@ export function Dashboard({ profile }: { profile: Profile }) {
       <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Submission eligibility is stored separately from answers. Reports show aggregates only.</p></div><div className="user-profile"><div className="avatar">{(profile.full_name||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{profile.full_name||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='admin'?'Administration':'Learning analytics'}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
+      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='admin'?'Administration':'Learning analytics'}</h1></div><div className="top-actions"><form className="global-search" role="search" onSubmit={runSearch}><Search size={16}/><input aria-label="Search courses, feedback and users" placeholder="Search workspace…" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/><button type="submit" aria-label="Search"><Search size={15}/></button></form><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
       <section className="content-area">
+        {searchResults && <section className="search-results-panel"><div className="section-heading"><div><h3>Search results</h3><p>Matches for “{searchQuery.trim()}”</p></div><button className="text-button" onClick={()=>setSearchResults(null)}>Clear search <X size={14}/></button></div><div className="search-result-grid">{searchResults.courses.map(item=><button key={item.id} className="search-result" onClick={()=>{setTab('courses');setSearchResults(null)}}><BookOpen size={16}/><span><b>{item.title}</b><small>Course · {item.status.toLowerCase()}</small></span></button>)}{searchResults.feedback.map(item=><button key={item.id} className="search-result" onClick={()=>{const found=feedback.find(form=>form.id===item.id);if(found&&profile.role==='STUDENT'&&found.is_open&&!found.submitted)setResponseModal(found);else setTab('feedback');setSearchResults(null)}}><FilePlus2 size={16}/><span><b>{item.title}</b><small>Feedback form · {item.is_open?'open':'closed'}</small></span></button>)}{searchResults.users.map(item=><button key={item.id} className="search-result" onClick={()=>{void changeTab('admin');setSearchResults(null)}}><Users size={16}/><span><b>{item.full_name||item.email||'User'}</b><small>User · {item.role.toLowerCase()}</small></span></button>)}{!searchResults.courses.length&&!searchResults.feedback.length&&!searchResults.users.length&&<p className="muted">No matching courses, forms or users were found in your permitted workspace.</p>}</div></section>}
         {error && <div className="alert error page-alert"><CircleHelp size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={16}/></button></div>}{notice && <div className="alert success page-alert">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
         {tab==='overview' && <>
           <div className="welcome-row"><div><span className="eyebrow">{new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><h2>Good {new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, {profile.full_name?.split(' ')[0]||'there'}.</h2><p>Bring course feedback into focus and turn it into action.</p></div><div className="pulse-orb"><Activity size={26}/><span>Live workspace</span></div></div>
