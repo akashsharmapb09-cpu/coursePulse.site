@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { feedbackInput } from '@/lib/validation';
+import { z } from 'zod';
 import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
