@@ -30,8 +30,11 @@ export async function POST(request: NextRequest) {
     if (q.type === 'single_choice' && (typeof value !== 'string' || !q.options?.includes(value))) return jsonError('Please choose a valid option.');
     if (q.type === 'multiple_choice' && (!Array.isArray(value) || (q.required && value.length === 0) || value.length > 20 || value.some(v => typeof v !== 'string' || !q.options?.includes(v)))) return jsonError('Please choose valid options.');
   }
-  const { error } = await supabase.from('responses').insert({ feedback_id: form.id, student_id: auth.user.id, answers: parsed.data.answers });
+  const { error } = await supabase.rpc('submit_anonymous_feedback', {
+    p_feedback_id: form.id,
+    p_answers: parsed.data.answers
+  });
   if (error?.code === '23505') return jsonError('You have already submitted feedback for this form.', 409);
-  if (error) return jsonError('Response could not be submitted.', 403);
+  if (error) return jsonError('Response could not be submitted.', error.code === '42501' ? 403 : 400);
   return NextResponse.json({ success: true }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
