@@ -28,7 +28,7 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabas
 
 ## Database project
 
-The migrations under `supabase/migrations/` correspond to the three applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database now has `users`, `courses`, `feedback`, and `responses`, all with RLS enabled. Its migration history is:
+The migrations under `supabase/migrations/` correspond to the four applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database now has `users`, `courses`, `feedback`, and `responses`, all with RLS enabled. Its migration history is:
 
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
@@ -58,7 +58,7 @@ Import the GitHub repository into Vercel or run `vercel link` after creating it.
 - `DATABASE_URL` (server-only Postgres URL)
 - `DIRECT_URL` (server-only direct Postgres URL)
 
-Do not configure `SUPABASE_SERVICE_ROLE_KEY` for normal app functionality; the app does not need it. Select Node.js 20.9+ and Next.js framework defaults. Set Supabase Auth site URL and allowed redirect URLs to the Vercel production domain.
+Do not configure `SUPABASE_SERVICE_ROLE_KEY` for normal app functionality; the app does not need it. Use Node.js 22.x and the Next.js framework defaults. In Supabase Auth > URL Configuration, set the Site URL to `https://coursepulse-production.vercel.app` and add both `https://coursepulse-production.vercel.app` and `https://coursepulse-production.vercel.app/auth/confirm` to the allowed redirect URLs. Signup confirmation links return through the app's `/auth/confirm` route.
 
 ## GitHub
 
