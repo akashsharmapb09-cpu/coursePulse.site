@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   const id = request.nextUrl.searchParams.get('id');
-  let query = supabase.from('feedback').select('id,course_id,title,description,form_schema,is_open,created_at,retention_days,due_at').order('created_at', { ascending: false });
+  let query = supabase.from('feedback').select('id,course_id,title,description,form_schema,is_open,created_at,retention_days,due_at,version').order('created_at', { ascending: false });
   if (id) query = query.eq('id', id);
   const { data, error } = await query;
   if (error) return jsonError('Unable to load feedback forms.', 500);
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     course_id: parsed.data.course_id, created_by: auth.user.id,
     title: parsed.data.title, description: parsed.data.description,
     form_schema: parsed.data.form_schema, retention_days: parsed.data.retention_days, due_at: parsed.data.due_at ?? null, is_open: true
-  }).select('id,course_id,title,description,is_open,created_at,due_at').single();
+  }).select('id,course_id,title,description,is_open,created_at,due_at,version').single();
   if (error) return jsonError('Feedback form could not be created. Check course ownership.', 403);
   return NextResponse.json({ feedback: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -67,7 +67,7 @@ export async function PATCH(request:NextRequest) {
   const parsed=lifecycleInput.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid feedback update.');
   const {id,...updates}=parsed.data;
-  const {data,error}=await supabase.from('feedback').update(updates).eq('id',id).select('id,course_id,title,description,form_schema,is_open,due_at,created_at').single();
+  const {data,error}=await supabase.from('feedback').update(updates).eq('id',id).select('id,course_id,title,description,form_schema,is_open,due_at,created_at,version').single();
   if(error||!data) return jsonError('Feedback form could not be updated. Check course ownership.',403);
   return NextResponse.json({feedback:data},{headers:{'Cache-Control':'no-store'}});
 }

@@ -76,6 +76,7 @@ model Feedback {
   description  String     @default("")
   formSchema   Json       @map("form_schema")
   isOpen       Boolean    @default(true) @map("is_open")
+  version      Int        @default(1)
   retentionDays Int       @default(365) @map("retention_days")
   dueAt        DateTime?  @map("due_at") @db.Timestamptz(6)
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
