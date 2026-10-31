@@ -9,7 +9,8 @@ const inputSchema=z.discriminatedUnion('action',[
   z.object({action:z.literal('semester'),name:z.string().trim().min(2).max(100),start_date:z.string().date(),end_date:z.string().date()}).strict(),
   z.object({action:z.literal('enroll'),course_id:z.string().uuid(),student_id:z.string().uuid()}).strict(),
   z.object({action:z.literal('assign'),course_id:z.string().uuid(),instructor_id:z.string().uuid()}).strict(),
-  z.object({action:z.literal('course_academic'),course_id:z.string().uuid(),department_id:z.string().uuid().nullable(),semester_id:z.string().uuid().nullable()}).strict()
+  z.object({action:z.literal('course_academic'),course_id:z.string().uuid(),department_id:z.string().uuid().nullable(),semester_id:z.string().uuid().nullable()}).strict(),
+  z.object({action:z.literal('user_department'),user_id:z.string().uuid(),department_id:z.string().uuid().nullable()}).strict()
 ]);
 
 const updateSchema=z.discriminatedUnion('action',[
@@ -32,7 +33,7 @@ export async function GET(){
     supabase.from('departments').select('id,name,code').order('name').limit(500),
     supabase.from('semesters').select('id,name,start_date,end_date,is_active').order('start_date',{ascending:false}).limit(100),
     supabase.from('courses').select('id,title,department_id,semester_id,status').order('title').limit(500),
-    supabase.from('users').select('id,email,full_name,role,is_active').order('full_name').limit(1000),
+    supabase.from('users').select('id,email,full_name,role,is_active,department_id').order('full_name').limit(1000),
     supabase.from('course_enrollments').select('id,course_id,student_id,enrolled_at').order('enrolled_at',{ascending:false}).limit(1000),
     supabase.from('instructor_course_assignments').select('id,course_id,instructor_id,created_at').order('created_at',{ascending:false}).limit(1000)
   ]);
@@ -40,6 +41,7 @@ export async function GET(){
   if(errors.length) return jsonError('Unable to load academic administration data.',500);
   return NextResponse.json({
     departments:departments.data??[],semesters:semesters.data??[],courses:courses.data??[],
+    accounts:users.data??[],
     students:(users.data??[]).filter(user=>user.role==='STUDENT'&&user.is_active),
     instructors:(users.data??[]).filter(user=>user.role==='INSTRUCTOR'&&user.is_active),
     enrollments:enrollments.data??[],assignments:assignments.data??[]
@@ -58,6 +60,7 @@ export async function POST(request:NextRequest){
   const input=parsed.data;
   let targetId:string|null=null;
   let auditAction='';
+  let auditHandled=false;
   if(input.action==='department'){
     const {data,error}=await supabase.from('departments').insert({name:input.name,code:input.code}).select('id').single();
     if(error) return jsonError(error.code==='23505'?'Department name or code already exists.':'Department could not be created.',error.code==='23505'?409:400);
@@ -79,13 +82,27 @@ export async function POST(request:NextRequest){
     const {data,error}=await supabase.from('instructor_course_assignments').insert({course_id:input.course_id,instructor_id:input.instructor_id,assigned_by:auth.user.id}).select('id').single();
     if(error) return jsonError(error.code==='23505'?'Instructor is already assigned to this course.':'Instructor assignment could not be created.',error.code==='23505'?409:400);
     targetId=data.id; auditAction='course.instructor.assigned';
+  }else if(input.action==='user_department'){
+    const {error}=await supabase.rpc('admin_assign_user_department',{
+      p_user_id:input.user_id,
+      p_department_id:input.department_id
+    });
+    if(error?.code==='P0002') return jsonError('User or department not found.',404);
+    if(error?.code==='42501') return jsonError('Administrator authentication with MFA is required.',403);
+    if(error?.code==='23503') return jsonError('Selected department was not found.',404);
+    if(error) return jsonError('User department could not be updated.',500);
+    targetId=input.user_id;
+    auditAction='user.department.updated';
+    auditHandled=true;
   }else{
     const {data,error}=await supabase.from('courses').update({department_id:input.department_id,semester_id:input.semester_id}).eq('id',input.course_id).select('id').single();
     if(error||!data) return jsonError('Course academic details could not be updated.',400);
     targetId=data.id; auditAction='course.academic.updated';
   }
-  const {error:auditError}=await supabase.rpc('admin_record_audit',{p_action:auditAction,p_target_type:input.action,p_target_id:targetId,p_details:{performed_by:auth.user.id}});
-  if(auditError) return jsonError('The change was saved, but its audit record could not be written. Contact the system administrator.',500);
+  if(!auditHandled){
+    const {error:auditError}=await supabase.rpc('admin_record_audit',{p_action:auditAction,p_target_type:input.action,p_target_id:targetId,p_details:{performed_by:auth.user.id}});
+    if(auditError) return jsonError('The change was saved, but its audit record could not be written. Contact the system administrator.',500);
+  }
   return NextResponse.json({success:true,id:targetId},{status:201,headers:{'Cache-Control':'no-store'}});
 }
 
