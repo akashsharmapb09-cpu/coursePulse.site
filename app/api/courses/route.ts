@@ -8,8 +8,6 @@ export async function GET() {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  const protection = await protectMutation(request, supabase, 'courses:create', 10, 3600);
-  if (protection) return protection;
   const query = supabase.from('courses').select('id,title,description,status,created_at,instructor_id').order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) return jsonError('Unable to load courses.', 500);
@@ -20,6 +18,8 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
+  const protection = await protectMutation(request, supabase, 'courses:create', 10, 3600);
+  if (protection) return protection;
   if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors and admins can create courses.', 403);
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError('Invalid JSON body.'); }
