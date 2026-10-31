@@ -49,3 +49,15 @@
 .rating-bar-row>b{text-align:right;color:#314c3a;font-size:12px}
 .rating-bar-track{height:9px;overflow:hidden;border-radius:99px;background:#edf3ee}
 .rating-bar-fill{height:100%;border-radius:99px;background:#78a987}
+
+
+.trend-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:0 0 22px}
+.trend-chart-card{padding:18px;border:1px solid #e4ece5;border-radius:16px;background:#fff}
+.trend-chart-card h4{margin-top:8px;color:#20352a;font-size:14px;font-weight:800}
+.trend-chart-card>p{margin:5px 0 16px;color:#87948b;font-size:11px}
+.trend-columns{display:flex;align-items:end;gap:8px;min-height:150px;padding-top:8px;border-bottom:1px solid #e8eee9}
+.trend-column{display:flex;flex:1;min-width:0;height:145px;flex-direction:column;align-items:center;justify-content:end;gap:6px}
+.trend-column>b{color:#466c51;font-size:11px}
+.trend-column-track{display:flex;align-items:end;width:100%;height:105px;border-radius:7px 7px 0 0;background:#f0f5f1;overflow:hidden}
+.trend-column-track>div{width:100%;min-height:3px;border-radius:6px 6px 0 0;background:#83ae8f}
+.trend-column>small{color:#87948b;font-size:10px;white-space:nowrap}
