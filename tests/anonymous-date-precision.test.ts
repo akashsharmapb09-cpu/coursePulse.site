@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031211344_coursepulse_anonymous_date_precision.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031211404_coursepulse_anonymous_date_precision.sql'),'utf8');
 const schema=readFileSync(resolve(process.cwd(),'prisma/schema.prisma'),'utf8');
 
 describe('anonymous timestamp minimization',()=>{
