@@ -5,18 +5,18 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 ## P0 — Privacy and data model
 - [x] DONE: threat model and target separation documented.
 - [x] DONE: migration design for eligibility and anonymous answer storage.
-- [x] DONE: atomic eligibility consumption and duplicate prevention without identity-answer mapping implemented in the database RPC; end-to-end verification remains open.
+- [x] PARTIAL: atomic eligibility consumption and duplicate prevention without identity-answer mapping are implemented in the database RPC; full end-to-end verification and adversarial tests remain open.
 - [x] DONE: no legacy response rows existed at migration time; legacy table retained under existing retention policy.
 - [x] PARTIAL: RLS matrix and automated contract tests added; exhaustive role-matrix, IDOR and statistical re-identification testing remains open.
 - [x] PARTIAL: app writes new answers to separate storage; completed-form visibility is eligibility-scoped; policy pages are technical drafts and require institution/legal review.
 
 ## P1 — Identity and security
-- [x] DONE: password recovery email flow and reset page added. Password change while signed in remains open.
+- [x] DONE: password recovery/reset and signed-in password change are implemented. The change flow verifies the current password in an isolated Auth client, uses a dedicated per-user rate limit, and attempts global session revocation; real-account/session end-to-end verification remains open.
 - [x] DONE: account suspension blocks application access through active-profile checks and role helper. Global token revocation remains outstanding.
 - [x] DONE: admin workspace and admin RPCs require TOTP AAL2; user and academic actions write audit events.
-- [x] DONE: database-backed user/action rate limits and same-origin checks for course, form and response mutations. Auth-provider rate limits still require dashboard verification.
+- [x] DONE: database-backed per-user/action rate limits and same-origin checks cover course, form, response, admin and signed-in password-change mutations. Auth-provider rate limits still require dashboard verification.
 - [x] DONE: baseline Content-Security-Policy added; nonce-based strict CSP and browser validation remain open.
-- [x] PARTIAL: password recovery/reset email flow and generic reset confirmation exist; password change, global session revocation and generic sign-in error normalization remain open.
+- [x] PARTIAL: password reset uses generic confirmation; consistent generic sign-in error normalization and provider-level rate-limit verification remain open.
 - [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
@@ -46,7 +46,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 13 Vitest files/47 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 14 Vitest files/54 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
@@ -56,7 +56,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
-- Latest feature branch is not deployed to production. Vercel previously rejected deployment creation with the Hobby daily API deployment limit; verify quota and latest preview before promotion.
+- Latest feature branch is not deployed to a verified preview or production. The newest READY Vercel preview is an older commit; the latest feature commit has a Vercel build-rate-limit/upgrade-to-Pro status. Verify a current preview and quota before promotion.
 - Supabase Auth leaked-password protection is still disabled in the project security advisor; enable it in Supabase Dashboard → Authentication → Security and rerun the advisor.
 - Admin MFA enrollment must be completed by the active administrator in the app before using the admin console.
 - Institution-approved privacy/terms content and verified contact/legal details are still required.
