@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
   if(!validDate(fromDate)||!validDate(toDate)) return jsonError('Dates must use YYYY-MM-DD format.');
   if(fromDate&&toDate&&fromDate>toDate) return jsonError('Start date must be on or before end date.');
   const rpcArgs={p_course_id:courseId,p_from_date:fromDate,p_to_date:toDate,p_semester_id:semesterId,p_department_id:departmentId};
-  const [aggregateResult,ratingResult]=await Promise.all([
+  const [aggregateResult,ratingResult,trendResult]=await Promise.all([
     supabase.rpc('get_instructor_aggregates_filtered',rpcArgs),
-    supabase.rpc('get_instructor_rating_distribution_filtered',rpcArgs)
+    supabase.rpc('get_instructor_rating_distribution_filtered',rpcArgs),
+    supabase.rpc('get_instructor_response_trends_filtered',rpcArgs)
   ]);
-  if(aggregateResult.error||ratingResult.error) return jsonError('Unable to load aggregate analytics.',403);
-  return NextResponse.json({ rows:aggregateResult.data??[], rating_distributions:ratingResult.data??[], minimum_group_size:5, raw_answers_included:false }, {headers:{'Cache-Control':'no-store'}});
+  if(aggregateResult.error||ratingResult.error||trendResult.error) return jsonError('Unable to load aggregate analytics.',403);
+  return NextResponse.json({rows:aggregateResult.data??[],rating_distributions:ratingResult.data??[],trends:trendResult.data??[],minimum_group_size:5,raw_answers_included:false},{headers:{'Cache-Control':'no-store'}});
 }
