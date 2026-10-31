@@ -8,12 +8,14 @@ type Profile = { id: string; email: string | null; full_name: string; role: 'ADM
 type Course = { id: string; title: string; description: string; status: string; created_at: string; instructor_id: string };
 type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; created_at: string; form_schema?: Question[]; course?: { title: string } };
 type Question = { id: string; label: string; type: 'rating'|'single_choice'|'multiple_choice'|'text'|'textarea'|'number'; required: boolean; options?: string[] };
+type AdminUser = { id:string; email:string|null; full_name:string; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean; created_at:string; department_id:string|null };
+type AuditEvent = { id:string; action:string; target_type:string; target_id:string|null; details:Record<string,unknown>; created_at:string };
 
 export function Dashboard({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'analytics'>('overview');
+  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'analytics'|'admin'>('overview');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +30,8 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [formDescription, setFormDescription] = useState('');
   const [questions, setQuestions] = useState<Question[]>([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', required: true }]);
   const [analytics, setAnalytics] = useState<any[]>([]);
+  const [adminUsers,setAdminUsers] = useState<AdminUser[]>([]);
+  const [adminAudit,setAdminAudit] = useState<AuditEvent[]>([]);
 
   async function load() {
     setLoading(true); setError('');
@@ -57,8 +61,24 @@ export function Dashboard({ profile }: { profile: Profile }) {
       const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365})}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice('Feedback form published.'); setFormTitle(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', required: true }]); await load();
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
+  async function loadAdmin() {
+    const [usersRes,auditRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'})]);
+    const usersData=await usersRes.json(); const auditData=await auditRes.json();
+    if(!usersRes.ok) throw new Error(usersData.error??'Could not load administrator users.');
+    if(!auditRes.ok) throw new Error(auditData.error??'Could not load audit history.');
+    setAdminUsers(usersData.users??[]); setAdminAudit(auditData.events??[]);
+  }
+  async function updateAdminUser(userId:string,role:AdminUser['role'],isActive:boolean) {
+    setBusy(true); setError('');
+    try {
+      const res=await fetch('/api/admin/users',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,role,is_active:isActive})});
+      const data=await res.json(); if(!res.ok) throw new Error(data.error??'Could not update account access.');
+      setNotice('Account access updated and audit logged.'); await loadAdmin();
+    } catch(e) { setError(e instanceof Error?e.message:'Could not update account.'); }
+    finally { setBusy(false); }
+  }
   async function fetchAnalytics() { setError(''); const res=await fetch('/api/analytics',{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); }
-  async function changeTab(next: typeof tab) { setTab(next); if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } }
+  async function changeTab(next: typeof tab) { setTab(next); if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="/dashboard"><span className="brand-mark">◉</span><span>CoursePulse</span></a>
@@ -68,12 +88,12 @@ export function Dashboard({ profile }: { profile: Profile }) {
         <button className={tab==='overview'?'active':''} onClick={()=>void changeTab('overview')}><LayoutDashboard size={17}/> Overview</button>
         <button className={tab==='courses'?'active':''} onClick={()=>void changeTab('courses')}><BookOpen size={17}/> Courses <span>{courses.length}</span></button>
         <button className={tab==='feedback'?'active':''} onClick={()=>void changeTab('feedback')}><FilePlus2 size={17}/> Feedback forms <span>{feedback.length}</span></button>
-        {canTeach && <button className={tab==='analytics'?'active':''} onClick={()=>void changeTab('analytics')}><FileBarChart size={17}/> Analytics</button>}
+        {canTeach && <button className={tab==='analytics'?'active':''} onClick={()=>void changeTab('analytics')}><FileBarChart size={17}/> Analytics</button>}{profile.role==='ADMIN' && <button className={tab==='admin'?'active':''} onClick={()=>void changeTab('admin')}><Users size={17}/> Administration</button>}
       </nav>
       <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Submission eligibility is stored separately from answers. Reports show aggregates only.</p></div><div className="user-profile"><div className="avatar">{(profile.full_name||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{profile.full_name||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':'Learning analytics'}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
+      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='admin'?'Administration':'Learning analytics'}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
       <section className="content-area">
         {error && <div className="alert error page-alert"><CircleHelp size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={16}/></button></div>}{notice && <div className="alert success page-alert">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
         {tab==='overview' && <>
@@ -86,6 +106,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
         </>}
         {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div>{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div><CourseList courses={courses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}}/></>}
         {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>Respond to an open form or manage forms you own.</p></div>{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div><FeedbackList feedback={feedback} role={profile.role} onRespond={setResponseModal}/></>}
+        {tab==='admin' && <AdminConsole users={adminUsers} audit={adminAudit} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser}/>}
         {tab==='analytics' && <><div className="section-heading"><div><h3>Aggregate insights</h3><p>Only groups with at least five submissions are shown. Written answers are never included.</p></div><div className="export-actions"><a className="button subtle" href="/api/exports/csv"><ArrowDownToLine size={15}/> CSV</a><a className="button subtle" href="/api/exports/xls"><ArrowDownToLine size={15}/> XLS</a><a className="button subtle" href="/api/exports/xlsx"><ArrowDownToLine size={15}/> XLSX</a><a className="button subtle" href="/api/exports/pdf"><ArrowDownToLine size={15}/> PDF</a></div></div><div className="privacy-banner"><ShieldCheck size={18}/><span><b>Aggregate-only reporting</b><small>Response identities and free-text answers are excluded. Suppressed groups contain fewer than five responses.</small></span></div><div className="analytics-grid">{analytics.length?analytics.map((r,i)=><article className="analytics-card" key={`${r.feedback_id}-${r.question_id}-${r.option_value}-${i}`}><span className="eyebrow">{r.course_title}</span><h4>{r.question_label}</h4><p>{r.feedback_title}</p><div className="analytic-value">{r.avg_numeric_value!=null?Number(r.avg_numeric_value).toFixed(2):r.response_count}<small>{r.avg_numeric_value!=null?' average score':` responses${r.option_value?` · ${r.option_value}`:''}`}</small></div></article>):<Empty icon={<FileBarChart/>} title="No reportable groups yet" text="Reports appear once at least five students have answered a question."/>}</div></>}
       </section>
     </main>
@@ -133,4 +154,12 @@ function ResponseForm({item,onDone}:{item:Feedback;onDone:()=>void}) {
     {error&&<p className="alert error" role="alert">{error}</p>}
     <button className="button primary full" disabled={busy}>{busy?'Submitting…':'Submit feedback'}</button>
   </form>;
+}
+
+function AdminConsole({users,audit,currentUserId,busy,onUpdate}:{users:AdminUser[];audit:AuditEvent[];currentUserId:string;busy:boolean;onUpdate:(id:string,role:AdminUser['role'],active:boolean)=>void}) {
+  return <div className="space-y-8">
+    <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
+    {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
+    <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator role and access changes will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replaceAll('.',' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
+  </div>;
 }
