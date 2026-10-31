@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { feedbackInput } from '@/lib/validation';
-import { getCurrentUser, jsonError } from '@/lib/http';
+import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
+  const protection = await protectMutation(request, supabase, 'feedback:create', 10, 3600);
+  if (protection) return protection;
   const id = request.nextUrl.searchParams.get('id');
   let query = supabase.from('feedback').select('id,course_id,title,description,form_schema,is_open,created_at,retention_days').order('created_at', { ascending: false });
   if (id) query = query.eq('id', id);
