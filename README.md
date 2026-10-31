@@ -28,18 +28,19 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabas
 
 ## Database project
 
-The migrations under `supabase/migrations/` correspond to the four applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database now has `users`, `courses`, `feedback`, and `responses`, all with RLS enabled. Its migration history is:
+The migrations under `supabase/migrations/` correspond to the five applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database now has `users`, `courses`, `feedback`, and `responses`, all with RLS enabled. Its migration history is:
 
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
 - `20261031162901_coursepulse_private_helpers_cron_hardening`
 - `20261031164000_coursepulse_feedback_creator_index`
+- `20261031195323_coursepulse_data_api_privilege_hardening`
 
-Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
+Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
 ## First admin / instructor setup
 
-New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a reviewed statement from `scripts/promote-role.sql` to assign `INSTRUCTOR` or the first `ADMIN`. The application intentionally has no self-service role escalation endpoint.
+New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a reviewed statement from `scripts/promote-role.sql` to assign `INSTRUCTOR` or the first `ADMIN`. The application intentionally has no self-service role escalation endpoint. Signed-in users can update only their `users.full_name` field; role, ownership, and response permissions are not client-editable.
 
 ## Reports
 
