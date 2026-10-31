@@ -1,0 +1,22 @@
+name: Temporary dependency audit
+on:
+  push:
+    branches:
+      - audit-deps
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - name: Generate lock and audit dependency tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts
+          npm audit --json > audit.json || true
+          node -e 'const a=require("./audit.json"); console.log("AUDIT_SUMMARY",JSON.stringify(a.metadata?.vulnerabilities||{})); for (const [name,v] of Object.entries(a.vulnerabilities||{})) console.log("AUDIT_ITEM",JSON.stringify({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,url:x.url,range:x.range})}));'
