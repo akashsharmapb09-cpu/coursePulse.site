@@ -33,6 +33,7 @@ The migrations under `supabase/migrations/` correspond to the three applied migr
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
 - `20261031162901_coursepulse_private_helpers_cron_hardening`
+- `20261031164000_coursepulse_feedback_creator_index`
 
 Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
