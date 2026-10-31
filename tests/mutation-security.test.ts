@@ -31,6 +31,10 @@ describe('mutation security contract', () => {
     expect(http).toMatch(/data !== true/);
   });
 
+  it('includes a dedicated password-change action in the rate-limit contract',()=>{
+    expect(http).toMatch(/account:password-change/);
+  });
+
   it('sets a baseline content security policy', () => {
     expect(nextConfig).toMatch(/Content-Security-Policy/);
     expect(nextConfig).toMatch(/frame-ancestors 'none'/);
