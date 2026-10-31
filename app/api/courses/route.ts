@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { courseInput } from '@/lib/validation';
-import { getCurrentUser, jsonError } from '@/lib/http';
+import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export async function GET() {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
+  const protection = await protectMutation(request, supabase, 'courses:create', 10, 3600);
+  if (protection) return protection;
   const query = supabase.from('courses').select('id,title,description,status,created_at,instructor_id').order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) return jsonError('Unable to load courses.', 500);
