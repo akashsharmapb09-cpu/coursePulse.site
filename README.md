@@ -28,7 +28,7 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabas
 
 ## Database project
 
-The migrations under `supabase/migrations/` correspond to the applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Students can view pending forms only for courses where an administrator has enrolled them; closed completed forms remain visible only to the student whose private eligibility record was consumed. Optional form deadlines are enforced by a database trigger at submission time. Its migration history is:
+The migrations under `supabase/migrations/` correspond to the applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Students can view pending forms only for courses where an administrator has enrolled them; closed completed forms remain visible only to the student whose private eligibility record was consumed. Optional form deadlines are enforced by a database trigger at submission time. Instructors can edit form questions/content, set deadlines, open/close forms, and edit/archive/republish their courses. Its migration history is:
 
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
@@ -46,6 +46,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031204820_coursepulse_admin_fk_indexes`
 - `20261031204847_coursepulse_rls_policy_optimization`
 - `20261101019000_coursepulse_feedback_deadlines_and_completed_visibility`
+- `20261101020000_coursepulse_filtered_analytics`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
@@ -55,7 +56,7 @@ New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a r
 
 ## Reports
 
-Instructors and admins can export CSV, Excel-compatible XLS, XLSX and PDF. The `.xls` route is an HTML Spreadsheet document labelled as Excel MIME type for interoperability; `.xlsx` is a native Office Open XML workbook. Every format reads from `public.get_instructor_aggregates()`, which enforces role/course scope and suppresses groups under five responses. Text answers are not returned from the RPC. Instructors and administrators cannot select raw rows from either response store. New submissions have no student identifier or eligibility reference in the answer table; the separate eligibility ledger is inaccessible through the Data API. Students can see pending/completed forms only for courses in which they are explicitly enrolled. The legacy `responses` table remains for compatibility and retention, but had zero rows when the migration was applied. A database transaction smoke test confirmed the new RPC accepts a valid student submission and rejects a duplicate.
+Instructors and admins can export CSV, Excel-compatible XLS, XLSX and PDF. The `.xls` route is an HTML Spreadsheet document labelled as Excel MIME type for interoperability; `.xlsx` is a native Office Open XML workbook. Every format reads from `public.get_instructor_aggregates_filtered()`, which enforces role/course scope, optional course/semester/date filters and suppresses groups under five responses. Anonymous submissions receive a timestamp for date-bounded reporting. Text answers are not returned from the RPC. Instructors and administrators cannot select raw rows from either response store. New submissions have no student identifier or eligibility reference in the answer table; the separate eligibility ledger is inaccessible through the Data API. Students can see pending/completed forms only for courses in which they are explicitly enrolled. The legacy `responses` table remains for compatibility and retention, but had zero rows when the migration was applied. A database transaction smoke test confirmed the new RPC accepts a valid student submission and rejects a duplicate.
 
 ## Retention
 
