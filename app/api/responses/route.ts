@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getCurrentUser, jsonError } from '@/lib/http';
+import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 import { responseInput, questionSchema } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
+  const protection = await protectMutation(request, supabase, 'responses:submit', 5, 60);
+  if (protection) return protection;
   if (auth.profile.role !== 'STUDENT') return jsonError('Only students can submit feedback.', 403);
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError('Invalid JSON body.'); }
