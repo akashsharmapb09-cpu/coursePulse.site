@@ -20,7 +20,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
-- [x] PARTIAL: departments, semesters and course metadata created; edit/archive/activate lifecycle and user department assignment remain open.
+- [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters. User department assignment and full archival/lifecycle controls remain open.
 - [x] DONE: student course enrollments and instructor-course assignments with scoped RLS.
 - [x] DONE: MFA-protected user role/suspension API and console; last-active-admin guard.
 - [x] PARTIAL: course create/edit/archive/republish and feedback create/edit/open/close/deadline enforcement implemented; immutable version history, delete/restore and scheduling remain open.
@@ -46,7 +46,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [ ] Integration and E2E tests for all roles (unit/static contract tests and SQL transaction smoke tests exist; browser E2E remains open).
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 13 Vitest files/47 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
@@ -56,6 +56,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
+- Latest feature branch is not deployed to production. Vercel previously rejected deployment creation with the Hobby daily API deployment limit; verify quota and latest preview before promotion.
 - Supabase Auth leaked-password protection is still disabled in the project security advisor; enable it in Supabase Dashboard → Authentication → Security and rerun the advisor.
 - Admin MFA enrollment must be completed by the active administrator in the app before using the admin console.
 - Institution-approved privacy/terms content and verified contact/legal details are still required.
