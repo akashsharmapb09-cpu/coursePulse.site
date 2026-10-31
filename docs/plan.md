@@ -33,7 +33,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## P4 — Instructor analytics
 - [x] PARTIAL: assigned-course dashboard and aggregate metrics; additional instructor assignments are supported.
-- [x] PARTIAL: course, semester, department/category and date filters, privacy-suppressed rating distribution charts and cross-course comparison are implemented; time-series trend charts remain open.
+- [x] PARTIAL: course, semester, department/category and date filters, privacy-suppressed rating distributions, weekly response trends and cross-course comparison are implemented; advanced longitudinal analysis remains open.
 - [x] PARTIAL: two-course comparison uses the filtered aggregate RPC and minimum-five cohort suppression; multi-course comparison and statistical significance context remain open.
 - [ ] Privacy-reviewed anonymized comment workflow remains open.
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
