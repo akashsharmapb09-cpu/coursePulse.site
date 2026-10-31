@@ -9,7 +9,6 @@ on:
       - components/**
       - README.md
       - tests/exports.test.ts
-      - .github/workflows/temp-dependency-audit.yml
 permissions:
   contents: write
 jobs:
