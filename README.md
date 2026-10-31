@@ -33,7 +33,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
 - `20261031162901_coursepulse_private_helpers_cron_hardening`
-- `20261031164000_coursepulse_feedback_creator_index`
+- `20261031163820_coursepulse_feedback_creator_index`
 - `20261031195323_coursepulse_data_api_privilege_hardening`
 - `20261031202355_coursepulse_anonymous_feedback_storage`
 - `20261031202452_coursepulse_anonymous_storage_policy_hardening`
@@ -45,12 +45,11 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031204219_coursepulse_student_feedback_progress`
 - `20261031204820_coursepulse_admin_fk_indexes`
 - `20261031204847_coursepulse_rls_policy_optimization`
-- `20261101019000_coursepulse_feedback_deadlines_and_completed_visibility`
-- `20261101020000_coursepulse_filtered_analytics`
-- `20261101021000_coursepulse_rating_distributions`
-- `20261101022000_coursepulse_department_analytics_filter`
-- `20261101023000_coursepulse_response_trends`
-- `20261101021000_coursepulse_rating_distributions`
+- `20261031205554_coursepulse_feedback_deadlines_and_completed_visibility`
+- `20261031210207_coursepulse_filtered_analytics`
+- `20261031210516_coursepulse_rating_distributions`
+- `20261031210728_coursepulse_department_analytics_filter`
+- `20261031210853_coursepulse_response_trends`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
