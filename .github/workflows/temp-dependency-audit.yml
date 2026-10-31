@@ -5,6 +5,7 @@ on:
       - audit-deps
     paths:
       - package.json
+      - tests/exports.test.ts
       - .github/workflows/temp-dependency-audit.yml
 permissions:
   contents: write
