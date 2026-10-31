@@ -29,9 +29,19 @@ model User {
   role      AppRole  @default(STUDENT)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  isActive Boolean @default(true) @map("is_active")
+  suspendedAt DateTime? @map("suspended_at") @db.Timestamptz(6)
+  departmentId String? @map("department_id") @db.Uuid
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   courses   Course[] @relation("CourseInstructor")
   feedback  Feedback[] @relation("FeedbackCreator")
   responses Response[]
+  courseEnrollments CourseEnrollment[] @relation("CourseEnrollmentStudent")
+  enrollmentsCreated CourseEnrollment[] @relation("CourseEnrollmentActor")
+  instructorAssignments InstructorCourseAssignment[] @relation("InstructorAssignmentInstructor")
+  assignmentsCreated InstructorCourseAssignment[] @relation("InstructorAssignmentActor")
+  auditLogs AuditLog[] @relation("AuditActor")
+  @@index([departmentId])
   @@map("users")
 }
 
@@ -43,8 +53,16 @@ model Course {
   status       CourseStatus @default(DRAFT)
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+  departmentId String?      @map("department_id") @db.Uuid
+  semesterId   String?      @map("semester_id") @db.Uuid
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  semester     Semester?    @relation(fields: [semesterId], references: [id], onDelete: SetNull)
   instructor   User         @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Restrict)
   feedback     Feedback[]
+  enrollments CourseEnrollment[]
+  instructorAssignments InstructorCourseAssignment[]
+  @@index([departmentId])
+  @@index([semesterId])
   @@index([instructorId])
   @@index([status])
   @@map("courses")
@@ -93,4 +111,67 @@ model AnonymousSubmission {
   @@index([feedbackId])
   @@index([receivedOn])
   @@map("anonymous_submissions")
+}
+
+model Department {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @unique
+  code String @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  users User[]
+  courses Course[]
+  @@map("departments")
+}
+
+model Semester {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @unique
+  startDate DateTime @map("start_date") @db.Date
+  endDate DateTime @map("end_date") @db.Date
+  isActive Boolean @default(false) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  courses Course[]
+  @@map("semesters")
+}
+
+model CourseEnrollment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  studentId String @map("student_id") @db.Uuid
+  enrolledBy String @map("enrolled_by") @db.Uuid
+  enrolledAt DateTime @default(now()) @map("enrolled_at") @db.Timestamptz(6)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User @relation("CourseEnrollmentStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  actor User @relation("CourseEnrollmentActor", fields: [enrolledBy], references: [id], onDelete: Restrict)
+  @@unique([courseId, studentId])
+  @@index([studentId])
+  @@map("course_enrollments")
+}
+
+model InstructorCourseAssignment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId String @map("course_id") @db.Uuid
+  instructorId String @map("instructor_id") @db.Uuid
+  assignedBy String @map("assigned_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor User @relation("InstructorAssignmentInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  actor User @relation("InstructorAssignmentActor", fields: [assignedBy], references: [id], onDelete: Restrict)
+  @@unique([courseId, instructorId])
+  @@index([instructorId])
+  @@map("instructor_course_assignments")
+}
+
+model AuditLog {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId String? @map("actor_id") @db.Uuid
+  action String
+  targetType String @map("target_type")
+  targetId String? @map("target_id") @db.Uuid
+  details Json @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  @@index([createdAt])
+  @@index([actorId])
+  @@map("audit_logs")
 }
