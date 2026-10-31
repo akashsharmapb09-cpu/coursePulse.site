@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
   const validDate=(value:string|null)=>{if(!value)return true;if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return false;const parsed=new Date(value+'T00:00:00.000Z');return !Number.isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===value;};
   if(!validDate(fromDate)||!validDate(toDate)) return jsonError('Dates must use YYYY-MM-DD format.');
   if(fromDate&&toDate&&fromDate>toDate) return jsonError('Start date must be on or before end date.');
-  const { data, error } = await supabase.rpc('get_instructor_aggregates_filtered', { p_course_id: courseId, p_from_date: fromDate, p_to_date: toDate, p_semester_id: semesterId });
-  if (error) return jsonError('Unable to load aggregate analytics.', 403);
-  return NextResponse.json({ rows: data ?? [], minimum_group_size: 5, raw_answers_included: false }, { headers: { 'Cache-Control': 'no-store' } });
+  const rpcArgs={p_course_id:courseId,p_from_date:fromDate,p_to_date:toDate,p_semester_id:semesterId};
+  const [aggregateResult,ratingResult]=await Promise.all([
+    supabase.rpc('get_instructor_aggregates_filtered',rpcArgs),
+    supabase.rpc('get_instructor_rating_distribution_filtered',rpcArgs)
+  ]);
+  if(aggregateResult.error||ratingResult.error) return jsonError('Unable to load aggregate analytics.',403);
+  return NextResponse.json({ rows:aggregateResult.data??[], rating_distributions:ratingResult.data??[], minimum_group_size:5, raw_answers_included:false }, {headers:{'Cache-Control':'no-store'}});
 }
