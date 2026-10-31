@@ -8,14 +8,16 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: atomic eligibility consumption and duplicate prevention without identity-answer mapping implemented in the database RPC; end-to-end verification remains open.
 - [x] DONE: no legacy response rows existed at migration time; legacy table retained under existing retention policy.
 - [ ] NOT STARTED: RLS matrix and re-identification tests.
-- [ ] IN PROGRESS: app writes new answers to separate storage; full policy copy and user-facing privacy review remain.
+- [ ] IN PROGRESS: app writes new answers to separate storage; policy pages are technical drafts and require institution/legal review.
 
 ## P1 — Identity and security
 - [ ] Password recovery/reset and password change.
 - [ ] Session invalidation and account suspension.
 - [ ] Admin MFA policy and privileged-action audit.
-- [ ] Distributed rate limits, CSRF/Origin controls and generic auth errors.
-- [ ] CSP, security header review, secret-history scan and credential rotation evidence.
+- [x] DONE: database-backed user/action rate limits and same-origin checks for course, form and response mutations. Auth-provider rate limits still require dashboard verification.
+- [x] DONE: baseline Content-Security-Policy added; nonce-based strict CSP and browser validation remain open.
+- [ ] Generic authentication errors, password recovery/change and session revocation.
+- [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
 - [ ] Departments and semesters.
