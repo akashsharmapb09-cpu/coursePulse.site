@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101022000_coursepulse_department_analytics_filter.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031210728_coursepulse_department_analytics_filter.sql'),'utf8');
 const analytics=readFileSync(resolve(process.cwd(),'app/api/analytics/route.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 
