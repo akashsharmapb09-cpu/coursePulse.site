@@ -4,6 +4,8 @@ import { describe,expect,it } from 'vitest';
 
 const helper=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031220141_coursepulse_feedback_eligibility_policy_helper.sql'),'utf8');
 const eligibility=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031202355_coursepulse_anonymous_feedback_storage.sql'),'utf8');
+const eligibilityPolicy=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031202452_coursepulse_anonymous_storage_policy_hardening.sql'),'utf8');
+const policyDefinition=helper.slice(helper.indexOf('create policy feedback_select_scoped'));
 
 describe('private feedback eligibility RLS boundary',()=>{
   it('keeps direct eligibility ledger reads revoked and RLS-denied',()=>{
