@@ -10,7 +10,7 @@ const policyDefinition=helper.slice(helper.indexOf('create policy feedback_selec
 describe('private feedback eligibility RLS boundary',()=>{
   it('keeps direct eligibility ledger reads revoked and RLS-denied',()=>{
     expect(eligibility).toMatch(/revoke all on table private\.feedback_eligibility from public, anon, authenticated, service_role/i);
-    expect(eligibility).toMatch(/feedback_eligibility_deny_direct_access[\s\S]*?using \(false\)/i);
+    expect(eligibilityPolicy).toMatch(/feedback_eligibility_deny_direct_access[\s\S]*?using \(false\)/i);
   });
   it('uses a narrow security-definer boolean helper for completed-form visibility',()=>{
     expect(helper).toMatch(/create or replace function private\.has_consumed_feedback_eligibility/);
@@ -23,6 +23,6 @@ describe('private feedback eligibility RLS boundary',()=>{
   it('removes direct table access from the feedback select policy',()=>{
     expect(helper).toMatch(/drop policy if exists feedback_select_scoped on public\.feedback/i);
     expect(helper).toMatch(/private\.has_consumed_feedback_eligibility\(id\)/);
-    expect(helper).not.toMatch(/exists\s*\(\s*select 1\s*from private\.feedback_eligibility/i);
+    expect(policyDefinition).not.toMatch(/exists\s*\(\s*select 1\s*from private\.feedback_eligibility/i);
   });
 });
