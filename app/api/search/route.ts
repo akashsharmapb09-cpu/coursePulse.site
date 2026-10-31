@@ -18,9 +18,12 @@ export async function GET(request:NextRequest){
   if(courses.error||feedback.error) return jsonError('Search is temporarily unavailable.',500);
   let users:{id:string;full_name:string;email:string|null;role:string}[]=[];
   if(auth.profile.role==='ADMIN'){
-    const result=await supabase.from('users').select('id,full_name,email,role').or(`full_name.ilike.${pattern},email.ilike.${pattern}`).limit(10);
-    if(result.error) return jsonError('User search is temporarily unavailable.',500);
-    users=result.data??[];
+    const [names,emails]=await Promise.all([
+      supabase.from('users').select('id,full_name,email,role').ilike('full_name',pattern).limit(10),
+      supabase.from('users').select('id,full_name,email,role').ilike('email',pattern).limit(10)
+    ]);
+    if(names.error||emails.error) return jsonError('User search is temporarily unavailable.',500);
+    users=Array.from(new Map([...(names.data??[]),...(emails.data??[])].map(user=>[user.id,user])).values()).slice(0,10);
   }
   return NextResponse.json({courses:courses.data??[],feedback:feedback.data??[],users},{headers:{'Cache-Control':'no-store'}});
 }
