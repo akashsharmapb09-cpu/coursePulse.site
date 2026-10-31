@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import ExcelJS from 'exceljs';
 import { csvCell, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
 
 const sample: AggregateRow = {
@@ -17,4 +18,13 @@ describe('aggregate exports', () => {
     expect(JSON.stringify(rows)).not.toContain('answers');
   });
   it('emits a deterministic header for empty results', () => expect(toCsv([])).toContain('Responses (minimum 5)'));
+  it('writes a real XLSX workbook archive', async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Feedback');
+    sheet.addRow(['Course', 'Responses']);
+    sheet.addRow(['Physics', 8]);
+    const bytes = Buffer.from(await workbook.xlsx.writeBuffer());
+    expect(bytes.subarray(0, 2).toString()).toBe('PK');
+    expect(bytes.length).toBeGreaterThan(100);
+  });
 });
