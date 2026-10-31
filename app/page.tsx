@@ -1,8 +1,43 @@
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowRight, BarChart3, BookOpenCheck, ClipboardList, ShieldCheck, Users2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+
+const capabilities = [
+  { icon: ClipboardList, title: 'Structured course feedback', text: 'Create course feedback forms and collect clear, actionable responses from eligible students.' },
+  { icon: BarChart3, title: 'Useful aggregate insights', text: 'Review course-level patterns with small-group suppression built into reporting.' },
+  { icon: ShieldCheck, title: 'Role-aware access', text: 'Student, instructor and administrator access is enforced by server checks and database policies.' },
+];
 
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  redirect(user ? '/dashboard' : '/login');
+  if (user) return <main className="min-h-screen grid place-items-center bg-[#f5f8f5]"><div className="text-center"><p className="text-sm text-[#62766b]">You are signed in.</p><Link className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-semibold text-white" href="/dashboard">Open your workspace <ArrowRight size={16}/></Link></div></main>;
+
+  return <main className="min-h-screen overflow-hidden bg-[#f7faf7] text-[#20352a]">
+    <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
+      <Link href="/" className="flex items-center gap-3 text-lg font-extrabold tracking-tight"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#245b3e] text-white">◉</span>CoursePulse</Link>
+      <nav aria-label="Main navigation" className="flex items-center gap-3"><a href="#features" className="hidden px-3 py-2 text-sm font-medium text-[#64766b] sm:inline">Features</a><Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-4 py-2.5 text-sm font-semibold">Sign in</Link><Link href="/login" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-4 py-2.5 text-sm font-semibold text-white shadow-sm">Get started <ArrowRight size={15}/></Link></nav>
+    </header>
+    <section className="relative mx-auto grid max-w-7xl items-center gap-14 px-6 pb-20 pt-12 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-20">
+      <div className="relative z-10">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#d9e8dc] bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-[#477456]"><span className="h-2 w-2 rounded-full bg-[#63a879]"/> COURSE FEEDBACK, MADE USEFUL</span>
+        <h1 className="mt-7 max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-.055em] sm:text-6xl">Listen better.<br/><span className="text-[#43805a]">Teach smarter.</span></h1>
+        <p className="mt-6 max-w-xl text-lg leading-8 text-[#718178]">Bring course feedback and learning analytics into one considered workspace. Collect responses, understand patterns and turn insight into better learning experiences.</p>
+        <div className="mt-9 flex flex-wrap gap-3"><Link href="/login" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#245b3e]/15">Open CoursePulse <ArrowRight size={17}/></Link><a href="#features" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Explore features</a></div>
+        <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-[#718178]"><span className="inline-flex items-center gap-2"><ShieldCheck size={15}/> Role-based access</span><span className="inline-flex items-center gap-2"><BarChart3 size={15}/> Aggregate reporting</span><span className="inline-flex items-center gap-2"><Users2 size={15}/> Built for learning teams</span></div>
+      </div>
+      <div className="relative mx-auto w-full max-w-xl">
+        <div className="absolute -inset-8 rounded-[3rem] bg-[#e4f0e6] blur-2xl"/>
+        <div className="relative rounded-[2rem] border border-[#e0e9e1] bg-white p-5 shadow-[0_30px_90px_-35px_rgba(31,76,49,.25)] sm:p-7">
+          <div className="flex items-center justify-between border-b border-[#edf1ed] pb-5"><div><p className="text-xs font-bold uppercase tracking-widest text-[#8b9b90]">Workspace preview</p><h2 className="mt-1 text-lg font-extrabold">Learning pulse</h2></div><span className="rounded-full bg-[#edf6ef] px-3 py-1.5 text-[11px] font-bold text-[#477456]">Overview</span></div>
+          <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[#f6f9f6] p-4"><BookOpenCheck className="text-[#4b805b]" size={20}/><p className="mt-4 text-xs text-[#819087]">Course workspace</p><p className="mt-1 text-lg font-extrabold">Organized</p></div><div className="rounded-2xl bg-[#f6f9f6] p-4"><BarChart3 className="text-[#4b805b]" size={20}/><p className="mt-4 text-xs text-[#819087]">Reporting</p><p className="mt-1 text-lg font-extrabold">Aggregate</p></div></div>
+          <div className="mt-4 rounded-2xl border border-[#edf1ed] p-4"><div className="flex items-center justify-between"><p className="text-sm font-bold">Feedback activity</p><span className="text-[11px] text-[#8b9b90]">Illustrative preview</span></div><div className="mt-5 flex h-28 items-end gap-2">{[38,55,44,72,60,86,67,94,74,88,63,79].map((height,index)=><div key={index} className="flex-1 rounded-t-md bg-[#b8d6bf]" style={{height:height+'%'}}/>)}</div><div className="mt-2 flex justify-between text-[10px] text-[#a0aca4]"><span>Week 1</span><span>Week 6</span></div></div>
+          <p className="mt-4 text-center text-[10px] text-[#9aa79e]">Illustrative interface preview — not live institution data.</p>
+        </div>
+      </div>
+    </section>
+    <section id="features" className="border-y border-[#e6eee7] bg-white py-20"><div className="mx-auto max-w-7xl px-6 lg:px-10"><div className="max-w-2xl"><span className="text-xs font-extrabold tracking-[.18em] text-[#548363]">A CLEARER FEEDBACK LOOP</span><h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">Everything in one learning workspace.</h2><p className="mt-4 leading-7 text-[#7b8980]">A focused toolkit for collecting feedback, protecting access and understanding course-level patterns.</p></div><div className="mt-12 grid gap-5 md:grid-cols-3">{capabilities.map(({icon:Icon,title,text})=><article key={title} className="rounded-2xl border border-[#e7eee8] bg-[#fbfdfb] p-6"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#eaf3ec] text-[#477956]"><Icon size={21}/></span><h3 className="mt-5 text-lg font-extrabold">{title}</h3><p className="mt-3 text-sm leading-6 text-[#7b8980]">{text}</p></article>)}</div></div></section>
+    <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10"><div className="flex flex-col items-start justify-between gap-8 rounded-[2rem] bg-[#214f37] p-8 text-white sm:p-12 lg:flex-row lg:items-center"><div><p className="text-xs font-bold tracking-[.18em] text-[#b8d8c0]">START WITH A BETTER CONVERSATION</p><h2 className="mt-3 max-w-xl text-3xl font-extrabold tracking-tight">Make every course conversation count.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#d0e0d3]">Sign in or create a student account to enter your CoursePulse workspace.</p></div><Link href="/login" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#214f37]">Continue to CoursePulse <ArrowRight size={16}/></Link></div></section>
+    <footer className="border-t border-[#e5ece6] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-xs text-[#89968d] sm:flex-row sm:items-center sm:justify-between lg:px-10"><span>© {new Date().getFullYear()} CoursePulse. Course feedback, made useful.</span><div className="flex gap-5"><Link href="/login" className="hover:text-[#245b3e]">Sign in</Link><a href="#features" className="hover:text-[#245b3e]">Features</a></div></div></footer>
+  </main>;
 }
