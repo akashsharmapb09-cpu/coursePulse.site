@@ -22,7 +22,8 @@ export function LoginForm() {
         if (error) throw error;
         router.replace('/dashboard'); router.refresh();
       } else {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim() } } });
+        const emailRedirectTo = new URL('/auth/confirm', process.env.NEXT_PUBLIC_APP_URL || window.location.origin).toString();
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim() }, emailRedirectTo } });
         if (error) throw error;
         if (data.session) { router.replace('/dashboard'); router.refresh(); }
         else setNotice('Check your email to confirm your account, then sign in.');
