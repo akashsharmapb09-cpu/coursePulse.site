@@ -8,8 +8,6 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  const protection = await protectMutation(request, supabase, 'feedback:create', 10, 3600);
-  if (protection) return protection;
   const id = request.nextUrl.searchParams.get('id');
   let query = supabase.from('feedback').select('id,course_id,title,description,form_schema,is_open,created_at,retention_days').order('created_at', { ascending: false });
   if (id) query = query.eq('id', id);
@@ -22,6 +20,8 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
+  const protection = await protectMutation(request, supabase, 'feedback:create', 10, 3600);
+  if (protection) return protection;
   if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors and admins can create feedback forms.', 403);
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError('Invalid JSON body.'); }
