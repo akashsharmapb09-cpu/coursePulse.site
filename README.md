@@ -28,7 +28,7 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or a Supabas
 
 ## Database project
 
-The migrations under `supabase/migrations/` correspond to the applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Students can view pending/completed forms only for courses where an administrator has enrolled them. Its migration history is:
+The migrations under `supabase/migrations/` correspond to the applied migrations on Supabase project `fwmovyitmtpnwhqmvrgh`. The live database has `users`, `courses`, `feedback`, legacy `responses`, and `anonymous_submissions`. All exposed application tables have RLS enabled. New feedback is written to `anonymous_submissions`; one-time eligibility is held separately in the unexposed `private.feedback_eligibility` table. Students can view pending forms only for courses where an administrator has enrolled them; closed completed forms remain visible only to the student whose private eligibility record was consumed. Optional form deadlines are enforced by a database trigger at submission time. Its migration history is:
 
 - `20261031162341_coursepulse_initial_schema_rls_aggregates_retention`
 - `20261031162429_coursepulse_fix_numeric_aggregation`
@@ -45,6 +45,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031204219_coursepulse_student_feedback_progress`
 - `20261031204820_coursepulse_admin_fk_indexes`
 - `20261031204847_coursepulse_rls_policy_optimization`
+- `20261101019000_coursepulse_feedback_deadlines_and_completed_visibility`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
