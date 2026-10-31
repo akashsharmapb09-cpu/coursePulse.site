@@ -98,7 +98,7 @@ as $$ select u.role from public.users u where u.id=(select auth.uid()) and u.is_
 
 create or replace function private.is_admin()
 returns boolean language sql stable security definer set search_path = ''
-as $ select coalesce(private.current_app_role()='ADMIN'::public.app_role and (auth.jwt()->>'aal')='aal2',false) $;
+as $$ select coalesce(private.current_app_role()='ADMIN'::public.app_role and (auth.jwt()->>'aal')='aal2',false) $$;
 
 create or replace function private.is_course_owner(p_course_id uuid)
 returns boolean
@@ -127,14 +127,14 @@ using ((select private.is_admin()) or (select private.is_course_owner(course_id)
    and exists(select 1 from public.course_enrollments e where e.course_id=feedback.course_id and e.student_id=(select auth.uid()))
    and exists(select 1 from public.courses c where c.id=feedback.course_id and c.status='PUBLISHED'::public.course_status)));
 
-do $
+do $$
 declare v_definition text;
 begin
   select pg_get_functiondef('private.get_instructor_aggregates(uuid)'::regprocedure) into v_definition;
   v_definition := replace(v_definition, 'c.instructor_id = (select auth.uid())', 'private.is_course_owner(c.id)');
   execute v_definition;
 end;
-$;
+$$;
 
 -- The RPC is the only path from identity-based eligibility to identity-free answers.
 create or replace function private.submit_anonymous_feedback(p_feedback_id uuid, p_answers jsonb)
