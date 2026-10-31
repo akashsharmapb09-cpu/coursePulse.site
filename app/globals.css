@@ -25,3 +25,17 @@
 .search-result b{overflow:hidden;color:#20352a;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
 .search-result small{color:#819087;font-size:11px}
 @media(max-width:760px){.global-search{min-width:0;width:100%;max-width:none;order:3}.top-actions{flex-wrap:wrap}.global-search input{font-size:12px}}
+
+
+.analytics-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:18px 0 22px;padding:16px;border:1px solid #e5ece6;border-radius:16px;background:#fff}
+.analytics-filters label{display:grid;gap:6px;min-width:190px;color:#68796e;font-size:12px;font-weight:700}
+.analytics-filters select{min-height:38px;border:1px solid #dce6de;border-radius:10px;background:#fff;padding:7px 10px;color:#20352a;font-size:13px}
+.comparison-panel{margin:0 0 22px;padding:18px;border:1px solid #e2ebe3;border-radius:18px;background:#fff}
+.comparison-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.comparison-card{padding:16px;border:1px solid #e8eee9;border-radius:14px;background:#fbfdfb}
+.comparison-card>b{display:block;color:#20352a;font-size:13px}
+.comparison-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.comparison-values span{display:grid;gap:4px}
+.comparison-values small{color:#829087;font-size:11px}
+.comparison-values strong{color:#356a46;font-size:25px;font-weight:800}
+.comparison-card>p{margin-top:12px;color:#75847a;font-size:12px}
