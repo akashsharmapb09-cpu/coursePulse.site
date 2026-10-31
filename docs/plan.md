@@ -23,7 +23,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] PARTIAL: departments, semesters and course metadata created; edit/archive/activate lifecycle and user department assignment remain open.
 - [x] DONE: student course enrollments and instructor-course assignments with scoped RLS.
 - [x] DONE: MFA-protected user role/suspension API and console; last-active-admin guard.
-- [x] PARTIAL: course creation and feedback create/open/close/deadline enforcement implemented; edit/versioning, archive lifecycle and deadline change after creation remain open.
+- [x] PARTIAL: course create/edit/archive/republish and feedback create/edit/open/close/deadline enforcement implemented; immutable version history, delete/restore and scheduling remain open.
 - [x] DONE: admin audit table and privileged audit RPC. Append-only Data API grants (no direct INSERT/UPDATE/DELETE).
 
 ## P3 — Student experience
@@ -33,8 +33,8 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## P4 — Instructor analytics
 - [x] PARTIAL: assigned-course dashboard and aggregate metrics; additional instructor assignments are supported.
-- [ ] Rating distributions, trend charts and date/semester/category filters remain open; course filter and cross-course comparison are implemented.
-- [x] PARTIAL: two-course comparison uses the aggregate RPC and minimum-five cohort suppression; multi-course comparison and statistical significance context remain open.
+- [x] PARTIAL: course, semester and date filters plus cross-course comparison are implemented; rating distributions, trend charts and category filters remain open.
+- [x] PARTIAL: two-course comparison uses the filtered aggregate RPC and minimum-five cohort suppression; multi-course comparison and statistical significance context remain open.
 - [ ] Privacy-reviewed anonymized comment workflow remains open.
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
 
