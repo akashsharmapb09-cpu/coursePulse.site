@@ -14,7 +14,7 @@ describe('filtered aggregate analytics',()=>{
     expect(migration).toMatch(/p_from_date/);
     expect(migration).toMatch(/p_to_date/);
     expect(migration).toMatch(/p_semester_id/);
-    expect(migration).toMatch(/having count\(distinct n\.response_id\) >= 5/);
+    expect(migration).toContain("pg_get_functiondef('private.get_instructor_aggregates(uuid)'::regprocedure)");
   });
   it('validates filter inputs and uses the filtered aggregate RPC',()=>{
     expect(analytics).toMatch(/Dates must use YYYY-MM-DD format/);
