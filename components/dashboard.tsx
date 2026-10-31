@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
 type Course = { id: string; title: string; description: string; status: string; created_at: string; instructor_id: string };
 type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; created_at: string; form_schema?: Question[]; course?: { title: string } };
-type Question = { id: string; label: string; type: string; required: boolean; options?: string[] };
+type Question = { id: string; label: string; type: 'rating'|'single_choice'|'multiple_choice'|'text'|'textarea'|'number'; required: boolean; options?: string[] };
 
 export function Dashboard({ profile }: { profile: Profile }) {
   const router = useRouter();
@@ -26,8 +26,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [courseDescription, setCourseDescription] = useState('');
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [questionLabel, setQuestionLabel] = useState('How would you rate this course?');
-  const [questionType, setQuestionType] = useState<'rating'|'text'>('rating');
+  const [questions, setQuestions] = useState<Question[]>([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', required: true }]);
   const [analytics, setAnalytics] = useState<any[]>([]);
 
   async function load() {
@@ -51,8 +50,11 @@ export function Dashboard({ profile }: { profile: Profile }) {
   }
   async function createForm(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
-    try { const schema: Question[] = [{ id:'course-pulse-question', label:questionLabel, type:questionType, required:true, ...(questionType==='rating'?{}:{}) }];
-      const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365})}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice('Feedback form published.'); setFormTitle(''); await load();
+    try {
+      const schema = questions.map((question, index) => ({ ...question, id: `question-${index + 1}`, ...(question.options ? { options: question.options.map(option => option.trim()).filter(Boolean) } : {}) }));
+      if (schema.some(question => question.label.trim().length < 2)) throw new Error('Every question needs a clear label.');
+      if (schema.some(question => ['single_choice', 'multiple_choice'].includes(question.type) && (question.options?.length ?? 0) < 2)) throw new Error('Choice questions need at least two options.');
+      const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365})}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice('Feedback form published.'); setFormTitle(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', required: true }]); await load();
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
   async function fetchAnalytics() { setError(''); const res=await fetch('/api/analytics',{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); }
@@ -88,7 +90,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
       </section>
     </main>
     {courseModal&&<Modal title="Create a course" onClose={()=>setCourseModal(false)}><form className="stack-form" onSubmit={createCourse}><label>Course title<input value={courseTitle} onChange={e=>setCourseTitle(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Introduction to Biology"/></label><label>Description<textarea value={courseDescription} onChange={e=>setCourseDescription(e.target.value)} maxLength={5000} rows={3} placeholder="What will students learn?"/></label><button className="button primary full" disabled={busy}>Create course</button></form></Modal>}
-    {feedbackModal&&<Modal title="Create feedback form" onClose={()=>setFeedbackModal(false)}><form className="stack-form" onSubmit={createForm}><label>Course<select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Form title<input value={formTitle} onChange={e=>setFormTitle(e.target.value)} required maxLength={160} placeholder="End-of-module feedback"/></label><label>Description<textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} maxLength={3000} rows={2}/></label><label>First question<input value={questionLabel} onChange={e=>setQuestionLabel(e.target.value)} required maxLength={180}/></label><label>Question type<select value={questionType} onChange={e=>setQuestionType(e.target.value as 'rating'|'text')}><option value="rating">Rating (1 to 5)</option><option value="text">Written response</option></select></label><p className="fine-print">This quick form creates one question. You can extend the form schema through the API with additional validated question types.</p><button className="button primary full" disabled={busy}>Publish feedback form</button></form></Modal>}
+    {feedbackModal&&<Modal title="Create feedback form" onClose={()=>setFeedbackModal(false)}><form className="stack-form" onSubmit={createForm}><label>Course<select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Form title<input value={formTitle} onChange={e=>setFormTitle(e.target.value)} required maxLength={160} placeholder="End-of-module feedback"/></label><label>Description<textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} maxLength={3000} rows={2}/></label><div className="section-heading"><div><h3>Questions</h3><p>Add up to 30 questions to this form.</p></div><button type="button" className="button subtle compact" disabled={questions.length>=30} onClick={()=>setQuestions(current=>[...current,{id:`question-${current.length+1}`,label:'',type:'rating',required:true}])}><Plus size={14}/> Add question</button></div>{questions.map((question,index)=><fieldset key={question.id} className="stack-form rounded-xl border border-[#e5ece6] p-4"><legend className="px-1 text-xs font-bold text-[#62766b]">Question {index+1}</legend><label>Question text<input value={question.label} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,label:e.target.value}:item))} required minLength={2} maxLength={180} placeholder="What should students answer?"/></label><label>Answer type<select value={question.type} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,type:e.target.value as Question['type'],options:['single_choice','multiple_choice'].includes(e.target.value)?(item.options??['Option 1','Option 2']):undefined}:item))}><option value="rating">Rating (1 to 5)</option><option value="number">Number</option><option value="text">Short text</option><option value="textarea">Long text</option><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option></select></label>{['single_choice','multiple_choice'].includes(question.type)&&<label>Options (comma separated)<input value={(question.options??[]).join(', ')} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,options:e.target.value.split(',').map(option=>option.trim()).filter(Boolean)}:item))} placeholder="Option 1, Option 2"/></label>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={question.required} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,required:e.target.checked}:item))}/> Required question</label>{questions.length>1&&<button type="button" className="text-button self-start" onClick={()=>setQuestions(current=>current.filter((_,i)=>i!==index))}>Remove question</button>}</fieldset>)}<button className="button primary full" disabled={busy}>Publish feedback form</button></form></Modal>}
     {responseModal&&<Modal title={responseModal.title} onClose={()=>setResponseModal(null)}><ResponseForm item={responseModal} onDone={()=>{setResponseModal(null);setNotice('Your response was submitted. Thank you.')}}/></Modal>}
   </div>;
 }
@@ -98,32 +100,37 @@ function FeedbackList({feedback,role,onRespond}:{feedback:Feedback[];role:string
 function Empty({icon,title,text}:{icon:React.ReactNode;title:string;text:string}){return <div className="empty-state"><div>{icon}</div><h4>{title}</h4><p>{text}</p></div>}
 function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){return <div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="modal" role="dialog" aria-modal="true" aria-label={title}><header><h3>{title}</h3><button className="icon-button" onClick={onClose} aria-label="Close"><X size={18}/></button></header>{children}</section></div>}
 function ResponseForm({item,onDone}:{item:Feedback;onDone:()=>void}) {
-  const question = item.form_schema?.[0];
-  const [answer,setAnswer] = useState<string>('');
+  const questions = item.form_schema ?? [];
+  const [answers,setAnswers] = useState<Record<string,string|string[]>>({});
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
   async function submit(e:FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
     try {
-      if (!question) throw new Error('This form has no questions.');
-      let value: unknown = answer;
-      if (question.type === 'rating' || question.type === 'number') value = Number(answer);
-      if (question.type === 'multiple_choice') value = answer ? [answer] : [];
-      const res = await fetch('/api/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback_id:item.id,answers:{[question.id]:value}})});
-      const payload = await res.json(); if(!res.ok) throw new Error(payload.error); onDone();
+      if (!questions.length) throw new Error('This form has no questions.');
+      const payload: Record<string,unknown> = {};
+      for (const question of questions) {
+        const value = answers[question.id];
+        if (value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) continue;
+        if (question.type === 'rating' || question.type === 'number') payload[question.id] = Number(value);
+        else payload[question.id] = value;
+      }
+      const res = await fetch('/api/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback_id:item.id,answers:payload})});
+      const result = await res.json(); if(!res.ok) throw new Error(result.error); onDone();
     } catch(e) { setError(e instanceof Error?e.message:'Could not submit response.'); }
     finally { setBusy(false); }
   }
-  if (!question) return <p className="alert error">This form has no questions.</p>;
+  if (!questions.length) return <p className="alert error">This form has no questions.</p>;
   return <form className="stack-form" onSubmit={submit}>
-    <p className="muted">Your response is private. Instructors only see aggregate summaries, never individual submissions.</p>
-    <label>{question.label}
-      {question.type === 'rating' ? <select value={answer} onChange={e=>setAnswer(e.target.value)} required><option value="">Choose a rating</option><option value="1">1 · Needs work</option><option value="2">2 · Fair</option><option value="3">3 · Good</option><option value="4">4 · Very good</option><option value="5">5 · Excellent</option></select> : null}
-      {question.type === 'number' ? <input type="number" value={answer} onChange={e=>setAnswer(e.target.value)} min="-1000000" max="1000000" step="any" required/> : null}
-      {question.type === 'text' || question.type === 'textarea' ? <textarea value={answer} onChange={e=>setAnswer(e.target.value)} rows={4} maxLength={2000} required={question.required} placeholder="Share a thought…"/> : null}
-      {question.type === 'single_choice' || question.type === 'multiple_choice' ? <select value={answer} onChange={e=>setAnswer(e.target.value)} required><option value="">Choose an option</option>{(question.options ?? []).map(option=><option key={option} value={option}>{option}</option>)}</select> : null}
-    </label>
-    {error&&<p className="alert error">{error}</p>}
-    <button className="button primary full" disabled={busy}>Submit feedback</button>
+    <p className="muted">Your answers are stored separately from your one-time eligibility record. Instructors and administrators only see aggregate summaries, never individual submissions.</p>
+    {questions.map(question=><label key={question.id}>{question.label}{question.required?' *':''}
+      {question.type === 'rating' && <select value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} required={question.required}><option value="">Choose a rating</option><option value="1">1 · Needs work</option><option value="2">2 · Fair</option><option value="3">3 · Good</option><option value="4">4 · Very good</option><option value="5">5 · Excellent</option></select>}
+      {question.type === 'number' && <input type="number" value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} min="-1000000" max="1000000" step="any" required={question.required}/>}
+      {(question.type === 'text' || question.type === 'textarea') && <textarea value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} rows={question.type==='textarea'?4:2} maxLength={2000} required={question.required} placeholder="Share a thought…"/>}
+      {question.type === 'single_choice' && <select value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} required={question.required}><option value="">Choose an option</option>{(question.options??[]).map(option=><option key={option} value={option}>{option}</option>)}</select>}
+      {question.type === 'multiple_choice' && <select multiple value={Array.isArray(answers[question.id])?answers[question.id] as string[]:[]} onChange={e=>setAnswers(current=>({...current,[question.id]:Array.from(e.currentTarget.selectedOptions,option=>option.value)}))} required={question.required} className="min-h-28">{(question.options??[]).map(option=><option key={option} value={option}>{option}</option>)}</select>}
+    </label>)}
+    {error&&<p className="alert error" role="alert">{error}</p>}
+    <button className="button primary full" disabled={busy}>{busy?'Submitting…':'Submit feedback'}</button>
   </form>;
 }
