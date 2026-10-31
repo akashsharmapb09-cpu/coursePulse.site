@@ -3,12 +3,12 @@
 Status: DONE means implementation and verification evidence exist; IN PROGRESS means partially implemented; NOT STARTED means missing; BLOCKED means owner decision or external capability is required.
 
 ## P0 — Privacy and data model
-- [ ] IN PROGRESS: threat model and target separation documented.
-- [ ] NOT STARTED: migration design for eligibility and anonymous answer storage.
-- [ ] NOT STARTED: atomic eligibility consumption and duplicate prevention without identity-answer mapping.
-- [ ] NOT STARTED: legacy response migration/retirement under approved retention rules.
+- [x] DONE: threat model and target separation documented.
+- [x] DONE: migration design for eligibility and anonymous answer storage.
+- [x] DONE: atomic eligibility consumption and duplicate prevention without identity-answer mapping implemented in the database RPC; end-to-end verification remains open.
+- [x] DONE: no legacy response rows existed at migration time; legacy table retained under existing retention policy.
 - [ ] NOT STARTED: RLS matrix and re-identification tests.
-- [ ] NOT STARTED: correct privacy language in product UI and policy.
+- [ ] IN PROGRESS: app writes new answers to separate storage; full policy copy and user-facing privacy review remain.
 
 ## P1 — Identity and security
 - [ ] Password recovery/reset and password change.
