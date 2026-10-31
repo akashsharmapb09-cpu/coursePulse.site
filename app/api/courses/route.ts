@@ -9,7 +9,7 @@ export async function GET() {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  const query = supabase.from('courses').select('id,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name)').order('created_at', { ascending: false });
+  const query = supabase.from('courses').select('id,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) return jsonError('Unable to load courses.', 500);
   return NextResponse.json({ courses: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
