@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   title: { default: 'CoursePulse | Course feedback, made useful', template: '%s | CoursePulse' },
   description: 'Collect course feedback, review protected aggregate insights and improve learning experiences in one role-aware workspace.',
   applicationName: 'CoursePulse',
-  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: '/',
