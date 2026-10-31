@@ -49,6 +49,7 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261101020000_coursepulse_filtered_analytics`
 - `20261101021000_coursepulse_rating_distributions`
 - `20261101022000_coursepulse_department_analytics_filter`
+- `20261101023000_coursepulse_response_trends`
 - `20261101021000_coursepulse_rating_distributions`
 
 Default public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
