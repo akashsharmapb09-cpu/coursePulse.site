@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031203740_coursepulse_academic_admin_lifecycle.sql'),'utf8');
+const departmentMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101100000_coursepulse_admin_user_department_assignment.sql'),'utf8');
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'app/dashboard/page.tsx'),'utf8');
 const dashboardUi=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
@@ -36,6 +37,13 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(dashboardUi).toMatch(/Update department/);
     expect(dashboardUi).toMatch(/Update semester/);
     expect(dashboardUi).toMatch(/Active semester/);
+  });
+  it('assigns and clears user departments through a MFA-protected audited RPC',()=>{
+    expect(departmentMigration).toMatch(/create or replace function private\.admin_assign_user_department/);
+    expect(departmentMigration).toMatch(/private\.is_admin\(\)/);
+    expect(departmentMigration).toMatch(/private\.admin_record_audit/);
+    expect(academicApi).toMatch(/admin_assign_user_department/);
+    expect(dashboardUi).toMatch(/Assign user department/);
   });
   it('supports enrollment, instructor assignments and academic metadata',()=>{
     expect(migration).toMatch(/create table public\.course_enrollments/);
