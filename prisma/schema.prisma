@@ -64,6 +64,7 @@ model Feedback {
   course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   creator      User       @relation("FeedbackCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   responses    Response[]
+  anonymousSubmissions AnonymousSubmission[]
   @@index([courseId])
   @@map("feedback")
 }
@@ -81,4 +82,15 @@ model Response {
   @@index([studentId])
   @@index([submittedAt])
   @@map("responses")
+}
+
+model AnonymousSubmission {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  feedbackId String   @map("feedback_id") @db.Uuid
+  answers    Json
+  receivedOn DateTime @default(dbgenerated("CURRENT_DATE")) @map("received_on") @db.Date
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  @@index([feedbackId])
+  @@index([receivedOn])
+  @@map("anonymous_submissions")
 }
