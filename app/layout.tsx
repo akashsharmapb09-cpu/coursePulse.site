@@ -14,12 +14,14 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'CoursePulse',
     title: 'CoursePulse | Course feedback, made useful',
-    description: 'A focused workspace for course feedback and aggregate learning analytics.'
+    description: 'A focused workspace for course feedback and aggregate learning analytics.',
+    images: ['/opengraph-image']
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CoursePulse | Course feedback, made useful',
-    description: 'Course feedback and aggregate learning analytics in one workspace.'
+    description: 'Course feedback and aggregate learning analytics in one workspace.',
+    images: ['/opengraph-image']
   },
   robots: { index: true, follow: true }
 };

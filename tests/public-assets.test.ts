@@ -5,6 +5,8 @@ import { describe,expect,it } from 'vitest';
 const layout=readFileSync(resolve(process.cwd(),'app/layout.tsx'),'utf8');
 const icon=readFileSync(resolve(process.cwd(),'public/icon.svg'),'utf8');
 const manifest=readFileSync(resolve(process.cwd(),'app/manifest.ts'),'utf8');
+const layout=readFileSync(resolve(process.cwd(),'app/layout.tsx'),'utf8');
+const og=readFileSync(resolve(process.cwd(),'app/opengraph-image.tsx'),'utf8');
 
 describe('public app identity assets',()=>{
   it('declares a favicon and shortcut icon in document metadata',()=>{
@@ -17,5 +19,9 @@ describe('public app identity assets',()=>{
     expect(manifest).toContain("name: 'CoursePulse'");
     expect(manifest).toContain("display: 'standalone'");
     expect(manifest).toContain("src: '/icon.svg'");
+    expect(layout).toContain("images: ['/opengraph-image']");
+    expect(og).toContain('export const size = { width: 1200, height: 630 };');
+    expect(og).toContain('Turn student feedback into');
+    expect(og).toContain('COLLEGE PROJECT');
   });
 });
