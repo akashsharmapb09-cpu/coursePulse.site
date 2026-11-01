@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { questionSchema } from '../lib/validation';
 
 const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101065511_coursepulse_yes_no_question_type.sql'), 'utf8');
+const multipleSelectMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101065824_coursepulse_multiple_select_question_type.sql'), 'utf8');
 const responsesRoute = readFileSync(resolve(process.cwd(), 'app/api/responses/route.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 
@@ -48,5 +49,10 @@ describe('supported feedback question types', () => {
     expect(migration).toContain("when 'yes_no' then");
     expect(migration).toContain("v_value #>> '{}' not in ('Yes', 'No')");
     expect(migration).toContain("errcode = '22023'");
+  });
+
+  it('extends database validation to the separate Multiple selection question type', () => {
+    expect(multipleSelectMigration).toContain("when 'multiple_choice', 'multiple_select' then");
+    expect(multipleSelectMigration).toContain("Could not locate multiple-choice validation");
   });
 });
