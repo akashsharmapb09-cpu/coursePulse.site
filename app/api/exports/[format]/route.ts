@@ -67,7 +67,7 @@ export async function GET(request: NextRequest, context: Context) {
     for (const row of rows) {
       if (doc.y > 720) doc.addPage();
       doc.fontSize(11).fillColor('#193c34').text(String(row.Question));
-      doc.fontSize(9).fillColor('#72817b').text(`${row.Course}  /  ${row.Feedback}  /  ${row.Type}`);
+      doc.fontSize(9).fillColor('#72817b').text(`${row.Course}  /  ${row.Feedback}  /  ${row.Category || 'Uncategorized'}  /  ${row.Type}`);
       const value = row['Average score'] !== '' ? `Average score: ${row['Average score']}` : `Responses: ${row['Responses (minimum 5)']}  ·  ${row['Answer option']}`;
       doc.fontSize(10).fillColor('#253b34').text(value); doc.moveDown(0.75);
     }
