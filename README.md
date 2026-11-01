@@ -1,5 +1,17 @@
 # CoursePulse
 
+## Project guides
+
+- PRD.md — product requirements.
+- docs/architecture.md — architecture and privacy model.
+- docs/SECURITY.md — security controls and open risks.
+- docs/API.md — API route reference.
+- docs/TESTING.md — automated/manual QA and release gates.
+- docs/SEEDING.md — isolated test-data strategy.
+- docs/plan.md — current implementation plan.
+- docs/MASTER-PROMPT-AUDIT.md — evidence-based compliance status.
+
+
 CoursePulse is a role-isolated course feedback application built with Next.js App Router, TypeScript, Supabase Auth/Postgres, Prisma schema tooling, and aggregate-only reporting.
 
 ## Stack
@@ -56,6 +68,14 @@ The migrations under `supabase/migrations/` correspond to the applied migrations
 - `20261031215225_coursepulse_account_password_rate_limit`
 - `20261031215804_coursepulse_feedback_version_history`
 - `20261031220141_coursepulse_feedback_eligibility_policy_helper`
+- `20261101065511_coursepulse_yes_no_question_type`
+- `20261101065824_coursepulse_multiple_select_question_type`
+- `20261101070445_course_codes`
+- `20261101070626_course_instructor_directory`
+- `20261101073156_account_profile_update`
+- `20261101074059_admin_dashboard_overview`
+- `20261101074717_data_deletion_requests`
+- `20261101075037_search_rate_limit`
 
 The version list is aligned to the live Supabase migration ledger. Some management-applied versions are represented remotely with `select 1;` placeholder statements even though the corresponding SQL is preserved in the local migration files. For example, the duplicate academic-admin and assignment-policy entries are explicit no-op files because those policies are already included in the primary academic-admin migration; the student completion RPC is preserved in `20261031204219`. Before any CLI `db push`, compare `supabase migration list` and the live schema; do not reset or blindly replay the production project.\n\nDefault public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 

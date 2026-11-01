@@ -36,7 +36,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## P4 — Instructor analytics
 - [x] PARTIAL: assigned-course dashboard and aggregate metrics; additional instructor assignments are supported.
-- [x] PARTIAL: course, semester, department, question-category and date filters, privacy-suppressed rating distributions, weekly response trends and cross-course comparison are implemented; weekly response trends remain course-wide rather than category-specific, and advanced longitudinal analysis remains open.
+- [x] PARTIAL: course, semester, department, question-category and date filters, privacy-suppressed rating distributions with donut charts, rating sentiment bars, reportable category-weighted teaching-effectiveness radar (when at least three categories meet the threshold), weekly response trends and two-course comparison are implemented; weekly response trends remain course-wide rather than category-specific, and advanced longitudinal analysis remains open.
 - [x] PARTIAL: two-course comparison uses the filtered aggregate RPC and minimum-five cohort suppression; multi-course comparison and statistical significance context remain open.
 - [ ] Privacy-reviewed anonymized comment workflow remains open.
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
@@ -49,17 +49,17 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 14 Vitest files/54 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 27 Vitest files/100 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
 - [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan); cron execution history.
-- [x] PARTIAL: PRD, architecture, code standards, security and CI documentation added; full API reference and seed strategy remain open.
+- [x] PARTIAL: PRD, architecture, code standards, security and CI documentation added; API reference, testing guide and seed strategy are documented; staging data fixtures and manual QA evidence remain open.
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
-- Latest feature branch is not deployed to a verified preview or production. The newest READY Vercel preview is an older commit; the latest feature commit has a Vercel build-rate-limit/upgrade-to-Pro status. Verify a current preview and quota before promotion.
+- Latest feature branch is not deployed to a verified preview or production. The newest READY Vercel preview is commit f4f7ba3, older than the current reviewed branch head cfe8fb5. Recent later feature deployments returned Vercel build errors/rate-limit status. Do not promote until Vercel can build the exact latest commit and preview smoke checks pass. Production alias is still on an older main deployment.
 - Supabase Auth leaked-password protection is still disabled in the project security advisor; enable it in Supabase Dashboard → Authentication → Security and rerun the advisor.
 - Admin MFA enrollment must be completed by the active administrator in the app before using the admin console.
 - Institution-approved privacy/terms content and verified contact/legal details are still required.
