@@ -29,11 +29,11 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 ## P3 — Student experience
 - [x] DONE: eligibility, pending and completed forms; closed completed forms remain visible only to the student who submitted.
 - [x] PARTIAL: optional deadlines are enforced by the database; cohort participation progress and richer history remain open.
-- [x] PARTIAL: multi-question response form supports all configured question types and confirmation; WCAG/keyboard/screen-reader validation remains open.
+- [x] PARTIAL: multi-question response form supports rating, numeric, single-choice, multiple-choice, short/long text and Yes/No; questions can be assigned one of seven academic categories. Category filters are available in analytics and exports. WCAG/keyboard/screen-reader validation remains open.
 
 ## P4 — Instructor analytics
 - [x] PARTIAL: assigned-course dashboard and aggregate metrics; additional instructor assignments are supported.
-- [x] PARTIAL: course, semester, department/category and date filters, privacy-suppressed rating distributions, weekly response trends and cross-course comparison are implemented; advanced longitudinal analysis remains open.
+- [x] PARTIAL: course, semester, department, question-category and date filters, privacy-suppressed rating distributions, weekly response trends and cross-course comparison are implemented; weekly response trends remain course-wide rather than category-specific, and advanced longitudinal analysis remains open.
 - [x] PARTIAL: two-course comparison uses the filtered aggregate RPC and minimum-five cohort suppression; multi-course comparison and statistical significance context remain open.
 - [ ] Privacy-reviewed anonymized comment workflow remains open.
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
