@@ -20,6 +20,7 @@ describe('institution course details', () => {
     expect(route).toContain("semester:semesters");
     expect(route).toContain('department:departments');
     expect(route).toContain('semester:semesters');
+    expect(route).toContain("select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)')");
   });
 
   it('shows the student course detail fields and lets staff enter an actual institutional code', () => {

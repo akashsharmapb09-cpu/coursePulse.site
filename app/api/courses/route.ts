@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     title: parsed.data.title,
     description: parsed.data.description,
     status: 'PUBLISHED'
-  }).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code),instructor:users!courses_instructor_id_fkey(id,full_name,email)').single();
+  }).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').single();
   if (error) return jsonError('Course could not be created. Check your role and try again.', 403);
   return NextResponse.json({ course: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -70,7 +70,7 @@ export async function PATCH(request:NextRequest) {
   const parsed=courseUpdateInput.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid course update.');
   const {id,...updates}=parsed.data;
-  const {data,error}=await supabase.from('courses').update(updates).eq('id',id).select('id,title,description,status,created_at,instructor_id').single();
+  const {data,error}=await supabase.from('courses').update(updates).eq('id',id).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').single();
   if(error||!data) return jsonError('Course could not be updated. Check course ownership.',403);
   return NextResponse.json({course:data},{headers:{'Cache-Control':'no-store'}});
 }
