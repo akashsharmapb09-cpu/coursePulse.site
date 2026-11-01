@@ -28,7 +28,7 @@ type AuditEvent = { id:string; action:string; target_type:string; target_id:stri
 type AcademicData = { departments:{id:string;name:string;code:string}[]; semesters:{id:string;name:string;start_date:string;end_date:string;is_active:boolean}[]; courses:{id:string;title:string;department_id:string|null;semester_id:string|null;status:string}[]; students:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; instructors:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; enrollments:{id:string;course_id:string;student_id:string;enrolled_at:string}[]; assignments:{id:string;course_id:string;instructor_id:string;created_at:string}[]; accounts:{id:string;email:string|null;full_name:string;role:string;is_active:boolean;department_id:string|null}[] };
 type ResponseTrend = {course_id:string;course_title:string;week_start:string;response_count:number};
 type RatingDistribution = {course_id:string;course_title:string;feedback_id:string;feedback_title:string;question_id:string;question_label:string;rating_value:number;response_count:number;question_category?:string|null};
-type SearchResults = {courses:Pick<Course,'id'|'title'|'description'|'status'>[];feedback:Pick<Feedback,'id'|'course_id'|'title'|'description'|'is_open'>[];users:Pick<AdminUser,'id'|'full_name'|'email'|'role'>[]};
+type SearchResults = {courses:(Pick<Course,'id'|'title'|'description'|'status'> & {course_code?:string|null})[];feedback:Pick<Feedback,'id'|'course_id'|'title'|'description'|'is_open'>[];users:Pick<AdminUser,'id'|'full_name'|'email'|'role'>[];departments:{id:string;name:string;code:string}[];instructors:{course_id:string;instructor_name:string}[]};
 type AcademicAction = {action:'department';name:string;code:string}|{action:'semester';name:string;start_date:string;end_date:string}|{action:'enroll';course_id:string;student_id:string}|{action:'assign';course_id:string;instructor_id:string}|{action:'course_academic';course_id:string;department_id:string|null;semester_id:string|null}|{action:'department_update';department_id:string;name:string;code:string}|{action:'semester_update';semester_id:string;name:string;start_date:string;end_date:string;is_active:boolean}|{action:'user_department';user_id:string;department_id:string|null};
 
 export function Dashboard({ profile }: { profile: Profile }) {
@@ -75,6 +75,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [adminAcademic,setAdminAcademic] = useState<AcademicData>({departments:[],semesters:[],courses:[],students:[],instructors:[],enrollments:[],assignments:[],accounts:[]});
   const [searchQuery,setSearchQuery]=useState('');
   const [searchResults,setSearchResults]=useState<SearchResults|null>(null);
+  const [searchLoading,setSearchLoading]=useState(false);
   const [currentPassword,setCurrentPassword]=useState('');
   const [newPassword,setNewPassword]=useState('');
   const [confirmNewPassword,setConfirmNewPassword]=useState('');
@@ -94,6 +95,26 @@ export function Dashboard({ profile }: { profile: Profile }) {
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const term=searchQuery.trim();
+    if(term.length<2){setSearchResults(null);setSearchLoading(false);return;}
+    let cancelled=false;
+    const timeout=window.setTimeout(async()=>{
+      setSearchLoading(true);
+      setSearchResults(null);
+      try {
+        const response=await fetch('/api/search?q='+encodeURIComponent(term),{cache:'no-store'});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.error??'Search failed.');
+        if(!cancelled) setSearchResults(data);
+      } catch(error) {
+        if(!cancelled) setError(error instanceof Error?error.message:'Search failed.');
+      } finally {
+        if(!cancelled) setSearchLoading(false);
+      }
+    },400);
+    return ()=>{cancelled=true;window.clearTimeout(timeout);};
+  },[searchQuery]);
   const canTeach = profile.role !== 'STUDENT';
   const stats = useMemo(() => ({ courses: courses.length, forms: feedback.length, open: feedback.filter(f=>f.is_open&&!f.submitted).length, completed: feedback.filter(f=>f.submitted).length }), [courses, feedback]);
   const trendCharts=useMemo(()=>{const groups=new Map<string,{course_title:string;points:ResponseTrend[]}>();for(const row of responseTrends){const group=groups.get(row.course_id)??{course_title:row.course_title,points:[]};group.points.push(row);groups.set(row.course_id,group);}return Array.from(groups.values()).map(group=>({...group,points:group.points.sort((a,b)=>a.week_start.localeCompare(b.week_start))}));},[responseTrends]);
@@ -275,11 +296,10 @@ export function Dashboard({ profile }: { profile: Profile }) {
     } catch(e) { setError(e instanceof Error?e.message:'Academic update failed.'); }
     finally { setBusy(false); }
   }
-  async function runSearch(event:FormEvent) {
-    event.preventDefault(); setError('');
+  function runSearch(event:FormEvent) {
+    event.preventDefault();
     if(searchQuery.trim().length<2){setError('Enter at least two characters to search.');return;}
-    try { const res=await fetch('/api/search?q='+encodeURIComponent(searchQuery.trim()),{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error??'Search failed.'); setSearchResults(data); }
-    catch(e){setError(e instanceof Error?e.message:'Search failed.');}
+    setError('');
   }
   function analyticsQuery(courseId?:string){const params=new URLSearchParams();if(courseId)params.set('course_id',courseId);if(analyticsFromDate)params.set('from_date',analyticsFromDate);if(analyticsToDate)params.set('to_date',analyticsToDate);if(analyticsSemesterId)params.set('semester_id',analyticsSemesterId);if(analyticsDepartmentId)params.set('department_id',analyticsDepartmentId);if(analyticsCategory)params.set('question_category',analyticsCategory);return params.toString();}
   async function fetchAnalytics() { setError(''); setCompareAnalytics([]); const query=analyticsQuery(analyticsCourseId||undefined); const res=await fetch('/api/analytics'+(query?'?'+query:''),{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); setRatingDistributions(data.rating_distributions??[]); setResponseTrends(data.trends??[]); }
@@ -311,7 +331,15 @@ export function Dashboard({ profile }: { profile: Profile }) {
     <main className="main-area">
       <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='history'?'Submission history':tab==='admin'?'Administration':tab==='security'?'Account security':'Learning analytics'}</h1></div><div className="top-actions"><form className="global-search" role="search" onSubmit={runSearch}><Search size={16}/><input aria-label="Search courses, feedback and users" placeholder="Search workspace…" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/><button type="submit" aria-label="Search"><Search size={15}/></button></form><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
       <section className="content-area">
-        {searchResults && <section className="search-results-panel"><div className="section-heading"><div><h3>Search results</h3><p>Matches for “{searchQuery.trim()}”</p></div><button className="text-button" onClick={()=>setSearchResults(null)}>Clear search <X size={14}/></button></div><div className="search-result-grid">{searchResults.courses.map(item=><button key={item.id} className="search-result" onClick={()=>{setTab('courses');setSearchResults(null)}}><BookOpen size={16}/><span><b>{item.title}</b><small>Course · {item.status.toLowerCase()}</small></span></button>)}{searchResults.feedback.map(item=><button key={item.id} className="search-result" onClick={()=>{const found=feedback.find(form=>form.id===item.id);if(found&&profile.role==='STUDENT'&&found.is_open&&!found.submitted)setResponseModal(found);else setTab('feedback');setSearchResults(null)}}><FilePlus2 size={16}/><span><b>{item.title}</b><small>Feedback form · {item.is_open?'open':'closed'}</small></span></button>)}{searchResults.users.map(item=><button key={item.id} className="search-result" onClick={()=>{void changeTab('admin');setSearchResults(null)}}><Users size={16}/><span><b>{item.full_name||item.email||'User'}</b><small>User · {item.role.toLowerCase()}</small></span></button>)}{!searchResults.courses.length&&!searchResults.feedback.length&&!searchResults.users.length&&<p className="muted">No matching courses, forms or users were found in your permitted workspace.</p>}</div></section>}
+        {searchLoading&&<p className="fine-print" role="status">Searching…</p>}
+        {searchResults && <section className="search-results-panel"><div className="section-heading"><div><h3>Search results</h3><p>Matches for “{searchQuery.trim()}”</p></div><button className="text-button" onClick={()=>{setSearchQuery('');setSearchResults(null)}}>Clear search <X size={14}/></button></div><div className="search-result-grid">
+          {searchResults.courses.map(item=><button key={item.id} className="search-result" onClick={()=>{setTab('courses');setSearchResults(null)}}><BookOpen size={16}/><span><b>{item.course_code?item.course_code+' · ':''}{item.title}</b><small>Course · {item.status.toLowerCase()}</small></span></button>)}
+          {searchResults.departments.map(item=><button key={item.id} className="search-result" onClick={()=>{setTab('courses');setSearchResults(null)}}><GraduationCap size={16}/><span><b>{item.name}</b><small>Department · {item.code}</small></span></button>)}
+          {searchResults.instructors.map(item=><button key={item.course_id||item.instructor_name} className="search-result" onClick={()=>{setTab('courses');setSearchResults(null)}}><Users size={16}/><span><b>{item.instructor_name}</b><small>Instructor · assigned course</small></span></button>)}
+          {searchResults.feedback.map(item=><button key={item.id} className="search-result" onClick={()=>{const found=feedback.find(form=>form.id===item.id);if(found&&profile.role==='STUDENT'&&found.is_open&&!found.submitted)setResponseModal(found);else setTab('feedback');setSearchResults(null)}}><FilePlus2 size={16}/><span><b>{item.title}</b><small>Feedback form · {item.is_open?'open':'closed'}</small></span></button>)}
+          {searchResults.users.map(item=><button key={item.id} className="search-result" onClick={()=>{void changeTab('admin');setSearchResults(null)}}><Users size={16}/><span><b>{item.full_name||item.email||'User'}</b><small>User · {item.role.toLowerCase()}</small></span></button>)}
+          {!searchResults.courses.length&&!searchResults.feedback.length&&!searchResults.users.length&&!searchResults.departments.length&&!searchResults.instructors.length&&<p className="muted">No matching courses, forms, instructors or departments were found in your permitted workspace.</p>}
+        </div></section>}
         {error && <div className="alert error page-alert"><CircleHelp size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={16}/></button></div>}{notice && <div className="alert success page-alert">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
         {tab==='overview' && <>
           <div className="welcome-row"><div><span className="eyebrow">{new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><h2>Good {new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, {profileName?.split(' ')[0]||'there'}.</h2><p>Bring course feedback into focus and turn it into action.</p></div><div className="pulse-orb"><Activity size={26}/><span>Live workspace</span></div></div>

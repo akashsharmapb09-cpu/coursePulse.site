@@ -44,7 +44,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 ## P5 — Public site, search and SEO
 - [x] PARTIAL: public landing page, features section and footer; institution about/contact content remains open.
 - [ ] Privacy/terms pages are technical drafts and need institution/legal approval.
-- [x] DONE: permission-aware search across courses/forms and admin-only user search.
+- [x] DONE: permission-aware debounced search across course titles/codes, feedback forms, departments, student-visible instructor names and admin-only user search. Search uses a per-user rate limit and excludes response text.
 - [x] DONE: metadata, canonical, Open Graph, sitemap, robots and noindex for private routes.
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
