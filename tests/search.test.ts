@@ -12,6 +12,11 @@ describe('permission-aware smart search',()=>{
     expect(dashboard).toContain('},400);');
     expect(dashboard).toContain('Searching…');
     expect(dashboard).toContain('No matching courses, forms, instructors or departments');
+    expect(dashboard).toContain("setSearchTarget({kind:'course',id:item.id})");
+    expect(dashboard).toContain("setSearchTarget({kind:'department',id:item.id})");
+    expect(dashboard).toContain('courses.filter(course=>course.department_id===searchTarget.id)');
+    expect(dashboard).toContain('feedback.filter(form=>form.id===searchTarget.id)');
+    expect(dashboard).toContain('adminUsers.filter(user=>user.id===searchUserId)');
   });
   it('searches course title/code, forms, departments and only permitted instructor/user records',()=>{
     expect(route).toContain("ilike('course_code',pattern)");
