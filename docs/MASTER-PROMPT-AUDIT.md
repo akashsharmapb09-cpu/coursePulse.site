@@ -51,6 +51,7 @@ Read-only RLS inspection confirmed:
 - public.anonymous_submissions has an explicit deny-direct-access policy for anon/authenticated.
 - Authenticated users have no direct SELECT or INSERT grant on private.data_deletion_requests.
 - Selected admin/security RPCs deny anon execution and require administrator role plus AAL2 inside the database.
+- Rollback-only live-schema student/instructor integration tests passed course/enrollment scoping, one-time eligibility consumption, duplicate rejection, direct answer/eligibility read denial, five-response suppression, other-instructor course isolation, weekly response aggregation and free-text exclusion; post-rollback verification found zero synthetic rows persisted.
 
 New anonymous_submissions rows do not store student identifiers or eligibility references. Eligibility is separately stored in private.feedback_eligibility. Legacy public.responses historically stores student_id alongside answers; it was empty at cutover and remains for compatibility/retention. Do not claim cryptographic anonymity. Timing inference, complementary suppression and repeated-query differencing still need independent review.
 
@@ -76,7 +77,7 @@ Current live project has one course and one feedback form, no student/instructor
 | 2. Existing project audit | PARTIAL | Repository, routes, schema, DB, CI and deployment reviewed; browser link/button/console audit and smoke test open. |
 | 3. Product and personas | PASS | PRD describes student, instructor and admin workflows. |
 | 4. Technology stack | PASS | Next.js 15.5.28, React 19, TypeScript, Supabase, Prisma schema tooling, Zod and exports. |
-| 5. Roles and permissions | PARTIAL | RBAC/RLS and AAL2 controls exist; exhaustive role-matrix and IDOR tests open. |
+| 5. Roles and permissions | PARTIAL | RBAC/RLS and AAL2 controls exist; exhaustive role-matrix, cross-resource IDOR and re-identification tests open. |
 | 6. Core application functionality | PARTIAL | Core academic, feedback, student, admin and instructor flows present; privacy-reviewed comments and advanced reporting remain open. |
 | 7. Database design | PARTIAL | Entity model, RLS and anonymity/eligibility separation present; full migration replay on disposable DB and adversarial role matrix open. |
 | 8. Application security | PARTIAL | Auth, RLS, Zod, same-origin checks, rate limits, headers, audit and MFA gates; adversarial XSS/CSRF/IDOR and secret-history scan open. |

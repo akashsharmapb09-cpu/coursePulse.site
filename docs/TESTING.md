@@ -30,6 +30,28 @@ The Vitest suite has contract/unit coverage for export escaping and formula neut
 
 These tests do not replace authenticated database role-matrix tests or browser E2E.
 
+## Completed rollback-only live-schema integration checks (1 November 2026)
+
+Two SQL integration scripts were run as explicit transactions against the active schema and ended with ROLLBACK. Follow-up queries confirmed zero synthetic Auth users, profiles, courses, forms, answers and deletion requests persisted.
+
+Student/anonymous flow PASS:
+- A synthetic enrolled student sees their published course and eligible open feedback form, but not a published course without enrollment.
+- Completion state changes from pending to submitted after calling the anonymous submission RPC.
+- A repeated submission is rejected with the duplicate/unique-violation path.
+- A private eligibility row is consumed atomically with one anonymous answer record.
+- Authenticated direct reads of anonymous_submissions and private.feedback_eligibility are denied.
+- The anonymous answer table contains no student_id, user_id or eligibility_id column.
+
+Instructor analytics/privacy PASS:
+- Five identical rating answers form a reportable aggregate with response_count 5 and average 4.
+- A four-response form is suppressed from aggregate/rating distribution results.
+- A second instructor's course aggregate is not returned to the tested instructor.
+- Weekly trend count correctly includes nine responses across the tested instructor's two forms.
+- Free-text answers are excluded from aggregate option_value output.
+- A student-role identity cannot call instructor aggregate analytics.
+
+These checks use synthetic fixtures inside one rollback-only SQL transaction. They validate selected database behavior; they are not browser E2E or a complete policy matrix.
+
 ## Controlled integration tests still required
 
 Run only against a disposable Supabase QA project with synthetic accounts. Never create synthetic student submissions in the production project.

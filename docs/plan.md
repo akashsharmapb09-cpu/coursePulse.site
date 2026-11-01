@@ -7,7 +7,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: migration design for eligibility and anonymous answer storage.
 - [x] PARTIAL: atomic eligibility consumption and duplicate prevention without identity-answer mapping are implemented in the database RPC; full end-to-end verification and adversarial tests remain open.
 - [x] DONE: no legacy response rows existed at migration time; legacy table retained under existing retention policy.
-- [x] PARTIAL: RLS matrix and automated contract tests added; exhaustive role-matrix, IDOR and statistical re-identification testing remains open.
+- [x] PARTIAL: RLS matrix and automated contract tests added; rollback-only live-schema tests passed for enrolled-course scope, eligible form visibility, anonymous eligibility consumption, duplicate prevention, direct answer/eligibility denial, instructor course scope, five-response threshold and free-text exclusion. Exhaustive role-matrix, IDOR and statistical re-identification testing remains open.
 - [x] PARTIAL: app writes new answers to separate storage; completed-form visibility is eligibility-scoped; policy pages are technical drafts and require institution/legal review.
 
 ## P1 — Identity and security
@@ -50,7 +50,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## P6 — QA and operations
 - [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 29 Vitest files/107 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
-- [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
+- [x] PARTIAL: selected rollback-only student/instructor RLS, duplicate-prevention and aggregate-suppression integration tests passed. Full role-matrix, cross-resource IDOR, adversarial XSS/CSRF and distributed abuse tests remain open.
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
