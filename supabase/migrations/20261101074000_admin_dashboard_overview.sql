@@ -20,7 +20,7 @@ begin
   if (select auth.uid()) is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
-  if private.current_app_role() <> 'ADMIN'::public.app_role then
+  if private.current_app_role() is distinct from 'ADMIN'::public.app_role then
     raise exception 'Administrator role required' using errcode = '42501';
   end if;
   if coalesce((select auth.jwt()->>'aal'),'aal1') <> 'aal2' then

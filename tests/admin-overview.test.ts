@@ -11,7 +11,7 @@ describe('administrator institution overview',()=>{
     expect(route).toContain('getCurrentUser(supabase)');
     expect(route).toContain("auth.profile.role !== 'ADMIN'");
     expect(route).toContain("rpc('get_admin_dashboard_overview')");
-    expect(migration).toContain("private.current_app_role() <> 'ADMIN'::public.app_role");
+    expect(migration).toContain("private.current_app_role() is distinct from 'ADMIN'::public.app_role");
     expect(migration).toContain("auth.jwt()->>'aal'");
   });
 
@@ -28,6 +28,6 @@ describe('administrator institution overview',()=>{
     expect(dashboard).toContain('/api/admin/overview');
     expect(dashboard).toContain('Institution overview');
     expect(dashboard).toContain('Low participation alerts');
-    expect(dashboard).toContain('reportable average rating');
+    expect(dashboard).toContain('average rating includes only question groups with at least five submissions');
   });
 });

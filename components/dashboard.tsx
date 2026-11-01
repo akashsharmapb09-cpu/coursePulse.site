@@ -348,8 +348,8 @@ function AdminConsole({users,audit,academic,overview,currentUserId,busy,onUpdate
         <Metric icon={<Users size={19}/>} label="Departments" value={overview.total_departments} hint="Institution departments"/>
         <Metric icon={<FilePlus2 size={19}/>} label="Feedback forms" value={overview.total_feedback_forms} hint="All forms"/>
         <Metric icon={<Activity size={19}/>} label="Responses" value={overview.total_responses} hint="Retained submissions"/>
-        <Metric icon={<Activity size={19}/>} label="Participation" value={overview.participation_rate==null?'—':overview.participation_rate.toFixed(1)+'%'} hint="Across enrolled places in forms"/>
-        <Metric icon={<FileBarChart size={19}/>} label="Average rating" value={overview.average_rating==null?'—':overview.average_rating.toFixed(2)+'/5'} hint="Reportable rating groups only"/>
+        <Metric icon={<Activity size={19}/>} label="Participation" value={overview.participation_rate==null?'—':Number(overview.participation_rate).toFixed(1)+'%'} hint="Across enrolled places in forms"/>
+        <Metric icon={<FileBarChart size={19}/>} label="Average rating" value={overview.average_rating==null?'—':Number(overview.average_rating).toFixed(2)+'/5'} hint="Reportable rating groups only"/>
       </div>
     </section>
     <section>
