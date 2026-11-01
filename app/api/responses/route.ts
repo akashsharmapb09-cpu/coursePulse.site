@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       continue;
     }
     if (q.type === 'rating' && (!Number.isInteger(value) || Number(value) < 1 || Number(value) > 5)) return jsonError('Ratings must be a whole number from 1 to 5.');
+    if (q.type === 'yes_no' && value !== 'Yes' && value !== 'No') return jsonError('Please answer Yes or No.');
     if (q.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > 1000000)) return jsonError('Numeric answer is invalid.');
     if (['text', 'textarea'].includes(q.type) && (typeof value !== 'string' || value.length > 2000)) return jsonError('Written answers must be 2,000 characters or fewer.');
     if (q.type === 'single_choice' && (typeof value !== 'string' || !q.options?.includes(value))) return jsonError('Please choose a valid option.');

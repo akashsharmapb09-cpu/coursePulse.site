@@ -5,10 +5,21 @@ export const courseInput = z.object({
   description: z.string().trim().max(5000).default('')
 }).strict();
 
+export const questionCategories = [
+  'Course Content',
+  'Teaching Effectiveness',
+  'Communication',
+  'Course Organization',
+  'Assessment',
+  'Learning Resources',
+  'Overall Satisfaction'
+] as const;
+
 export const questionSchema = z.object({
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,48}$/),
   label: z.string().trim().min(2).max(180),
-  type: z.enum(['rating', 'single_choice', 'multiple_choice', 'text', 'textarea', 'number']),
+  type: z.enum(['rating', 'single_choice', 'multiple_choice', 'text', 'textarea', 'number', 'yes_no']),
+  category: z.enum(questionCategories).optional(),
   required: z.boolean().default(true),
   options: z.array(z.string().trim().min(1).max(100)).max(20).optional()
 }).strict().superRefine((q, ctx) => {
