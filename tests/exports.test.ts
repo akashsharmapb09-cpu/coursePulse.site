@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
 
 const exportRoute = readFileSync(resolve(process.cwd(), 'app/api/exports/[format]/route.ts'), 'utf8');
+const rateMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101180000_coursepulse_report_rate_limits.sql'), 'utf8');
 
 const sample: AggregateRow = {
   course_id: 'c1', course_title: 'Physics', feedback_id: 'f1', feedback_title: 'Module pulse',
@@ -21,7 +22,11 @@ describe('aggregate exports', () => {
     expect(spreadsheetSafeText('ordinary course title')).toBe('ordinary course title');
     expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK");
   });
-  it('applies the shared formula sanitizer to HTML XLS and XLSX string cells', () => {
+  it('keeps export downloads under an authenticated per-user hourly budget', () => {
+    expect(exportRoute).toContain("checkReadRateLimit(supabase, 'exports:download', 20, 3600)");
+    expect(rateMigration).toContain("'exports:download'");
+  });
+  it('applies the shared formula sanitizer to HTML XLS and XLSX string cells', () =>{
     expect(exportRoute).toContain('escapeHtml(spreadsheetSafeText(row[k as keyof typeof row]))');
     expect(exportRoute).toContain("typeof value === 'string' ? spreadsheetSafeText(value) : value");
   });

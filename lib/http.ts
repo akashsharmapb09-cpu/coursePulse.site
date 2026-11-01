@@ -52,3 +52,24 @@ export async function protectMutation(
   if (data !== true) return jsonError('Too many requests. Please wait before trying again.', 429);
   return null;
 }
+
+export async function checkReadRateLimit(
+  supabase: ServerSupabase,
+  action: 'analytics:query' | 'exports:download',
+  limit: number,
+  windowSeconds: number
+): Promise<NextResponse | null> {
+  const { data, error } = await supabase.rpc('consume_api_rate_limit', {
+    p_action: action,
+    p_limit: limit,
+    p_window_seconds: windowSeconds
+  });
+  if (error) return jsonError('This report is temporarily unavailable. Please retry shortly.', 503);
+  if (data !== true) {
+    return NextResponse.json(
+      { error: 'You have reached the report request limit. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(windowSeconds), 'Cache-Control': 'no-store' } }
+    );
+  }
+  return null;
+}
