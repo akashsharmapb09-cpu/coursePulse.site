@@ -1,4 +1,4 @@
-import { QUESTION_CATEGORIES } from '@/lib/question-categories';
+import { QUESTION_CATEGORIES } from './question-categories';
 
 export type RatingBin = { rating_value: number; response_count: number };
 export type CategoryAggregate = { question_category?: string | null; question_type?: string | null; avg_numeric_value?: number | string | null; response_count?: number | string | null };
