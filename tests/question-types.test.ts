@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { questionSchema } from '../lib/validation';
 
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101090000_coursepulse_yes_no_question_type.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101065511_coursepulse_yes_no_question_type.sql'), 'utf8');
 const responsesRoute = readFileSync(resolve(process.cwd(), 'app/api/responses/route.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 
