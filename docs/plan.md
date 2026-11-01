@@ -42,14 +42,14 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
 
 ## P5 — Public site, search and SEO
-- [x] PARTIAL: public landing page with required headline/CTAs, About and Contact information pages, Features section, footer and free-project refund information; institution-specific support contact/legal approval remain open.
+- [x] PARTIAL: public landing page with required headline/CTAs, About and Contact information pages, Features section, complete footer and free-project refund information; verified institutional support contact/legal approval remain open.
 - [ ] Privacy/terms pages are technical drafts and need institution/legal approval.
 - [x] DONE: permission-aware debounced search across course titles/codes, feedback forms, departments, student-visible instructor names and admin-only user search. Search uses a per-user rate limit and excludes response text.
 - [x] DONE: metadata, canonical, Open Graph, sitemap, robots and noindex for private routes.
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 27 Vitest files/100 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 28 Vitest files/103 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.

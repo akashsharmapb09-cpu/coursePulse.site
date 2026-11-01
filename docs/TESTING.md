@@ -18,7 +18,7 @@ Latest evidence at feature commit cfe8fb5 on 1 November 2026:
 - Dependency audit: 0 npm vulnerabilities reported.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
-- Vitest: 27 files / 100 tests PASS.
+- Vitest: 28 files / 103 tests PASS.
 - Next.js production build: PASS.
 
 CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys.
