@@ -48,6 +48,7 @@ export function AdminMfaGate() {
       for(const pendingId of pendingFactorIds){
         const {error:removeError}=await supabase.auth.mfa.unenroll({factorId:pendingId});
         if(removeError) throw removeError;
+        setPendingFactorIds(current=>current.filter(id=>id!==pendingId));
       }
       const {data:enrolled,error:enrollError}=await supabase.auth.mfa.enroll({factorType:'totp',friendlyName:'CoursePulse administrator'});
       if(enrollError) throw enrollError;
