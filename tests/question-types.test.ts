@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { questionSchema } from '../lib/validation';
+import { questionListSchema, questionSchema } from '../lib/validation';
+import { validateResponseAnswers } from '../lib/response-validation';
 
 const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101065511_coursepulse_yes_no_question_type.sql'), 'utf8');
 const multipleSelectMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101065824_coursepulse_multiple_select_question_type.sql'), 'utf8');
-const responsesRoute = readFileSync(resolve(process.cwd(), 'app/api/responses/route.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 
 describe('supported feedback question types', () => {
@@ -28,9 +28,21 @@ describe('supported feedback question types', () => {
       category: 'Invented category',
       required: true
     }).success).toBe(false);
-    expect(responsesRoute).toContain("q.type === 'yes_no'");
-    expect(responsesRoute).toContain("['multiple_choice', 'multiple_select'].includes(q.type)");
-    expect(responsesRoute).toContain("value !== 'Yes' && value !== 'No'");
+    const questions = questionListSchema.parse([
+      { id: 'q-yes-no', label: 'Was the course useful?', type: 'yes_no' },
+      { id: 'q-many', label: 'Choose topics', type: 'multiple_select', options: ['A', 'B'] }
+    ]);
+    expect(validateResponseAnswers(questions, { 'q-yes-no': 'Yes', 'q-many': ['A'] })).toBeNull();
+    expect(validateResponseAnswers(questions, { 'q-yes-no': 'Maybe', 'q-many': ['A'] })).toContain('Yes or No');
+    expect(validateResponseAnswers(questions, { 'q-yes-no': 'No', 'q-many': ['C'] })).toContain('valid options');
+  });
+
+  it('rejects duplicate question identifiers before publishing or editing a form', () => {
+    const duplicate = questionListSchema.safeParse([
+      { id: 'same-id', label: 'First question', type: 'rating' },
+      { id: 'same-id', label: 'Second question', type: 'yes_no' }
+    ]);
+    expect(duplicate.success).toBe(false);
   });
 
   it('renders a Yes/No control and exposes every master-prompt category in the builder', () => {
