@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import ExcelJS from 'exceljs';
-import { csvCell, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
+import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
 
 const sample: AggregateRow = {
   course_id: 'c1', course_title: 'Physics', feedback_id: 'f1', feedback_title: 'Module pulse',
@@ -10,7 +10,12 @@ const sample: AggregateRow = {
 
 describe('aggregate exports', () => {
   it('escapes quotes and CSV delimiters', () => expect(csvCell('a,"b"')).toBe('"a,""b"""'));
-  it('neutralizes spreadsheet formulas', () => expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK"));
+  it('neutralizes spreadsheet formulas in text values before CSV, XLS and XLSX encoding', () => {
+    expect(spreadsheetSafeText('=HYPERLINK("x")')).toBe("'=HYPERLINK(\"x\")");
+    expect(spreadsheetSafeText('\t+cmd|/C calc')).toBe("'\t+cmd|/C calc");
+    expect(spreadsheetSafeText('ordinary course title')).toBe('ordinary course title');
+    expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK");
+  });
   it('contains aggregate metrics, not response answer data', () => {
     const rows = aggregateExportRows([sample]);
     expect(rows[0]['Average score']).toBe(4.25);

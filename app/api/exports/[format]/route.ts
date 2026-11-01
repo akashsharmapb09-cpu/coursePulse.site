@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { createClient } from '@/lib/supabase/server';
-import { aggregateExportRows, toCsv, type AggregateRow } from '@/lib/exports';
+import { aggregateExportRows, spreadsheetSafeText, toCsv, type AggregateRow } from '@/lib/exports';
 import { getCurrentUser, jsonError } from '@/lib/http';
 import { attachQuestionCategories, isQuestionCategory, loadQuestionCategoryMap } from '@/lib/question-categories';
 
@@ -44,14 +44,19 @@ export async function GET(request: NextRequest, context: Context) {
   if (format === 'csv') return new NextResponse(toCsv(rows), { headers: { ...common, 'Content-Type': 'text/csv; charset=utf-8' } });
   if (format === 'xls') {
     const keys = rows.length ? Object.keys(rows[0]) : ['Notice'];
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CoursePulse aggregate report</title></head><body><h1>CoursePulse aggregate report</h1><p>Generated ${date}. Groups under five responses are suppressed. Individual and written answers are not included.</p><table border="1"><thead><tr>${keys.map(k => `<th>${escapeHtml(k)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(row => `<tr>${keys.map(k => `<td>${escapeHtml(String(row[k as keyof typeof row] ?? ''))}</td>`).join('')}</tr>`).join('') : `<tr><td>No groups currently meet the minimum group size of five responses.</td></tr>`}</tbody></table></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>CoursePulse aggregate report</title></head><body><h1>CoursePulse aggregate report</h1><p>Generated ${date}. Groups under five responses are suppressed. Individual and written answers are not included.</p><table border="1"><thead><tr>${keys.map(k => `<th>${escapeHtml(k)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(row => `<tr>${keys.map(k => `<td>${escapeHtml(spreadsheetSafeText(row[k as keyof typeof row]))}</td>`).join('')}</tr>`).join('') : `<tr><td>No groups currently meet the minimum group size of five responses.</td></tr>`}</tbody></table></body></html>`;
     return new NextResponse(html, { headers: { ...common, 'Content-Type': 'application/vnd.ms-excel; charset=utf-8' } });
   }
   if (format === 'xlsx') {
     const workbook = new ExcelJS.Workbook(); workbook.creator = 'CoursePulse'; workbook.created = new Date();
     const sheet = workbook.addWorksheet('Aggregate report');
     sheet.columns = rows.length ? Object.keys(rows[0]).map(key => ({ header: key, key, width: Math.min(48, Math.max(16, key.length + 4)) })) : [{ header: 'Notice', key: 'notice', width: 80 }];
-    if (rows.length) sheet.addRows(rows); else sheet.addRow({ notice: 'No groups currently meet the minimum group size of five responses.' });
+    if (rows.length) {
+      const safeRows = rows.map(row => Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [key, typeof value === 'string' ? spreadsheetSafeText(value) : value])
+      ));
+      sheet.addRows(safeRows);
+    } else sheet.addRow({ notice: 'No groups currently meet the minimum group size of five responses.' });
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }; sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF193C34' } };
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
     const buffer = await workbook.xlsx.writeBuffer();

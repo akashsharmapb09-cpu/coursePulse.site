@@ -4,10 +4,14 @@ export type AggregateRow = {
   option_value: string | null; response_count: number; avg_numeric_value: number | null; question_category?: string | null;
 };
 
+export function spreadsheetSafeText(value: unknown): string {
+  const text = value == null ? '' : String(value);
+  // Spreadsheet applications may interpret formula-leading text as executable formulas.
+  return /^[\\s]*[=+@-]/.test(text) ? `'${text}` : text;
+}
+
 export function csvCell(value: unknown): string {
-  let text = value == null ? '' : String(value);
-  // Prevent spreadsheet formula injection on exported text fields.
-  if (/^[\s]*[=+@-]/.test(text)) text = `'${text}`;
+  const text = spreadsheetSafeText(value);
   return `"${text.replace(/"/g, '""')}"`;
 }
 
