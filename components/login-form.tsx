@@ -33,7 +33,15 @@ export function LoginForm() {
         if (data.session) { router.replace('/dashboard'); router.refresh(); }
         else setNotice('Check your email to confirm your account, then sign in.');
       }
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to authenticate.'); }
+    } catch {
+      if (mode === 'signin') {
+        setError('Sign-in failed. Check your credentials and try again.');
+      } else if (mode === 'signup') {
+        setNotice('If an account can be created for this email, confirmation instructions will be sent. If you already have an account, try signing in.');
+      } else {
+        setNotice('If an account exists for this email, password reset instructions can be sent. Try again later if nothing arrives.');
+      }
+    }
     finally { setBusy(false); }
   }
   return <div className="auth-card">
