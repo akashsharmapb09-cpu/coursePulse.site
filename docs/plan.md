@@ -42,7 +42,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: CSV, XLSX and PDF downloads use the shared aggregate service; legacy XLS is also available.
 
 ## P5 — Public site, search and SEO
-- [x] PARTIAL: public landing page, features section and footer; institution about/contact content remains open.
+- [x] PARTIAL: public landing page with required headline/CTAs, About and Contact information pages, Features section, footer and free-project refund information; institution-specific support contact/legal approval remain open.
 - [ ] Privacy/terms pages are technical drafts and need institution/legal approval.
 - [x] DONE: permission-aware debounced search across course titles/codes, feedback forms, departments, student-visible instructor names and admin-only user search. Search uses a per-user rate limit and excludes response text.
 - [x] DONE: metadata, canonical, Open Graph, sitemap, robots and noindex for private routes.
