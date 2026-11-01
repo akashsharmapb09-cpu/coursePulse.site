@@ -23,7 +23,8 @@ export async function GET() {
       if(typeof row.instructor_name==='string'&&!names.includes(row.instructor_name)) names.push(row.instructor_name);
       byCourse.set(row.course_id,names);
     }
-    courses=courses.map(({instructor_id,...course})=>({...course,instructors:byCourse.get(course.id)??[]}));
+    const studentCourses=courses.map(({instructor_id,...course})=>({...course,instructors:byCourse.get(course.id)??[]}));
+    return NextResponse.json({courses:studentCourses},{headers:{'Cache-Control':'no-store'}});
   }
   return NextResponse.json({ courses }, { headers: { 'Cache-Control': 'no-store' } });
 }
