@@ -5,7 +5,6 @@ import { describe,expect,it } from 'vitest';
 const layout=readFileSync(resolve(process.cwd(),'app/layout.tsx'),'utf8');
 const icon=readFileSync(resolve(process.cwd(),'public/icon.svg'),'utf8');
 const manifest=readFileSync(resolve(process.cwd(),'app/manifest.ts'),'utf8');
-const layout=readFileSync(resolve(process.cwd(),'app/layout.tsx'),'utf8');
 const og=readFileSync(resolve(process.cwd(),'app/opengraph-image.tsx'),'utf8');
 
 describe('public app identity assets',()=>{
