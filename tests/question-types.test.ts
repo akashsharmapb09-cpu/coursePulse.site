@@ -37,7 +37,10 @@ describe('supported feedback question types', () => {
     expect(dashboard).toContain('<option value="yes_no">Yes / No</option>');
     expect(dashboard).toContain('<option value="multiple_select">Multiple selection (checkboxes)</option>');
     expect(dashboard).toContain("question.type === 'multiple_select'");
-    expect(dashboard).toContain("id:`q-${crypto.randomUUID().replaceAll('-', '')}`");
+    expect(dashboard).toContain("crypto.randomUUID().replaceAll('-','')");
+    expect(dashboard).toContain('id: question.id');
+    expect(dashboard).toContain('reorderQuestionItems(current,index,target)');
+    expect(dashboard).toContain('Move question');
     expect(dashboard).toContain("tab==='history'");
     expect(dashboard).toContain("if (question.required && unanswered)");
     expect(dashboard).toContain('<fieldset key={question.id}');
