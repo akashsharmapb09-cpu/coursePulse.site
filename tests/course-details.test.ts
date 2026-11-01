@@ -23,6 +23,11 @@ describe('institution course details', () => {
     expect(route).toContain("select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)')");
   });
 
+  it('does not return internal instructor account IDs to student clients', () => {
+    expect(route).toContain('courses=courses.map(({instructor_id,...course})=>');
+    expect(route).toContain('instructors:byCourse.get(course.id)??[]');
+  });
+
   it('shows the student course detail fields and lets staff enter an actual institutional code', () => {
     expect(dashboard).toContain('Course code (optional)');
     expect(dashboard).toContain('Instructor:');
