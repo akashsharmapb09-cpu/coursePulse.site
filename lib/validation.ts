@@ -20,6 +20,19 @@ export const questionSchema = z.object({
   if (['single_choice', 'multiple_choice', 'multiple_select'].includes(q.type) && (!q.options || q.options.length < 2)) {
     ctx.addIssue({ code: 'custom', message: 'Choice questions need at least two options.', path: ['options'] });
   }
+  if (q.options && new Set(q.options.map(option => option.toLowerCase())).size !== q.options.length) {
+    ctx.addIssue({ code: 'custom', message: 'Choice options must be unique.', path: ['options'] });
+  }
+});
+
+export const questionListSchema = z.array(questionSchema).min(1).max(30).superRefine((questions, ctx) => {
+  const seen = new Set<string>();
+  questions.forEach((question, index) => {
+    if (seen.has(question.id)) {
+      ctx.addIssue({ code: 'custom', message: 'Question IDs must be unique.', path: [index, 'id'] });
+    }
+    seen.add(question.id);
+  });
 });
 
 export const feedbackInput = z.object({
@@ -28,11 +41,8 @@ export const feedbackInput = z.object({
   description: z.string().trim().max(3000).default(''),
   retention_days: z.number().int().min(30).max(730).default(365),
   due_at: z.string().datetime().nullable().optional(),
-  form_schema: z.array(questionSchema).min(1).max(30)
-}).strict().superRefine((input, ctx) => {
-  const ids = input.form_schema.map(q => q.id);
-  if (new Set(ids).size !== ids.length) ctx.addIssue({ code: 'custom', message: 'Question IDs must be unique.', path: ['form_schema'] });
-});
+  form_schema: questionListSchema
+}).strict();
 
 export const responseInput = z.object({
   feedback_id: z.string().uuid(),

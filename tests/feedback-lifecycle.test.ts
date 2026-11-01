@@ -7,7 +7,7 @@ const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'
 
 describe('feedback form lifecycle',()=>{
   it('validates and updates form content through the scoped feedback table policy',()=>{
-    expect(route).toMatch(/form_schema:z\.array\(questionSchema\)/);
+    expect(route).toContain('form_schema:questionListSchema.optional()');
     expect(route).toMatch(/title:z\.string\(\)/);
     expect(route).toMatch(/supabase\.from\('feedback'\)\.update\(updates\)/);
     expect(route).toMatch(/protectMutation/);

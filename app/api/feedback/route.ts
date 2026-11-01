@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { feedbackInput, questionSchema } from '@/lib/validation';
+import { feedbackInput, questionListSchema } from '@/lib/validation';
 import { z } from 'zod';
 import { getCurrentUser, jsonError, protectMutation } from '@/lib/http';
 
@@ -51,7 +51,7 @@ const lifecycleInput = z.object({
   is_open:z.boolean().optional(),
   title:z.string().trim().min(2).max(160).optional(),
   description:z.string().trim().max(3000).optional(),
-  form_schema:z.array(questionSchema).min(1).max(30).optional(),
+  form_schema:questionListSchema.optional(),
   due_at:z.string().datetime().nullable().optional()
 }).strict().refine(input=>Object.keys(input).length>1,'Provide at least one field to update.');
 
