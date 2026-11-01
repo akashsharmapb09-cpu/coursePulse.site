@@ -51,6 +51,7 @@ Read-only RLS inspection confirmed:
 - public.anonymous_submissions has an explicit deny-direct-access policy for anon/authenticated.
 - Authenticated users have no direct SELECT or INSERT grant on private.data_deletion_requests.
 - Selected admin/security RPCs deny anon execution and require administrator role plus AAL2 inside the database.
+- The daily `coursepulse-retention-cleanup` cron job is active (`17 20 * * *` UTC); last observed run on 31 October 2026 20:17 UTC succeeded. The cleanup RPC is executable by `service_role` only. A rollback-only expiry smoke test proved old legacy and anonymous answers plus expired rate-limit rows are deleted; no QA rows persisted.
 - Rollback-only live-schema student/instructor integration tests passed course/enrollment scoping, one-time eligibility consumption, duplicate rejection, direct answer/eligibility read denial, five-response suppression, other-instructor course isolation, weekly response aggregation and free-text exclusion; post-rollback verification found zero synthetic rows persisted.
 
 New anonymous_submissions rows do not store student identifiers or eligibility references. Eligibility is separately stored in private.feedback_eligibility. Legacy public.responses historically stores student_id alongside answers; it was empty at cutover and remains for compatibility/retention. Do not claim cryptographic anonymity. Timing inference, complementary suppression and repeated-query differencing still need independent review.

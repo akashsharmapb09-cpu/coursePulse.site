@@ -54,7 +54,8 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
-- [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan); cron execution history.
+- [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan).
+- [x] PARTIAL: daily retention cron job is active (`17 20 * * *` UTC) with one successful recorded run; rollback-only expiry test confirmed legacy responses, anonymous submissions and old rate-limit rows are cleaned. Ongoing schedule monitoring remains open.
 - [x] PARTIAL: PRD, architecture, code standards, security and CI documentation added; API reference, testing guide and seed strategy are documented; staging data fixtures and manual QA evidence remain open.
 - [ ] Production smoke test and evidence-based sign-off.
 

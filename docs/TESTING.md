@@ -75,6 +75,16 @@ Not yet evidenced for the latest feature commit:
 - Lighthouse/Core Web Vitals: LCP, INP and CLS. Do not claim the two-second target without measurements.
 - Chromium, Firefox and WebKit smoke checks.
 
+## Retention/cron verification (1 November 2026)
+
+- Cron job `coursepulse-retention-cleanup` is active on schedule `17 20 * * *` UTC.
+- Last recorded job run: 31 October 2026 20:17 UTC, status `succeeded`.
+- Cleanup function is owned by postgres, executable by service_role, and not executable by anon/authenticated.
+- Rollback-only SQL smoke test inserted 31-day-old legacy and anonymous answer rows plus a three-day-old rate-limit row, invoked the cleanup function, and asserted that all three were deleted.
+- A follow-up query confirmed that no synthetic course/form/response fixtures persisted after rollback.
+
+This proves one recorded cron execution and the function's expiration behavior; it does not prove long-term recurring reliability or backup restoration.
+
 ## Test data safety
 
 No default admin credentials or production demo students are seeded. Preview and production currently share the same Supabase project URL; treat preview writes as production writes. Follow docs/SEEDING.md for an isolated QA project.
