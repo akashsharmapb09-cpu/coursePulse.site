@@ -6,7 +6,7 @@ export const courseInput = z.object({
   description: z.string().trim().max(5000).default('')
 }).strict();
 
-export { QUESTION_CATEGORIES as questionCategories } from '@/lib/question-categories';
+export { QUESTION_CATEGORIES as questionCategories } from './question-categories';
 
 export const questionSchema = z.object({
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,48}$/),

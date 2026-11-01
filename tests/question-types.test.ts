@@ -37,6 +37,8 @@ describe('supported feedback question types', () => {
     expect(dashboard).toContain('<option value="multiple_select">Multiple selection (checkboxes)</option>');
     expect(dashboard).toContain("question.type === 'multiple_select'");
     expect(dashboard).toContain("tab==='history'");
+    expect(dashboard).toContain("if (question.required && unanswered)");
+    expect(dashboard).toContain('<fieldset key={question.id}');
     for (const category of ['Course Content', 'Teaching Effectiveness', 'Communication', 'Course Organization', 'Assessment', 'Learning Resources', 'Overall Satisfaction']) {
       expect(dashboard).toContain(category);
     }
