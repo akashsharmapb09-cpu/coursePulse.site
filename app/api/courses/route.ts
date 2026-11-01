@@ -9,7 +9,7 @@ export async function GET() {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  const query = supabase.from('courses').select('id,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').order('created_at', { ascending: false });
+  const query = supabase.from('courses').select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code),instructor:users!courses_instructor_id_fkey(id,full_name,email)').order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) return jsonError('Unable to load courses.', 500);
   return NextResponse.json({ courses: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
@@ -28,10 +28,11 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return jsonError(parsed.error.issues[0]?.message ?? 'Invalid course details.');
   const { data, error } = await supabase.from('courses').insert({
     instructor_id: auth.user.id,
+    course_code: parsed.data.course_code || null,
     title: parsed.data.title,
     description: parsed.data.description,
     status: 'PUBLISHED'
-  }).select('id,title,description,status,created_at,instructor_id').single();
+  }).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code),instructor:users!courses_instructor_id_fkey(id,full_name,email)').single();
   if (error) return jsonError('Course could not be created. Check your role and try again.', 403);
   return NextResponse.json({ course: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -41,6 +42,7 @@ const courseUpdateInput=z.object({
   title:z.string().trim().min(2).max(160).optional(),
   description:z.string().trim().max(5000).optional(),
   status:z.enum(['DRAFT','PUBLISHED','ARCHIVED']).optional()
+  course_code:z.string().trim().min(2).max(30).nullable().optional()
 }).strict().refine(input=>Object.keys(input).length>1,'Provide at least one course field to update.');
 
 export async function PATCH(request:NextRequest) {

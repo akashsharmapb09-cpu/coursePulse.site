@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { QUESTION_CATEGORIES } from './question-categories';
 
 export const courseInput = z.object({
+  course_code: z.string().trim().min(2).max(30).optional().nullable(),
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().max(5000).default('')
 }).strict();
