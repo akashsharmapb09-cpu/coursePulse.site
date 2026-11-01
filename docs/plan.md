@@ -30,7 +30,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: eligibility, pending and completed forms; closed completed forms remain visible only to the student who submitted.
 - [x] DONE: students, instructors and admins can update their own display name through a column-scoped RLS-protected profile endpoint.
 - [x] PARTIAL: optional deadlines are enforced by the database; cohort participation progress and richer history remain open.
-- [x] PARTIAL: multi-question response form supports rating, numeric, single-choice, multiple-choice, short/long text and Yes/No; questions can be assigned one of seven academic categories. Category filters are available in analytics and exports. WCAG/keyboard/screen-reader validation remains open.
+- [x] PARTIAL: multi-question response form supports rating, numeric, single-choice, multiple-choice, checkbox multiple selection, short/long text and Yes/No; questions can be assigned one of seven academic categories, reordered, and retain stable IDs when edited. Category filters are available in analytics and exports. WCAG/keyboard/screen-reader validation remains open.
 
 ## P4 — Instructor analytics
 - [x] PARTIAL: assigned-course dashboard and aggregate metrics; additional instructor assignments are supported.
