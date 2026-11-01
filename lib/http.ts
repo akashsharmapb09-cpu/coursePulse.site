@@ -21,7 +21,7 @@ export async function getCurrentUser(supabase: ServerSupabase) {
 export async function protectMutation(
   request: NextRequest,
   supabase: ServerSupabase,
-  action: 'courses:create' | 'feedback:create' | 'responses:submit' | 'admin:user-update' | 'account:password-change' | 'account:profile-update',
+  action: 'courses:create' | 'feedback:create' | 'responses:submit' | 'admin:user-update' | 'account:password-change' | 'account:profile-update' | 'account:deletion-request',
   limit: number,
   windowSeconds: number
 ): Promise<NextResponse | null> {

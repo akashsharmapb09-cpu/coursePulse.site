@@ -17,7 +17,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: database-backed per-user/action rate limits and same-origin checks cover course, form, response, admin and signed-in password-change mutations. Auth-provider rate limits still require dashboard verification.
 - [x] DONE: baseline Content-Security-Policy added; nonce-based strict CSP and browser validation remain open.
 - [x] PARTIAL: password reset uses generic confirmation; consistent generic sign-in error normalization and provider-level rate-limit verification remain open.
-- [ ] Supabase leaked-password protection (dashboard setting), secret-history scan and credential rotation evidence.
+- [ ] Supabase leaked-password protection (dashboard setting; unavailable on current Free tier), secret-history scan and credential rotation evidence.
 
 ## P2 — Academic administration
 - [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters; users can be assigned/cleared from departments through an MFA-protected, audited RPC. Full archival/lifecycle controls remain open.
@@ -30,6 +30,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 ## P3 — Student experience
 - [x] DONE: eligibility, pending and completed forms; closed completed forms remain visible only to the student who submitted.
 - [x] DONE: students, instructors and admins can update their own display name through a column-scoped RLS-protected profile endpoint.
+- [x] PARTIAL: users can submit and track deletion requests; admins can review and document outcomes with MFA. Actual Auth-user deletion must be carried out and verified through the institution's authorized Supabase process before a request is marked COMPLETED.
 - [x] PARTIAL: optional deadlines are enforced by the database; cohort participation progress and richer history remain open.
 - [x] PARTIAL: multi-question response form supports rating, numeric, single-choice, multiple-choice, checkbox multiple selection, short/long text and Yes/No; questions can be assigned one of seven academic categories, reordered, and retain stable IDs when edited. Category filters are available in analytics and exports. WCAG/keyboard/screen-reader validation remains open.
 
@@ -53,7 +54,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
-- [ ] Backup/restore and cron execution evidence.
+- [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan); cron execution history.
 - [x] PARTIAL: PRD, architecture, code standards, security and CI documentation added; full API reference and seed strategy remain open.
 - [ ] Production smoke test and evidence-based sign-off.
 

@@ -11,6 +11,7 @@ type Course = { id: string; course_code?:string|null; title: string; description
 type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; submitted?: boolean; due_at?: string|null; created_at: string; version?:number; form_schema?: Question[]; course?: { title: string } };
 type FeedbackVersion = {version:number;title:string;description:string;form_schema:Question[];due_at:string|null;changed_by:string|null;created_at:string};
 type Question = { id: string; label: string; type: 'rating'|'single_choice'|'multiple_choice'|'multiple_select'|'text'|'textarea'|'number'|'yes_no'; category?: 'Course Content'|'Teaching Effectiveness'|'Communication'|'Course Organization'|'Assessment'|'Learning Resources'|'Overall Satisfaction'; required: boolean; options?: string[] };
+type DataDeletionRequest = {id:string;status:'PENDING'|'IN_REVIEW'|'APPROVED'|'REJECTED'|'COMPLETED';created_at:string;reviewed_at:string|null;resolution_note:string|null;requester_name?:string;requester_email?:string;requester_role?:string};
 type AdminOverview = {
   total_students:number;
   total_instructors:number;
@@ -67,6 +68,9 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [analyticsCategory,setAnalyticsCategory]=useState('');
   const [adminUsers,setAdminUsers] = useState<AdminUser[]>([]);
   const [adminAudit,setAdminAudit] = useState<AuditEvent[]>([]);
+  const [deletionRequests,setDeletionRequests]=useState<DataDeletionRequest[]>([]);
+  const [deletionLoading,setDeletionLoading]=useState(false);
+  const [deletionBusy,setDeletionBusy]=useState(false);
   const [adminOverview,setAdminOverview]=useState<AdminOverview>({total_students:0,total_instructors:0,total_courses:0,total_departments:0,total_feedback_forms:0,total_responses:0,participation_rate:null,average_rating:null,low_participation_forms:[]});
   const [adminAcademic,setAdminAcademic] = useState<AcademicData>({departments:[],semesters:[],courses:[],students:[],instructors:[],enrollments:[],assignments:[],accounts:[]});
   const [searchQuery,setSearchQuery]=useState('');
@@ -178,6 +182,44 @@ export function Dashboard({ profile }: { profile: Profile }) {
     finally{setProfileSaving(false);}
   }
 
+  async function loadMyDeletionRequests() {
+    setDeletionLoading(true);
+    try {
+      const response=await fetch('/api/account/data-deletion',{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not load deletion requests.');
+      setDeletionRequests(data.requests??[]);
+    } catch(error) {
+      setError(error instanceof Error?error.message:'Could not load deletion requests.');
+    } finally { setDeletionLoading(false); }
+  }
+
+  async function submitDeletionRequest(event:FormEvent) {
+    event.preventDefault();
+    setDeletionBusy(true);setError('');setNotice('');
+    try {
+      const response=await fetch('/api/account/data-deletion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not submit deletion request.');
+      setNotice('Your data deletion request has been recorded. An administrator will review it.');
+      await loadMyDeletionRequests();
+    } catch(error) {
+      setError(error instanceof Error?error.message:'Could not submit deletion request.');
+    } finally { setDeletionBusy(false); }
+  }
+
+  async function reviewDeletionRequest(requestId:string,status:DataDeletionRequest['status'],resolutionNote:string) {
+    setBusy(true);setError('');setNotice('');
+    try {
+      const response=await fetch('/api/admin/deletion-requests',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId,status,resolution_note:resolutionNote})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not update deletion request.');
+      setNotice('Data deletion request status updated and audit logged.');
+      await loadAdmin();
+    } catch(error) { setError(error instanceof Error?error.message:'Could not update deletion request.'); }
+    finally { setBusy(false); }
+  }
+
   async function changePassword(event:FormEvent) {
     event.preventDefault();setError('');setNotice('');
     if(newPassword.length<10||newPassword.length>72){setError('New password must be between 10 and 72 characters.');return;}
@@ -196,12 +238,14 @@ export function Dashboard({ profile }: { profile: Profile }) {
   }
 
   async function loadAdmin() {
-    const [usersRes,auditRes,academicRes,overviewRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'}),fetch('/api/admin/academic',{cache:'no-store'}),fetch('/api/admin/overview',{cache:'no-store'})]);
-    const usersData=await usersRes.json(); const auditData=await auditRes.json(); const academicData=await academicRes.json(); const overviewData=await overviewRes.json();
+    const [usersRes,auditRes,academicRes,overviewRes,deletionRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'}),fetch('/api/admin/academic',{cache:'no-store'}),fetch('/api/admin/overview',{cache:'no-store'}),fetch('/api/admin/deletion-requests',{cache:'no-store'})]);
+    const usersData=await usersRes.json(); const auditData=await auditRes.json(); const academicData=await academicRes.json(); const overviewData=await overviewRes.json(); const deletionData=await deletionRes.json();
     if(!usersRes.ok) throw new Error(usersData.error??'Could not load administrator users.');
     if(!auditRes.ok) throw new Error(auditData.error??'Could not load audit history.');
     if(!academicRes.ok) throw new Error(academicData.error??'Could not load academic administration data.');
     if(!overviewRes.ok) throw new Error(overviewData.error??'Could not load institution metrics.');
+    if(!deletionRes.ok) throw new Error(deletionData.error??'Could not load data deletion requests.');
+    setDeletionRequests(deletionData.requests??[]);
     setAdminUsers(usersData.users??[]); setAdminAudit(auditData.events??[]); setAdminAcademic(academicData); setAdminOverview(overviewData.overview);
   }
   async function updateAdminUser(userId:string,role:AdminUser['role'],isActive:boolean) {
@@ -249,7 +293,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
       setAnalytics(a.rows??[]);setCompareAnalytics(b.rows??[]);setRatingDistributions(a.rating_distributions??[]);setResponseTrends(a.trends??[]);
     } catch(e){setError(e instanceof Error?e.message:'Course comparison failed.');}
   }
-  async function changeTab(next: typeof tab) { setTab(next); if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
+  async function changeTab(next: typeof tab) { setTab(next); if(next==='security') { void loadMyDeletionRequests(); } if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="/dashboard"><span className="brand-mark">◉</span><span>CoursePulse</span></a>
@@ -280,8 +324,13 @@ export function Dashboard({ profile }: { profile: Profile }) {
         {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div>{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div><CourseList courses={courses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}} onEdit={editCourse} onStatus={updateCourseStatus}/></>}
         {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>Respond to an open form or manage forms you own.</p></div>{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div><FeedbackList feedback={feedback} role={profile.role} onRespond={setResponseModal} onToggle={toggleFeedback} onEdit={editFeedback} onVersions={viewFeedbackVersions}/></>}
         {tab==='history' && <><div className="section-heading"><div><h3>Completed feedback</h3><p>Your previous submissions are listed here. Individual answers are not shown again.</p></div><span className="role-chip">{stats.completed} completed</span></div><FeedbackList feedback={feedback.filter(form=>form.submitted)} role="STUDENT" onRespond={setResponseModal} onToggle={()=>{}} onEdit={()=>{}} onVersions={()=>{}}/></>}
-        {tab==='security' && <section className="mx-auto w-full max-w-2xl space-y-5"><div className="section-heading"><div><h3>Protect your account</h3><p>Confirm your current password before setting a new one. Other active sessions are revoked after a successful change.</p></div><ShieldCheck size={24}/></div><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={saveProfile}><div><h3 className="font-semibold">Profile information</h3><p className="fine-print">Update the name displayed across your workspace.</p></div><label>Full name<input value={profileName} onChange={e=>setProfileName(e.target.value)} minLength={2} maxLength={100} autoComplete="name" required/></label><button className="button primary self-start" disabled={profileSaving||profileName.trim()===profile.full_name}>{profileSaving?'Saving…':'Save profile'}</button></form><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" minLength={1} maxLength={72} required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} /></label><label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={newPassword} onChange={e=>setNewPassword(e.target.value)} /></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={confirmNewPassword} onChange={e=>setConfirmNewPassword(e.target.value)} /></label><p className="fine-print">Use a unique password you do not reuse on other websites. You will need to sign in again on this device after changing it.</p><button className="button primary self-start" disabled={busy||!currentPassword||!newPassword||!confirmNewPassword}>{busy?'Updating password…':'Change password'}</button></form></section>}
-        {tab==='admin' && <AdminConsole users={adminUsers} audit={adminAudit} academic={adminAcademic} overview={adminOverview} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser} onAcademicCreate={createAcademic} onAcademicUpdate={updateAcademic}/>}
+        {tab==='security' && <section className="mx-auto w-full max-w-2xl space-y-5"><div className="section-heading"><div><h3>Protect your account</h3><p>Confirm your current password before setting a new one. Other active sessions are revoked after a successful change.</p></div><ShieldCheck size={24}/></div><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={saveProfile}><div><h3 className="font-semibold">Profile information</h3><p className="fine-print">Update the name displayed across your workspace.</p></div><label>Full name<input value={profileName} onChange={e=>setProfileName(e.target.value)} minLength={2} maxLength={100} autoComplete="name" required/></label><button className="button primary self-start" disabled={profileSaving||profileName.trim()===profile.full_name}>{profileSaving?'Saving…':'Save profile'}</button></form><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" minLength={1} maxLength={72} required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} /></label><label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={newPassword} onChange={e=>setNewPassword(e.target.value)} /></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={confirmNewPassword} onChange={e=>setConfirmNewPassword(e.target.value)} /></label><p className="fine-print">Use a unique password you do not reuse on other websites. You will need to sign in again on this device after changing it.</p><button className="button primary self-start" disabled={busy||!currentPassword||!newPassword||!confirmNewPassword}>{busy?'Updating password…':'Change password'}</button></form><section className="stack-form rounded-2xl border border-amber-200 bg-white p-6">
+  <div><h3 className="font-semibold">Personal data deletion request</h3><p className="fine-print">You can request deletion of eligible account data. The institution must review legal retention requirements and any records that must be kept. Anonymous feedback answers are stored separately from your account eligibility.</p></div>
+  <form onSubmit={submitDeletionRequest}><button className="button subtle" disabled={deletionBusy||deletionLoading||deletionRequests.some(request=>request.status==='PENDING'||request.status==='IN_REVIEW'||request.status==='APPROVED')}>{deletionBusy?'Submitting…':'Request account data deletion'}</button></form>
+  <div className="space-y-2"><h4 className="text-sm font-semibold">Your requests</h4>{deletionLoading?<p className="fine-print">Loading requests…</p>:deletionRequests.length?deletionRequests.map(request=><article key={request.id} className="rounded-xl border border-[#e5ece6] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{request.status.replace('_',' ')}</b><small className="muted">{new Date(request.created_at).toLocaleString()}</small></div>{request.resolution_note&&<p className="fine-print mt-2">{request.resolution_note}</p>}</article>):<p className="fine-print">No requests submitted.</p>}</div>
+  <p className="fine-print">A request is not an automatic deletion. The institution will confirm the outcome after review.</p>
+</section></section>}
+        {tab==='admin' && <AdminConsole users={adminUsers} audit={adminAudit} academic={adminAcademic} overview={adminOverview} deletionRequests={deletionRequests} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser} onAcademicCreate={createAcademic} onAcademicUpdate={updateAcademic} onDeletionReview={reviewDeletionRequest}/>}
         {tab==='analytics' && <><div className="section-heading"><div><h3>Aggregate insights</h3><p>Only groups with at least five submissions are shown. Written answers are never included.</p></div><div className="export-actions"><a className="button subtle" href={'/api/exports/csv'+(analyticsQuery(analyticsCourseId||undefined)?'?'+analyticsQuery(analyticsCourseId||undefined):'')}><ArrowDownToLine size={15}/> CSV</a><a className="button subtle" href={'/api/exports/xls'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> XLS</a><a className="button subtle" href={'/api/exports/xlsx'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> XLSX</a><a className="button subtle" href={'/api/exports/pdf'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> PDF</a></div></div><div className="analytics-filters"><label>Course<select value={analyticsCourseId} onChange={e=>{setAnalyticsCourseId(e.target.value);setCompareAnalytics([])}}><option value="">All assigned courses</option>{courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Semester<select value={analyticsSemesterId} onChange={e=>{setAnalyticsSemesterId(e.target.value);setCompareAnalytics([])}}><option value="">All semesters</option>{Array.from(new Map(courses.filter(course=>course.semester_id&&course.semester).map(course=>[course.semester_id!,course.semester!])).values()).map(semester=><option key={semester.id} value={semester.id}>{semester.name}</option>)}</select></label><label>Department<select value={analyticsDepartmentId} onChange={e=>{setAnalyticsDepartmentId(e.target.value);setCompareAnalytics([])}}><option value="">All departments</option>{Array.from(new Map(courses.filter(course=>course.department_id&&course.department).map(course=>[course.department_id!,course.department!])).values()).map(department=><option key={department.id} value={department.id}>{department.name} ({department.code})</option>)}</select></label><label>From date<input type="date" value={analyticsFromDate} max={analyticsToDate||undefined} onChange={e=>{setAnalyticsFromDate(e.target.value);setCompareAnalytics([])}}/></label><label>To date<input type="date" value={analyticsToDate} min={analyticsFromDate||undefined} onChange={e=>{setAnalyticsToDate(e.target.value);setCompareAnalytics([])}}/></label><label>Question category<select value={analyticsCategory} onChange={e=>{setAnalyticsCategory(e.target.value);setCompareAnalytics([])}}><option value="">All categories</option>{QUESTION_CATEGORIES.map(category=><option key={category} value={category}>{category}</option>)}</select></label><label>Compare with<select value={compareCourseId} onChange={e=>setCompareCourseId(e.target.value)}><option value="">Select another course</option>{courses.filter(course=>course.id!==analyticsCourseId).map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><button className="button primary compact" onClick={()=>void compareCourses()} disabled={!analyticsCourseId||!compareCourseId}>Compare courses</button><button className="button subtle compact" onClick={()=>void fetchAnalytics()}>Apply filters</button></div>{compareAnalytics.length>0&&<div className="comparison-panel"><div className="section-heading"><div><h3>Course comparison</h3><p>Only matching questions with reportable cohort sizes are compared.</p></div></div><div className="comparison-grid">{analytics.filter(row=>row.avg_numeric_value!=null).map((row,index)=>{const match=compareAnalytics.find(other=>other.avg_numeric_value!=null&&other.question_label===row.question_label&&other.question_type===row.question_type);return match?<article className="comparison-card" key={row.question_id+'-'+index}><b>{row.question_label}</b><div className="comparison-values"><span><small>{row.course_title}</small><strong>{Number(row.avg_numeric_value).toFixed(2)}</strong></span><span><small>{match.course_title}</small><strong>{Number(match.avg_numeric_value).toFixed(2)}</strong></span></div><p>Difference: {(Number(row.avg_numeric_value)-Number(match.avg_numeric_value)).toFixed(2)} points</p></article>:null;})}</div></div>}<div className="privacy-banner"><ShieldCheck size={18}/><span><b>Aggregate-only reporting</b><small>Response identities and free-text answers are excluded. Suppressed groups contain fewer than five responses.</small></span></div><div className="rating-distribution-grid">{ratingCharts.map((chart,index)=>{const max=Math.max(...chart.values.map(value=>value.response_count),1);return <article className="rating-chart-card" key={chart.question_id+'-'+index}><span className="eyebrow">{chart.course_title} · {chart.feedback_title}</span><h4>{chart.question_label}</h4><p>{chart.values[0]?.question_category?`${chart.values[0].question_category} · `:''}Rating distribution · bins below five responses are suppressed</p>{chart.values.map(value=><div className="rating-bar-row" key={value.rating_value}><span>{value.rating_value}</span><div className="rating-bar-track"><div className="rating-bar-fill" style={{width:(value.response_count/max*100)+'%'}}/></div><b>{value.response_count}</b></div>)}</article>})}</div><div className="trend-chart-grid">{trendCharts.map((chart,index)=>{const max=Math.max(...chart.points.map(point=>point.response_count),1);return <article className="trend-chart-card" key={chart.course_title+'-'+index}><span className="eyebrow">{chart.course_title}</span><h4>Weekly response trend</h4><p>Only weeks with at least five submissions are shown. Weekly trends remain course-wide when a question category is selected.</p><div className="trend-columns">{chart.points.map(point=><div className="trend-column" key={point.week_start}><b>{point.response_count}</b><div className="trend-column-track"><div style={{height:(point.response_count/max*100)+'%'}}/></div><small>{new Date(point.week_start+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}</small></div>)}</div></article>})}</div><div className="analytics-grid">{analytics.length?analytics.map((r,i)=><article className="analytics-card" key={`${r.feedback_id}-${r.question_id}-${r.option_value}-${i}`}><span className="eyebrow">{r.course_title}</span><h4>{r.question_label}</h4><p>{r.feedback_title}{r.question_category?` · ${r.question_category}`:''}</p><div className="analytic-value">{r.avg_numeric_value!=null?Number(r.avg_numeric_value).toFixed(2):r.response_count}<small>{r.avg_numeric_value!=null?' average score':` responses${r.option_value?` · ${r.option_value}`:''}`}</small></div></article>):<Empty icon={<FileBarChart/>} title="No reportable groups yet" text="Reports appear once at least five students have answered a question."/>}</div></>}
       </section>
     </main>
@@ -337,7 +386,31 @@ function ResponseForm({item,onDone}:{item:Feedback;onDone:()=>void}) {
   </form>;
 }
 
-function AdminConsole({users,audit,academic,overview,currentUserId,busy,onUpdate,onAcademicCreate,onAcademicUpdate}:{users:AdminUser[];audit:AuditEvent[];academic:AcademicData;overview:AdminOverview;currentUserId:string;busy:boolean;onUpdate:(id:string,role:AdminUser['role'],active:boolean)=>void;onAcademicCreate:(payload:AcademicAction)=>void;onAcademicUpdate:(payload:AcademicAction)=>void}) {
+function AdminDeletionRequest({request,busy,onSave}:{request:DataDeletionRequest;busy:boolean;onSave:(id:string,status:DataDeletionRequest['status'],note:string)=>void}) {
+  const [status,setStatus]=useState<DataDeletionRequest['status']>(request.status);
+  const [note,setNote]=useState(request.resolution_note??'');
+  const options=request.status==='PENDING'?['IN_REVIEW','APPROVED','REJECTED']:request.status==='IN_REVIEW'?['APPROVED','REJECTED']:request.status==='APPROVED'?['COMPLETED','REJECTED']:[];
+  return <article className="feedback-row">
+    <div className="feedback-icon"><ShieldCheck size={18}/></div>
+    <div className="feedback-copy min-w-0">
+      <b>{request.requester_name||'Account no longer present'} · {request.requester_role??'—'}</b>
+      <span>{request.requester_email??'No email'} · Requested {new Date(request.created_at).toLocaleString()}</span>
+      {request.reviewed_at&&<small>Last reviewed {new Date(request.reviewed_at).toLocaleString()}</small>}
+      <label className="mt-2 block text-xs">Resolution note<textarea value={note} maxLength={500} rows={2} onChange={e=>setNote(e.target.value)} placeholder="Explain the review or retention exception."/></label>
+      {request.status==='APPROVED'&&<p className="fine-print">Before marking completed, delete eligible account data through the authorized Supabase process and verify required retention exceptions. This app does not have privileged Auth deletion credentials.</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <select aria-label={'Review status for request '+request.id} value={status} onChange={e=>setStatus(e.target.value as DataDeletionRequest['status'])} disabled={options.length===0}>
+          {options.map(option=><option key={option} value={option}>{option.replace('_',' ')}</option>)}
+          {options.length===0&&<option value={request.status}>{request.status.replace('_',' ')}</option>}
+        </select>
+        <button className="button subtle compact" disabled={busy||options.length===0||status===request.status||note.trim().length===0} onClick={()=>onSave(request.id,status,note)}>Save review</button>
+      </div>
+    </div>
+    <span className={'status-badge '+(request.status==='COMPLETED'?'published':request.status==='REJECTED'?'archived':'draft')}>{request.status.replace('_',' ').toLowerCase()}</span>
+  </article>;
+}
+
+function AdminConsole({users,audit,academic,overview,deletionRequests,currentUserId,busy,onUpdate,onAcademicCreate,onAcademicUpdate,onDeletionReview}:{users:AdminUser[];audit:AuditEvent[];academic:AcademicData;overview:AdminOverview;deletionRequests:DataDeletionRequest[];currentUserId:string;busy:boolean;onUpdate:(id:string,role:AdminUser['role'],active:boolean)=>void;onAcademicCreate:(payload:AcademicAction)=>void;onAcademicUpdate:(payload:AcademicAction)=>void;onDeletionReview:(requestId:string,status:DataDeletionRequest['status'],note:string)=>void}) {
   return <div className="space-y-8">
     <section>
       <div className="section-heading"><div><h3>Institution overview</h3><p>Live totals from the database. Average rating includes only question groups with at least five submissions.</p></div></div>
@@ -359,6 +432,7 @@ function AdminConsole({users,audit,academic,overview,currentUserId,busy,onUpdate
     <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
     {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
     <AdminAcademicManager data={academic} busy={busy} onCreate={onAcademicCreate} onUpdate={onAcademicUpdate}/>
+    <section><div className="section-heading"><div><h3>Data deletion requests</h3><p>Review privacy requests. Only mark COMPLETED after eligible account deletion is carried out and verified through the institution's authorized process.</p></div><span className="role-chip">{deletionRequests.filter(request=>['PENDING','IN_REVIEW','APPROVED'].includes(request.status)).length} active</span></div>{deletionRequests.length?<div className="feedback-list">{deletionRequests.map(request=><AdminDeletionRequest key={request.id} request={request} busy={busy} onSave={onDeletionReview}/>)}</div>:<Empty icon={<ShieldCheck/>} title="No deletion requests" text="User privacy requests will appear here for review."/>}</section>
     <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account and academic actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator actions will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replace(/\./g,' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
   </div>;
 }
