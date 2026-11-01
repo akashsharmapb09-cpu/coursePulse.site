@@ -1,5 +1,5 @@
 'use client';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -418,7 +418,62 @@ function Metric({icon,label,value,hint}:{icon:React.ReactNode;label:string;value
 function CourseList({courses,role,loading,onFeedback,onEdit,onStatus}:{courses:Course[];role:string;loading:boolean;onFeedback:(id:string)=>void;onEdit:(course:Course)=>void;onStatus:(course:Course)=>void}){if(loading)return <div className="loading-panel">Loading courses…</div>;if(!courses.length)return <Empty icon={<BookOpen/>} title="No courses yet" text={role==='STUDENT'?'Published courses will appear here.':'Create your first course to get started.'}/>;return <div className="course-grid">{courses.map(c=><article className="course-card" key={c.id}><div className="course-art"><span className="course-art-mark"><GraduationCap size={25}/></span><span className={`status-badge ${c.status.toLowerCase()}`}>{c.status.toLowerCase()}</span></div><div className="course-card-body"><div className="flex flex-wrap items-center gap-2">{c.course_code&&<span className="role-chip">{c.course_code}</span>}<h4>{c.title}</h4></div><p>{c.description||'No course description yet.'}</p>{role==='STUDENT'&&<div className="course-meta"><small>Instructor: {c.instructors?.length?c.instructors.join(', '):c.instructor?.full_name||c.instructor?.email||'Not assigned'}</small><small>Department: {c.department?.name||'Not assigned'}</small><small>Semester: {c.semester?.name||'Not assigned'}</small></div>}<div className="course-footer"><small>Added {new Date(c.created_at).toLocaleDateString()}</small>{role!=='STUDENT'&&<div className="flex flex-wrap gap-2"><button className="mini-action" onClick={()=>onFeedback(c.id)}><Plus size={14}/> Feedback</button><button className="mini-action" onClick={()=>onEdit(c)}><Pencil size={13}/> Edit</button><button className="mini-action" onClick={()=>onStatus(c)}>{c.status==='ARCHIVED'?'Republish':'Archive'}</button></div>}</div></div></article>)}</div>}
 function FeedbackList({feedback,role,onRespond,onToggle,onEdit,onVersions}:{feedback:Feedback[];role:string;onRespond:(f:Feedback)=>void;onToggle:(f:Feedback)=>void;onEdit:(f:Feedback)=>void;onVersions:(f:Feedback)=>void}){if(!feedback.length)return <Empty icon={<FilePlus2/>} title="Nothing here yet" text="When feedback forms are created, they will appear here."/>;return <div className="feedback-list">{feedback.map(f=>{const expired=Boolean(f.due_at&&new Date(f.due_at).getTime()<=Date.now());return <article className="feedback-row" key={f.id}><div className="feedback-icon"><FilePlus2 size={18}/></div><div className="feedback-copy"><b>{f.title}</b><span>{f.description||'Feedback form'} · {new Date(f.created_at).toLocaleDateString()}{f.due_at?` · Due ${new Date(f.due_at).toLocaleString()}`:''}</span></div><span className={`status-badge ${f.submitted?'published':f.is_open?'published':'archived'}`}>{f.submitted?'completed':expired?'expired':f.is_open?'open':'closed'}</span>{role==='STUDENT'&&f.is_open&&!f.submitted&&!expired&&<button className="button subtle compact" onClick={()=>onRespond(f)}>Respond <ArrowDownToLine size={14}/></button>}{role!=='STUDENT'&&<><button className="button subtle compact" onClick={()=>onEdit(f)}><Pencil size={13}/> Edit</button><button className="button subtle compact" onClick={()=>onVersions(f)}>Versions</button><button className="button subtle compact" onClick={()=>onToggle(f)}>{f.is_open?'Close form':'Reopen form'}</button></>}</article>})}</div>}
 function Empty({icon,title,text}:{icon:React.ReactNode;title:string;text:string}){return <div className="empty-state"><div>{icon}</div><h4>{title}</h4><p>{text}</p></div>}
-function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){return <div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="modal" role="dialog" aria-modal="true" aria-label={title}><header><h3>{title}</h3><button className="icon-button" onClick={onClose} aria-label="Close"><X size={18}/></button></header>{children}</section></div>}
+function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){
+  const headingId=useId();
+  const dialogRef=useRef<HTMLElement|null>(null);
+  const closeRef=useRef(onClose);
+  closeRef.current=onClose;
+
+  useEffect(()=>{
+    const dialog=dialogRef.current;
+    if(!dialog)return;
+    const previouslyFocused=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    const previousBodyOverflow=document.body.style.overflow;
+    const focusableSelector='a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const getFocusable=()=>Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)).filter(element=>!element.hasAttribute('hidden')&&element.getAttribute('aria-hidden')!=='true');
+
+    document.body.style.overflow='hidden';
+    (getFocusable()[0]??dialog).focus();
+
+    function handleKeyDown(event:KeyboardEvent){
+      if(event.key==='Escape'){
+        event.preventDefault();
+        closeRef.current();
+        return;
+      }
+      if(event.key!=='Tab')return;
+      const items=getFocusable();
+      if(!items.length){
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first=items[0];
+      const last=items[items.length-1];
+      if(event.shiftKey&&(document.activeElement===first||!dialog.contains(document.activeElement))){
+        event.preventDefault();
+        last.focus();
+      }else if(!event.shiftKey&&(document.activeElement===last||!dialog.contains(document.activeElement))){
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown',handleKeyDown);
+    return ()=>{
+      document.removeEventListener('keydown',handleKeyDown);
+      document.body.style.overflow=previousBodyOverflow;
+      previouslyFocused?.focus();
+    };
+  },[]);
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeRef.current()}}>
+    <section ref={dialogRef} className="modal" role="dialog" aria-modal="true" aria-labelledby={headingId} tabIndex={-1}>
+      <header><h3 id={headingId}>{title}</h3><button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={18}/></button></header>
+      {children}
+    </section>
+  </div>;
+}
 function ResponseForm({item,onDone}:{item:Feedback;onDone:()=>void}) {
   const questions = item.form_schema ?? [];
   const [answers,setAnswers] = useState<Record<string,string|string[]>>({});
