@@ -31,7 +31,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: eligibility, pending and completed forms; closed completed forms remain visible only to the student who submitted.
 - [x] DONE: students, instructors and admins can update their own display name through a column-scoped RLS-protected profile endpoint.
 - [x] PARTIAL: users can submit and track deletion requests; admins can review and document outcomes with MFA. Actual Auth-user deletion must be carried out and verified through the institution's authorized Supabase process before a request is marked COMPLETED.
-- [x] PARTIAL: optional deadlines are enforced by the database; cohort participation progress and richer history remain open.
+- [x] PARTIAL: optional deadlines are enforced by the database; students see their own eligible-form completion progress and history. Cohort-level participation is restricted to privacy-safe admin aggregates.
 - [x] PARTIAL: multi-question response form supports rating, numeric, single-choice, multiple-choice, checkbox multiple selection, short/long text and Yes/No; questions can be assigned one of seven academic categories, reordered, and retain stable IDs when edited. Category filters are available in analytics and exports. WCAG/keyboard/screen-reader validation remains open.
 
 ## P4 — Instructor analytics
