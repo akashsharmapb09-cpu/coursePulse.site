@@ -23,6 +23,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters; users can be assigned/cleared from departments through an MFA-protected, audited RPC. Full archival/lifecycle controls remain open.
 - [x] DONE: student course enrollments and instructor-course assignments with scoped RLS.
 - [x] DONE: MFA-protected user role/suspension API and console; last-active-admin guard.
+- [x] DONE: admin institution overview with live counts, participation rate, reportable average rating, and privacy-safe low-participation alerts.
 - [x] PARTIAL: course create/edit/archive/republish and feedback create/edit/open/close/deadline enforcement implemented; form-definition version snapshots and owner/admin restore are implemented; deletion recovery, scheduling and full lifecycle audit remain open.
 - [x] DONE: admin audit table and privileged audit RPC. Append-only Data API grants (no direct INSERT/UPDATE/DELETE).
 
