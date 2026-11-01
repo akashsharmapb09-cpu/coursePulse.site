@@ -11,12 +11,12 @@ export { QUESTION_CATEGORIES as questionCategories } from '@/lib/question-catego
 export const questionSchema = z.object({
   id: z.string().regex(/^[a-zA-Z0-9_-]{1,48}$/),
   label: z.string().trim().min(2).max(180),
-  type: z.enum(['rating', 'single_choice', 'multiple_choice', 'text', 'textarea', 'number', 'yes_no']),
+  type: z.enum(['rating', 'single_choice', 'multiple_choice', 'text', 'textarea', 'number', 'yes_no', 'multiple_select']),
   category: z.enum(QUESTION_CATEGORIES).optional(),
   required: z.boolean().default(true),
   options: z.array(z.string().trim().min(1).max(100)).max(20).optional()
 }).strict().superRefine((q, ctx) => {
-  if (['single_choice', 'multiple_choice'].includes(q.type) && (!q.options || q.options.length < 2)) {
+  if (['single_choice', 'multiple_choice', 'multiple_select'].includes(q.type) && (!q.options || q.options.length < 2)) {
     ctx.addIssue({ code: 'custom', message: 'Choice questions need at least two options.', path: ['options'] });
   }
 });

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (q.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > 1000000)) return jsonError('Numeric answer is invalid.');
     if (['text', 'textarea'].includes(q.type) && (typeof value !== 'string' || value.length > 2000)) return jsonError('Written answers must be 2,000 characters or fewer.');
     if (q.type === 'single_choice' && (typeof value !== 'string' || !q.options?.includes(value))) return jsonError('Please choose a valid option.');
-    if (q.type === 'multiple_choice' && (!Array.isArray(value) || (q.required && value.length === 0) || value.length > 20 || value.some(v => typeof v !== 'string' || !q.options?.includes(v)))) return jsonError('Please choose valid options.');
+    if (['multiple_choice', 'multiple_select'].includes(q.type) && (!Array.isArray(value) || (q.required && value.length === 0) || value.length > 20 || value.some(v => typeof v !== 'string' || !q.options?.includes(v)))) return jsonError('Please choose valid options.');
   }
   const { error } = await supabase.rpc('submit_anonymous_feedback', {
     p_feedback_id: form.id,

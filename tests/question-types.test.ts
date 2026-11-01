@@ -16,6 +16,7 @@ describe('supported feedback question types', () => {
       category: 'Teaching Effectiveness',
       required: true
     }).success).toBe(true);
+    expect(questionSchema.safeParse({ id: 'q-multi', label: 'Select applicable topics', type: 'multiple_select', category: 'Course Content', options: ['A', 'B'], required: false }).success).toBe(true);
   });
 
   it('rejects unknown categories and unsupported Yes/No values at the API boundary', () => {
@@ -27,11 +28,15 @@ describe('supported feedback question types', () => {
       required: true
     }).success).toBe(false);
     expect(responsesRoute).toContain("q.type === 'yes_no'");
+    expect(responsesRoute).toContain("['multiple_choice', 'multiple_select'].includes(q.type)");
     expect(responsesRoute).toContain("value !== 'Yes' && value !== 'No'");
   });
 
   it('renders a Yes/No control and exposes every master-prompt category in the builder', () => {
     expect(dashboard).toContain('<option value="yes_no">Yes / No</option>');
+    expect(dashboard).toContain('<option value="multiple_select">Multiple selection (checkboxes)</option>');
+    expect(dashboard).toContain("question.type === 'multiple_select'");
+    expect(dashboard).toContain("tab==='history'");
     for (const category of ['Course Content', 'Teaching Effectiveness', 'Communication', 'Course Organization', 'Assessment', 'Learning Resources', 'Overall Satisfaction']) {
       expect(dashboard).toContain(category);
     }
