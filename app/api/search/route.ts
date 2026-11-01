@@ -37,7 +37,7 @@ export async function GET(request:NextRequest){
     const uniqueUsers=new Map<string,{id:string;full_name:string;email:string|null;role:string}>();
     for(const user of [...(names.data??[]),...(emails.data??[])]) uniqueUsers.set(user.id,user);
     users=Array.from(uniqueUsers.values()).slice(0,10);
-    instructors=users.filter(user=>user.role==='INSTRUCTOR').map(user=>({course_id:'',instructor_name:user.full_name}));
+    instructors=[];
   } else if(auth.profile.role==='STUDENT') {
     const {data:rows,error:instructorError}=await supabase.rpc('get_student_course_instructors');
     if(instructorError) return jsonError('Instructor search is temporarily unavailable.',500);
