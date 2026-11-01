@@ -3,6 +3,9 @@ import { resolve } from 'node:path';
 import { describe,expect,it } from 'vitest';
 
 const home=readFileSync(resolve(process.cwd(),'app/page.tsx'),'utf8');
+const signup=readFileSync(resolve(process.cwd(),'app/signup/page.tsx'),'utf8');
+const loginForm=readFileSync(resolve(process.cwd(),'components/login-form.tsx'),'utf8');
+const robots=readFileSync(resolve(process.cwd(),'app/robots.ts'),'utf8');
 const about=readFileSync(resolve(process.cwd(),'app/about/page.tsx'),'utf8');
 const contact=readFileSync(resolve(process.cwd(),'app/contact/page.tsx'),'utf8');
 const refunds=readFileSync(resolve(process.cwd(),'app/refunds/page.tsx'),'utf8');
@@ -22,6 +25,11 @@ describe('public college-project website experience',()=>{
     expect(home).toContain('Get started');
     expect(home).toContain('Explore features');
     expect(home).toContain('href="/login"');
+    expect(home.match(/href="\\/signup"/g)?.length).toBe(3);
+    expect(signup).toContain('<LoginForm initialMode="signup" />');
+    expect(loginForm).toContain("useState<'signin' | 'signup' | 'forgot'>(initialMode)");
+    expect(robots).toContain("'/signup'");
+    expect(signup).toContain("robots: { index: false, follow: false }");
   });
   it('provides About, Features and Contact destinations without invented contact details',()=>{
     expect(home).toContain('href="/about"');

@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, BookOpen, LoaderCircle, Mail, LockKeyhole } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-export function LoginForm() {
+export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' }) {
   const router = useRouter();
-  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
