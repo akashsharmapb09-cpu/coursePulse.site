@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const route=readFileSync(resolve(process.cwd(),'app/api/admin/overview/route.ts'),'utf8');
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101074000_admin_dashboard_overview.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101074059_admin_dashboard_overview.sql'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 
 describe('administrator institution overview',()=>{
