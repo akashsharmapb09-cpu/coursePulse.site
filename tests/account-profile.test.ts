@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const route = readFileSync(resolve(process.cwd(), 'app/api/account/profile/route.ts'), 'utf8');
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101071500_account_profile_update.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101073156_account_profile_update.sql'), 'utf8');
 const http = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
 
 describe('account profile update boundary', () => {
