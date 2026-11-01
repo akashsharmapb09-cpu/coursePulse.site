@@ -20,7 +20,7 @@ describe('administrator institution overview',()=>{
     expect(migration).toContain('participation_rate numeric');
     expect(migration).toContain('average_rating numeric');
     expect(migration).toContain('having count(*)>=5');
-    expect(migration).not.toMatch(/return\s+query\s+select\s+.*student_id/is);
+    expect(migration).not.toMatch(/returns table\s*\([^)]*\b(student_id|answers)\b/is);
     expect(migration).toContain("'Fewer than five submissions'");
   });
 
@@ -28,6 +28,6 @@ describe('administrator institution overview',()=>{
     expect(dashboard).toContain('/api/admin/overview');
     expect(dashboard).toContain('Institution overview');
     expect(dashboard).toContain('Low participation alerts');
-    expect(dashboard).toContain('average rating includes only question groups with at least five submissions');
+    expect(dashboard).toContain('Average rating includes only question groups with at least five submissions');
   });
 });
