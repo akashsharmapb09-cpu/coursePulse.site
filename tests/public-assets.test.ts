@@ -12,6 +12,19 @@ describe('public app identity assets',()=>{
     expect(layout).toContain("icon: '/icon.svg'");
     expect(layout).toContain("shortcut: '/icon.svg'");
   });
+  it('self-hosts the chosen fonts through Next font optimization instead of runtime Google Fonts requests',()=>{
+    const css=readFileSync(resolve(process.cwd(),'app/globals.css'),'utf8');
+    expect(layout).toContain("from 'next/font/google'");
+    expect(layout).toContain("DM_Sans");
+    expect(layout).toContain("Manrope");
+    expect(layout).toContain("dmSans.variable");
+    expect(layout).toContain("manrope.variable");
+    expect(css).not.toContain('fonts.googleapis.com');
+  });
+  it('uses a visible keyboard focus indicator',()=>{
+    const css=readFileSync(resolve(process.cwd(),'app/globals.css'),'utf8');
+    expect(css).toContain(':focus-visible');
+  });
   it('uses a valid scalable SVG mark and web-app manifest',()=>{
     expect(icon).toContain('<svg');
     expect(icon).toContain('viewBox="0 0 64 64"');
