@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { QUESTION_CATEGORIES } from '@/lib/question-categories';
-import { moveQuestion, normalizeQuestionOptions } from '@/lib/question-editor';
+import { moveQuestion as reorderQuestionItems, normalizeQuestionOptions } from '@/lib/question-editor';
 
 type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
 type Course = { id: string; course_code?:string|null; title: string; description: string; status: string; created_at: string; instructor_id: string; instructor?:{id:string;full_name:string|null;email:string|null}|null; instructors?:string[]; department_id?:string|null; semester_id?:string|null; semester?:{id:string;name:string}|null; department?:{id:string;name:string;code:string}|null };
@@ -137,9 +137,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
     setQuestions(current=>{
       const target=index+offset;
       if(target<0||target>=current.length) return current;
-      const next=[...current];
-      [next[index],next[target]]=[next[target],next[index]];
-      return next;
+      return reorderQuestionItems(current,index,target);
     });
   }
 
