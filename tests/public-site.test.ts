@@ -25,7 +25,7 @@ describe('public college-project website experience',()=>{
     expect(home).toContain('Get started');
     expect(home).toContain('Explore features');
     expect(home).toContain('href="/login"');
-    expect(home.match(/href="\\/signup"/g)?.length).toBe(3);
+    expect(home.split('href="/signup"').length - 1).toBe(3);
     expect(signup).toContain('<LoginForm initialMode="signup" />');
     expect(loginForm).toContain("useState<'signin' | 'signup' | 'forgot'>(initialMode)");
     expect(robots).toContain("'/signup'");
