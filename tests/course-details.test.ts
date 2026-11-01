@@ -24,7 +24,7 @@ describe('institution course details', () => {
   });
 
   it('does not return internal instructor account IDs to student clients', () => {
-    expect(route).toContain('courses=courses.map(({instructor_id,...course})=>');
+    expect(route).toContain('const studentCourses=courses.map(({instructor_id,...course})=>');
     expect(route).toContain('instructors:byCourse.get(course.id)??[]');
   });
 
