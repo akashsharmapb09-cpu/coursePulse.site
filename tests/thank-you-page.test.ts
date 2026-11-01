@@ -18,7 +18,9 @@ describe('feedback submission confirmation page', () => {
     expect(page).toContain('Feedback form');
     expect(page).toContain('Submission status');
     expect(page).toContain('Return to Dashboard');
-    expect(page).not.toContain('answers');
+    expect(page).not.toMatch(/\.select\([^)]*answers/i);
+    expect(page).not.toMatch(/from\(['\"](?:responses|anonymous_submissions)['\"]\)/);
+    expect(page).toContain('Your answers remain separate from eligibility.');
   });
 
   it('routes a successful form submission to the confirmation page', () => {
