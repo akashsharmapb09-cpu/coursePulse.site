@@ -1,37 +1,41 @@
 # CoursePulse Architecture
 
-## Current production baseline
-Next.js App Router 15.5.28, React 19, TypeScript, Tailwind, Supabase Auth/Postgres with RLS, Prisma schema/client tooling, and Vercel hosting. Runtime request data access uses request-scoped Supabase session clients so the caller JWT reaches Postgres RLS; Prisma is not the runtime data layer.
+## Current implementation baseline
+- Next.js App Router 15.5.28, React 19, TypeScript, Tailwind and Lucide.
+- Supabase Auth + Postgres with RLS, private-schema SECURITY DEFINER helpers and RPC wrappers.
+- Prisma is the typed schema/client-generation and migration tooling contract; request runtime data access uses signed-in Supabase session clients, not a global Prisma/service-role connection.
+- Vercel hosting; GitHub Actions dependency audit, Prisma validation, TypeScript, Vitest and Next.js production build.
 
-## Target logical modules
-- Identity: auth callbacks, recovery, session policy, profiles and role administration.
-- Academic: departments, semesters, courses, enrollments and instructor assignments.
-- Feedback: form definitions, question versions, eligibility and submission workflow.
-- Anonymous response store: answer payloads without student identifiers or reversible identity references.
-- Reporting: one server-side aggregate service applying cohort suppression before charts, exports and APIs.
-- Administration: user lifecycle, academic configuration, retention and append-only audit events.
-- Public site: landing, features, legal and contact content with crawl controls.
+## Runtime modules
+- Identity and profile: sign-up, email confirmation, login/logout, password reset/change, display-name update, active-account checks and role protection.
+- Academic catalogue: departments, semesters, courses/course codes, enrollments and instructor assignments.
+- Feedback lifecycle: multi-question form schema, categories, deadlines, open/close, form version snapshots and restore.
+- Student submission: private eligibility ledger, atomic duplicate prevention, anonymous answer storage, completion status, history and confirmation.
+- Analytics/reporting: filtered aggregate RPCs, rating bins, weekly trends, category filters, donut/sentiment/radar presentation, two-course comparison and CSV/XLS/XLSX/PDF.
+- Administration: user role/suspension, academic setup, audit log, institution overview, privacy-request review and low-participation alerts.
+- Search and public pages: debounced permission-aware search, public landing/features/legal drafts, metadata, canonical/OG, robots/sitemap and private-page noindex.
 
-## Privacy boundary
-Eligibility asks whether an authenticated student may submit and whether the permission has been used. Anonymous answer storage records only the answer content. No stable shared ID, foreign key, timestamp precision, request metadata or administrator-accessible mapping may reconstruct the student-to-answer relationship.
+## Privacy boundary and limitations
+New submissions are written to `public.anonymous_submissions` with `feedback_id`, `answers` and date-level `received_on`. That table has no student ID or reference to eligibility. One-time eligibility/duplicate prevention is separate in `private.feedback_eligibility`, with direct Data API access denied. The submission RPC validates schema/answer types, atomically consumes eligibility and inserts answer payloads in one database transaction.
 
-The existing response model stores student_id with answers and is not anonymous. It must not be silently relabelled. Migration requires a reviewed threat model, compatibility plan, duplicate-prevention design and tests before production cutover.
+The legacy `public.responses` table still has `student_id` alongside answers. It was empty at cutover and remains for compatibility/retention. Do not relabel legacy records or claim cryptographic anonymity. Timing/aggregate inference, complementary suppression and repeated-query differencing still need independent review.
 
-## Authorization
-Authenticate at route entry; resolve role from protected server-controlled data, never user-editable metadata; check role and resource ownership in route code and RLS; avoid service-role clients for ordinary requests. Admin operations use explicit allowlists and append-only audit records. Review views/RPC security mode and EXECUTE grants.
+Free-text questions can be collected, but raw text is not included in ordinary analytics or exports. A privacy-reviewed anonymized comment workflow is not implemented.
 
-## Target data entities
-users, departments, semesters, courses, course_enrollments, instructor_course_assignments, feedback_forms, feedback_questions, feedback_eligibility, anonymous_submissions, anonymous_answers, audit_logs, consent_records and data_deletion_requests.
+## Authorization and operations
+Every route authenticates and resolves role from protected server-side profile data. RLS scopes student enrollments, instructor ownership/assignment and admin actions. The private schema contains eligibility, rate limits, feedback-version snapshots, deletion requests and SECURITY DEFINER helpers. Admin RPCs require AAL2. Profile self-update is limited to `users.full_name`. Deletion requests can be reviewed and audited, but actual Supabase Auth account deletion is a separate authorized owner operation; the app has no service-role credential for automatic deletion.
 
-Inspect live constraints/data before selecting identifiers or retention. No destructive migration or production reset is permitted.
+Production database changes must be additive, reviewed, recorded in the Supabase migration ledger and tested before deployment. Never reset production or use student data for an unreviewed test. Preview and production currently share the production Supabase project, so browser tests that create records require a disposable staging project.
 
 ## Reporting pipeline
-1. Authenticate and scope to assigned courses or authorized institution scope.
-2. Aggregate in Postgres or trusted server-side service.
-3. Apply minimum cohort threshold before returning metrics or categories.
-4. Suppress small complementary groups to prevent subtraction attacks.
-5. Exclude free text from ordinary reports.
-6. Reuse the same aggregate service for dashboard and exports.
+1. Authenticate and apply course/institution scope.
+2. Query aggregate RPCs only; do not read raw response rows.
+3. Suppress rating bins and question groups below five responses.
+4. Use category-level teaching effectiveness only when each contributing question is reportable.
+5. Exclude free-text answers from ordinary reports and exports.
+6. Reuse the same aggregate service for dashboards and downloadable reports.
 
-## Operations
-Keep secrets server-only; version and review migrations; CI gates typecheck, tests, build, dependency and secret scans; validate on preview before production. Verify backups, restore and cron history before sign-off.
+Minimum-five suppression does not by itself prove resistance to complementary suppression or repeated-query differencing.
+
+## Deployment gates
+Before production sign-off verify a current preview of the exact commit; role-specific browser flows; RLS/IDOR/XSS/CSRF and rate limits; WCAG 2.2 AA; responsive viewports; Lighthouse/Core Web Vitals; backup/restore and cron execution; legal/policy approval; and production smoke tests. Do not infer deployment success from CI success alone.
