@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { QUESTION_CATEGORIES } from '@/lib/question-categories';
+import { moveQuestion, normalizeQuestionOptions } from '@/lib/question-editor';
 
 type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
 type Course = { id: string; course_code?:string|null; title: string; description: string; status: string; created_at: string; instructor_id: string; instructor?:{id:string;full_name:string|null;email:string|null}|null; instructors?:string[]; department_id?:string|null; semester_id?:string|null; semester?:{id:string;name:string}|null; department?:{id:string;name:string;code:string}|null };
@@ -145,7 +146,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   async function createForm(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
     try {
-      const schema = questions.map(question => ({ ...question, id: question.id, ...(question.options ? { options: question.options.map(option => option.trim()).filter(Boolean) } : {}) }));
+      const schema = questions.map(question => ({ ...question, id: question.id, ...(question.options ? { options: normalizeQuestionOptions(question.options) ?? [] } : {}) }));
       if (schema.some(question => question.label.trim().length < 2)) throw new Error('Every question needs a clear label.');
       if (schema.some(question => ['single_choice', 'multiple_choice', 'multiple_select'].includes(question.type) && (question.options?.length ?? 0) < 2)) throw new Error('Choice questions need at least two options.');
       const deadline=formDueAt?new Date(formDueAt).toISOString():null; const payload=editingFeedback?{id:editingFeedback.id,title:formTitle,description:formDescription,form_schema:schema,due_at:deadline}:{course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365,due_at:deadline}; const res=await fetch('/api/feedback',{method:editingFeedback?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice(editingFeedback?'Feedback form updated.':'Feedback form published.'); setEditingFeedback(null); setFormTitle(''); setFormDueAt(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]); await load();
