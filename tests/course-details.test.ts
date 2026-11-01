@@ -5,7 +5,7 @@ import { courseInput } from '../lib/validation';
 
 const route = readFileSync(resolve(process.cwd(), 'app/api/courses/route.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101071000_course_codes.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261101070445_course_codes.sql'), 'utf8');
 
 describe('institution course details', () => {
   it('accepts an optional course code and preserves existing code-free courses', () => {

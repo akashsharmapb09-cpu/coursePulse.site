@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101072000_course_instructor_directory.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101070626_course_instructor_directory.sql'),'utf8');
 const route=readFileSync(resolve(process.cwd(),'app/api/courses/route.ts'),'utf8');
 
 describe('student course instructor directory',()=>{
