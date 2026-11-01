@@ -425,8 +425,9 @@ function Modal({title,children,onClose}:{title:string;children:React.ReactNode;o
   closeRef.current=onClose;
 
   useEffect(()=>{
-    const dialog=dialogRef.current;
-    if(!dialog)return;
+    const dialogElement=dialogRef.current;
+    if(dialogElement===null)return;
+    const dialog:HTMLElement=dialogElement;
     const previouslyFocused=document.activeElement instanceof HTMLElement?document.activeElement:null;
     const previousBodyOverflow=document.body.style.overflow;
     const focusableSelector='a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
