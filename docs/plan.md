@@ -49,7 +49,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 28 Vitest files/103 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 29 Vitest files/107 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
 - [ ] RLS, IDOR, XSS, CSRF and rate-limit tests (same-origin and database rate-limit controls are implemented; adversarial tests remain open).
 - [ ] WCAG 2.2 AA, keyboard and screen-reader review.
 - [ ] Mobile/tablet/desktop browser matrix.
@@ -59,7 +59,7 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
-- Latest feature branch is not deployed to a verified preview or production. The newest READY Vercel preview is commit f4f7ba3, older than the current reviewed branch head cfe8fb5. Recent later feature deployments returned Vercel build errors/rate-limit status. Do not promote until Vercel can build the exact latest commit and preview smoke checks pass. Production alias is still on an older main deployment.
+- Latest exact-SHA preview for feature commit 0c71aecca715e6f79c25570ee6b54896ee9cf48a is READY in the Vercel coursepulse-production project at https://coursepulse-production-kia83y858-akashsharmapb09-8177.vercel.app. Vercel build log shows npm audit, typecheck, tests, Next build and 17/17 static pages passed. Direct HTTP/browser smoke tests could not be run from the available runner because DNS resolution failed. Production alias still points to an older main deployment.
 - Supabase Auth leaked-password protection is still disabled in the project security advisor; enable it in Supabase Dashboard → Authentication → Security and rerun the advisor.
 - Admin MFA enrollment must be completed by the active administrator in the app before using the admin console.
 - Institution-approved privacy/terms content and verified contact/legal details are still required.

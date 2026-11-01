@@ -13,13 +13,14 @@ Commands:
 - npm test
 - npm run build
 
-Latest evidence at feature commit cfe8fb5 on 1 November 2026:
+Latest GitHub Actions evidence at feature commit 0c71aecca715e6f79c25570ee6b54896ee9cf48a on 1 November 2026:
 
 - Dependency audit: 0 npm vulnerabilities reported.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
-- Vitest: 28 files / 103 tests PASS.
-- Next.js production build: PASS.
+- Vitest: 29 files / 107 tests PASS.
+- Next.js production build: PASS; static pages 17/17 generated.
+- Vercel exact-SHA feature preview: READY; deployment ID dpl_G96JHPSwEkeJpPSZsRXy4oeNT9PT. HTTP/browser GET smoke test could not be completed because DNS resolution failed in the runner.
 
 CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys.
 
