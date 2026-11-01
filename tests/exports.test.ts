@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import ExcelJS from 'exceljs';
 import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
+
+const exportRoute = readFileSync(resolve(process.cwd(), 'app/api/exports/[format]/route.ts'), 'utf8');
 
 const sample: AggregateRow = {
   course_id: 'c1', course_title: 'Physics', feedback_id: 'f1', feedback_title: 'Module pulse',
@@ -16,6 +20,10 @@ describe('aggregate exports', () => {
     expect(spreadsheetSafeText('  =1+1')).toBe("'  =1+1");
     expect(spreadsheetSafeText('ordinary course title')).toBe('ordinary course title');
     expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK");
+  });
+  it('applies the shared formula sanitizer to HTML XLS and XLSX string cells', () => {
+    expect(exportRoute).toContain('escapeHtml(spreadsheetSafeText(row[k as keyof typeof row]))');
+    expect(exportRoute).toContain("typeof value === 'string' ? spreadsheetSafeText(value) : value");
   });
   it('contains aggregate metrics, not response answer data', () => {
     const rows = aggregateExportRows([sample]);
