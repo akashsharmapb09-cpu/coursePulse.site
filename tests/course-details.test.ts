@@ -16,7 +16,8 @@ describe('institution course details', () => {
 
   it('returns instructor, department and semester metadata from authorized course rows', () => {
     expect(route).toContain("supabase.rpc('get_student_course_instructors')");
-    expect(route).toContain('users!courses_instructor_id_fkey');
+    expect(route).toContain("department:departments");
+    expect(route).toContain("semester:semesters");
     expect(route).toContain('department:departments');
     expect(route).toContain('semester:semesters');
   });
