@@ -28,6 +28,12 @@ describe('account password change security contract',()=>{
     expect(migration).toMatch(/private\.consume_api_rate_limit/);
     expect(migration).toMatch(/revoke all on function private\.consume_api_rate_limit/);
   });
+  it('supports a separately rate-limited profile update without exposing role fields',()=>{
+    expect(http).toContain("account:profile-update");
+    expect(dashboard).toContain("/api/account/profile");
+    expect(dashboard).toContain('Save profile');
+    expect(dashboard).toContain('full_name:normalized');
+  });
   it('exposes an authenticated account security form with password confirmation',()=>{
     expect(dashboard).toMatch(/Account security/);
     expect(dashboard).toMatch(/Current password/);
