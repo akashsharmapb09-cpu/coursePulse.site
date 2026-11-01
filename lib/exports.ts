@@ -7,7 +7,7 @@ export type AggregateRow = {
 export function spreadsheetSafeText(value: unknown): string {
   const text = value == null ? '' : String(value);
   // Spreadsheet applications may interpret formula-leading text as executable formulas.
-  return /^[\\s]*[=+@-]/.test(text) ? `'${text}` : text;
+  return /^[\s]*[=+@-]/.test(text) ? `'${text}` : text;
 }
 
 export function csvCell(value: unknown): string {

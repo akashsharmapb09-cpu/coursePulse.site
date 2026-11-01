@@ -13,6 +13,7 @@ describe('aggregate exports', () => {
   it('neutralizes spreadsheet formulas in text values before CSV, XLS and XLSX encoding', () => {
     expect(spreadsheetSafeText('=HYPERLINK("x")')).toBe("'=HYPERLINK(\"x\")");
     expect(spreadsheetSafeText('\t+cmd|/C calc')).toBe("'\t+cmd|/C calc");
+    expect(spreadsheetSafeText('  =1+1')).toBe("'  =1+1");
     expect(spreadsheetSafeText('ordinary course title')).toBe('ordinary course title');
     expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK");
   });
