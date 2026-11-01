@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { QUESTION_CATEGORIES } from '@/lib/question-categories';
+import { QUESTION_CATEGORIES } from './question-categories';
 
 export const courseInput = z.object({
   title: z.string().trim().min(2).max(160),
