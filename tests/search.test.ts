@@ -4,7 +4,7 @@ import { describe,expect,it } from 'vitest';
 
 const route=readFileSync(resolve(process.cwd(),'app/api/search/route.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101111000_search_rate_limit.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101075037_search_rate_limit.sql'),'utf8');
 
 describe('permission-aware smart search',()=>{
   it('debounces requests and handles loading/empty state',()=>{

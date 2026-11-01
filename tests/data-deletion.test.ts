@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe,expect,it } from 'vitest';
 
-const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101110000_data_deletion_requests.sql'),'utf8');
+const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101074717_data_deletion_requests.sql'),'utf8');
 const userRoute=readFileSync(resolve(process.cwd(),'app/api/account/data-deletion/route.ts'),'utf8');
 const adminRoute=readFileSync(resolve(process.cwd(),'app/api/admin/deletion-requests/route.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
