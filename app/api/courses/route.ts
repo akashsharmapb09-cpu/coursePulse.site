@@ -9,10 +9,23 @@ export async function GET() {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  const query = supabase.from('courses').select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code),instructor:users!courses_instructor_id_fkey(id,full_name,email)').order('created_at', { ascending: false });
-  const { data, error } = await query;
+  const courseFields='id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)';
+  const columns=auth.profile.role==='STUDENT'?courseFields:`${courseFields},instructor:users!courses_instructor_id_fkey(id,full_name,email)`;
+  const { data, error } = await supabase.from('courses').select(columns).order('created_at', { ascending: false });
   if (error) return jsonError('Unable to load courses.', 500);
-  return NextResponse.json({ courses: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
+  let courses=data??[];
+  if(auth.profile.role==='STUDENT'&&courses.length){
+    const {data:instructors,error:instructorError}=await supabase.rpc('get_student_course_instructors');
+    if(instructorError) return jsonError('Unable to load course instructor details.',500);
+    const byCourse=new Map<string,string[]>();
+    for(const row of instructors??[]){
+      const names=byCourse.get(row.course_id)??[];
+      if(typeof row.instructor_name==='string'&&!names.includes(row.instructor_name)) names.push(row.instructor_name);
+      byCourse.set(row.course_id,names);
+    }
+    courses=courses.map(course=>({...course,instructors:byCourse.get(course.id)??[]}));
+  }
+  return NextResponse.json({ courses }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +54,7 @@ const courseUpdateInput=z.object({
   id:z.string().uuid(),
   title:z.string().trim().min(2).max(160).optional(),
   description:z.string().trim().max(5000).optional(),
-  status:z.enum(['DRAFT','PUBLISHED','ARCHIVED']).optional()
+  status:z.enum(['DRAFT','PUBLISHED','ARCHIVED']).optional(),
   course_code:z.string().trim().min(2).max(30).nullable().optional()
 }).strict().refine(input=>Object.keys(input).length>1,'Provide at least one course field to update.');
 

@@ -48,7 +48,7 @@ model User {
 model Course {
   id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   instructorId String       @map("instructor_id") @db.Uuid
-  courseCode   String?      @unique @map("course_code")
+  courseCode   String?      @map("course_code")
   title        String
   description  String       @default("")
   status       CourseStatus @default(DRAFT)
