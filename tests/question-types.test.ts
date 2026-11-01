@@ -55,6 +55,10 @@ describe('supported feedback question types', () => {
     expect(dashboard).toContain('Move question');
     expect(dashboard).toContain("tab==='history'");
     expect(dashboard).toContain("if (question.required && unanswered)");
+    expect(dashboard).toContain('typeof value === \'string\' && value.trim().length === 0');
+    expect(dashboard).toContain('aria-required={question.required}');
+    expect(dashboard).toContain('aria-label={question.label}');
+    expect(dashboard).toContain('className="fine-print ml-2">Required</span>');
     expect(dashboard).toContain('<fieldset key={question.id}');
     for (const category of ['Course Content', 'Teaching Effectiveness', 'Communication', 'Course Organization', 'Assessment', 'Learning Resources', 'Overall Satisfaction']) {
       expect(dashboard).toContain(category);
