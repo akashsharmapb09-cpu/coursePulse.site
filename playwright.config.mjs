@@ -13,9 +13,13 @@ export default defineConfig({
   reporter: 'list',
   timeout: 30_000,
   expect: { timeout: 8_000 },
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+    { name: 'firefox', use: { browserName: 'firefox' } },
+    { name: 'webkit', use: { browserName: 'webkit' } }
+  ],
   use: {
     baseURL,
-    browserName: 'chromium',
     headless: true,
     ignoreHTTPSErrors: false,
     actionTimeout: 8_000,
