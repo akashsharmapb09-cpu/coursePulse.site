@@ -79,7 +79,7 @@ A READY deployment and passing CI do not establish complete real-user operation.
 10. **Institution/legal decisions:** Institution/controller identity, approved support contact, jurisdiction, privacy/terms/cookie wording, legal basis, retention schedule, consent/minor policy and accessibility contact must be supplied and approved by the institution. This report does not invent legal approval.
 11. **Account deletion:** The application records and audits requests, but the institution's authorized Supabase owner must perform and verify Auth-user deletion before a request is marked completed.
 
-The live database currently contains one course, one feedback form and one active administrator; no student/instructor accounts or feedback submissions were present at the latest review. Do not use real student information until institutional approval and the outstanding release gates are complete.
+At the 2 November 2026 snapshot, the live database contains one active ADMIN profile and one STUDENT profile, but no INSTRUCTOR profile; one course (`cse111`) is ARCHIVED; one feedback form is closed; there are zero departments, semesters, student-course enrollments, instructor-course assignments, legacy responses or anonymous submissions. No college roster has been loaded. Do not use real student information until Auth redirects are verified, institutional approval is signed and the outstanding release gates are complete.
 
 ## 5. Submission and demonstration guidance
 
