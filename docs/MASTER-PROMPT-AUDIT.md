@@ -3,13 +3,13 @@
 Audit date: 2 November 2026  
 Repository: akashsharmapb09-cpu/coursePulse.site  
 Branch: feat/master-prompt-completion  
-Latest application commit reviewed: cd4a5332c497d17d5c5d221cb20689bb8e46c22a  
+Latest application commit reviewed: 01c4f461fb60905b3a1ed0f94745428353ec5d25  
 Pull request: #2, open and draft  
 Production alias: https://coursepulse-site.vercel.app
 
 ## Executive verdict
 
-PARTIAL — deployed to Vercel Production, but not approved for real-college data or final production release. Exact feature HEAD `cd4a533` is mapped to the production alias and PR validation passes. Core student, instructor, administrator, academic, feedback, search, analytics and public-site functionality is substantially implemented. Remaining release gates include real-browser/E2E and adversarial privacy/security tests, accessibility/performance evidence, fresh admin MFA/recovery verification, Supabase Auth security configuration, institution-approved legal wording, backup/restore evidence and owner sign-off.
+PARTIAL — the previous feature build is deployed to Vercel Production, but the newer feature branch hardening is not deployed yet and the project is not approved for real-college data or final production release. Core student, instructor, administrator, academic, feedback, search, analytics and public-site functionality is substantially implemented. Remaining release gates include exact-HEAD deployment and live-header verification, authenticated role journeys, adversarial privacy/security tests, accessibility/performance evidence, fresh admin MFA/recovery verification, Supabase Auth security configuration, institution-approved legal wording, backup/restore evidence and owner sign-off.
 
 A successful build is not proof of complete end-to-end operation.
 
@@ -25,7 +25,7 @@ GitHub Actions PR validation run #385 completed successfully on 2 November 2026.
 
 Vercel deployment `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` is `READY`, target `production`, and built exact feature SHA `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`. Its aliases include `https://coursepulse-site.vercel.app`; a separate alias lookup confirmed that the production domain maps to this deployment. Browser-level functional smoke testing remains NOT VERIFIED.
 
-The workflow uses placeholder public Supabase settings for build-time rendering. It does not authenticate real accounts, run browser E2E, exercise every live RLS policy, or verify provider settings. Browser access to the latest Vercel preview was unavailable from the current runner, so URL/browser smoke-test status remains NOT VERIFIED.
+The workflow uses placeholder public Supabase settings for build-time and local browser checks. The browser suite is being moved to the exact locally built production bundle so it does not rely on a stale hosted preview and does not write to Supabase. It does not authenticate real accounts, exercise every live RLS policy, or verify provider settings.
 
 ## Implemented scope
 
@@ -38,6 +38,11 @@ The workflow uses placeholder public Supabase settings for build-time rendering.
 - Admin user management, audit history, academic setup, institution overview, low-participation alerts and deletion-request review.
 - Password reset/change, same-origin mutation checks, per-user rate limits and permission-aware debounced search with filtered navigation.
 - Public landing page with required headline/CTAs, About and Contact pages, Features section, footer, honest free-project refund information, technical policy pages, canonical/OG metadata, robots/sitemap, custom 404/error pages, SVG icon and web-app manifest.
+- Premium forest-green / warm-ivory workspace styling and consistent CoursePulse pulse mark across public, authentication and dashboard surfaces.
+- Per-request nonce-based CSP using `script-src 'self' 'nonce-…' 'strict-dynamic'`, with no `unsafe-inline`, `unsafe-eval` or `data:` in `script-src`; `object-src 'none'`, `frame-src 'none'`, `frame-ancestors 'none'` and `X-XSS-Protection: 0`.
+- RFC 9116 `/.well-known/security.txt` with HTTPS contact/policy/expiry/canonical fields; repository private vulnerability reporting still requires owner-side enablement and verification.
+- Static XSS sink regression checks prohibit raw HTML assignment, `dangerouslySetInnerHTML`, `document.write`, `eval` and `new Function` in app/components/lib code.
+- Playwright browser coverage now checks actual CSP nonce propagation into executable script tags and the security.txt HTTP response.
 - PRD, architecture, security, code style, API reference, testing guide, seed strategy, plan and current compliance audit.
 
 ## Live database and privacy checks
@@ -66,9 +71,10 @@ Current live project has one course and one feedback form, one active ADMIN acco
 - PR #2 remains open and draft; it has not been merged.
 - The intended college-demo deployment is the Vercel project `coursepulse-site` (project ID `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`) connected to `akashsharmapb09-cpu/coursePulse.site`.
 - The verified project domain is `https://coursepulse-site.vercel.app`.
-- Current feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` is deployed to Vercel Production as `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`, target `production`), branch `feat/master-prompt-completion`.
-- Production alias `https://coursepulse-site.vercel.app` is mapped to that exact deployment; `aliasError` is null.
-- Direct browser smoke verification of root/login/signup/privacy and authenticated journeys is not evidenced; the available browser/runner could not open the public routes.
+- Previous feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` remains deployed to Vercel Production as `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`, target `production`); production alias `https://coursepulse-site.vercel.app` maps to it.
+- Current feature HEAD `01c4f461fb60905b3a1ed0f94745428353ec5d25` is committed to `feat/master-prompt-completion` and remains in draft PR #2; it is not the current production deployment.
+- Latest known READY branch-preview deployment is still the older CSP-helper commit `5aab9b17526ebd354ec22b81afddc89233a58fea`; therefore its HTTP headers do not yet verify the newer middleware/CSP/security.txt changes.
+- A new Vercel deployment could not be created during this work because the Vercel API returned the account's `api-deployments-free-per-day` limit (HTTP 402). Do not claim the branch head is live or promote an unverified build.
 - Preview and Production environments share the same Supabase project URL. Treat preview writes as production writes; use a disposable QA DB before running browser journeys that create records.
 
 ## Master-prompt section status
@@ -82,7 +88,7 @@ Current live project has one course and one feedback form, one active ADMIN acco
 | 5. Roles and permissions | PARTIAL | RBAC/RLS and AAL2 controls exist; exhaustive role-matrix, cross-resource IDOR and re-identification tests open. |
 | 6. Core application functionality | PARTIAL | Core academic, feedback, student, admin and instructor flows present; privacy-reviewed comments and advanced reporting remain open. |
 | 7. Database design | PARTIAL | Entity model, RLS and anonymity/eligibility separation present; full migration replay on disposable DB and adversarial role matrix open. |
-| 8. Application security | PARTIAL | Auth, RLS, Zod, same-origin checks, rate limits, headers, audit and MFA gates; adversarial XSS/CSRF/IDOR and secret-history scan open. |
+| 8. Application security | PARTIAL | Auth, RLS, Zod, same-origin checks, rate limits, audit and MFA gates; nonce CSP, RFC 9116 security.txt and unsafe-sink regression tests added. Private reporting enablement, live header check and adversarial XSS/CSRF/IDOR review remain open. |
 | 9. Privacy, minors and deletion | PARTIAL | Technical privacy docs and deletion request flow; actual Auth deletion owner operation, consent/minor policy and legal approval open. |
 | 10. Navigation and clickable elements | PARTIAL | Core navigation, search-result filters, landing/footer and custom errors exist; complete browser click/link audit open. |
 | 11. Smart search | PASS | Debounced authorized search, filtered result navigation and per-user rate limit; answer text excluded. |
@@ -95,11 +101,11 @@ Current live project has one course and one feedback form, one active ADMIN acco
 | 18. Product analytics | NOT APPLICABLE to current build | No third-party analytics provider is configured. Do not add non-essential tracking without approved consent decision. |
 | 19. Documentation | PASS | PRD, architecture, security, code style, AGENTS, plan, API, testing and seed strategy docs present. |
 | 20. Project structure | PASS | Existing App Router structure is modular; no empty scaffolding added. |
-| 21. Testing and QA | PARTIAL | 34 Vitest files/130 tests and exact-HEAD CI/Vercel preview build pass; integration, Playwright, full RLS, browser, accessibility and device tests open. |
+| 21. Testing and QA | PARTIAL | Unit/type/build checks and XSS/CSP contract tests pass on recent branch CI runs; exact-HEAD browser suite is being rerun locally against the build. Live deployment smoke, role-specific E2E, full RLS and device/accessibility evidence remain open. |
 | 22. Final quality checklist | PARTIAL | Selected controls verified; production, browser, privacy, legal and performance gates open. |
 | 23. Implementation roadmap | PARTIAL | Core phases implemented; final QA/release phase not complete. |
 | 24. Engineering report | PARTIAL | This report records evidence and blockers; final PASS report awaits release-gate evidence. |
-| 25. Production-ready goal | BLOCKED | Exact feature HEAD is deployed to the production alias and CI passes; browser smoke, isolated staging, adversarial QA, accessibility/performance, legal and owner/institution sign-off remain. |
+| 25. Production-ready goal | BLOCKED | Current branch HEAD is not deployed; only the earlier feature build is on the production alias. Exact-HEAD deploy, isolated staging, adversarial QA, accessibility/performance, legal and owner/institution sign-off remain. |
 
 ## Remaining release blockers
 
@@ -116,4 +122,4 @@ Current live project has one course and one feedback form, one active ADMIN acco
 
 ## Release recommendation
 
-Keep PR #2 in draft. The current feature head is already serving the `.site` Vercel production alias, but do not merge into `main` or declare the college project fully accepted until public route/browser smoke, isolated staging, role-specific E2E, adversarial security/privacy tests, accessibility/performance evidence, Auth dashboard settings, and institution/owner decisions are complete.
+Keep PR #2 in draft. The current feature head is not yet serving the `.site` production alias. Do not merge into `main` or declare the college project fully accepted until the exact branch head is deployed, nonce CSP and security.txt are verified over HTTPS, public/browser and role-specific E2E pass, isolated staging and adversarial security/privacy tests are evidenced, accessibility/performance checks are complete, and Auth dashboard plus institution/owner decisions are signed off.
