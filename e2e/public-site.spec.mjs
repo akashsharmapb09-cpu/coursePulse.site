@@ -45,19 +45,24 @@ test.describe('public-page browser smoke', () => {
     await expect(page.getByRole('button', { name: /update password/i })).toBeEnabled();
   });
 
-  for (const route of ['/login', '/signup', '/privacy', '/terms']) {
-    test(`${route} does not overflow a narrow mobile viewport`, async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 812 });
-      await page.goto(route);
-      const dimensions = await page.evaluate(() => ({
-        viewportWidth: document.documentElement.clientWidth,
-        contentWidth: document.documentElement.scrollWidth
-      }));
-      expect(
-        dimensions.contentWidth,
-        `Horizontal overflow on ${route}: ${JSON.stringify(dimensions)}`
-      ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
-    });
+  const viewportRoutes = ['/', '/login', '/signup', '/privacy', '/terms'];
+  const viewportWidths = [320, 375, 480, 768, 1024, 1280, 1440];
+
+  for (const route of viewportRoutes) {
+    for (const width of viewportWidths) {
+      test(`${route} has no horizontal overflow at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(route);
+        const dimensions = await page.evaluate(() => ({
+          viewportWidth: document.documentElement.clientWidth,
+          contentWidth: document.documentElement.scrollWidth
+        }));
+        expect(
+          dimensions.contentWidth,
+          `Horizontal overflow on ${route} at ${width}px: ${JSON.stringify(dimensions)}`
+        ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+      });
+    }
   }
 
   test('home page has working sign-in and sign-up navigation targets', async ({ page }) => {
