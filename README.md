@@ -8,6 +8,9 @@
 - docs/API.md — API route reference.
 - docs/TESTING.md — automated/manual QA and release gates.
 - docs/SEEDING.md — isolated test-data strategy.
+- docs/COLLEGE-ONBOARDING-RUNBOOK.md — exact Supabase Auth callback, instructor/student provisioning and course setup sequence.
+- docs/INSTITUTIONAL-PILOT-APPROVAL.md — institution data-use review and signature template (approval remains pending until signed).
+- docs/college-roster-template.csv — working roster sheet; not an automated import.
 - docs/plan.md — current implementation plan.
 - docs/MASTER-PROMPT-AUDIT.md — evidence-based compliance status.
 - docs/COLLEGE-SUBMISSION-REPORT.md — verified submission summary, test evidence and open acceptance gates.
@@ -83,6 +86,8 @@ The migrations under `supabase/migrations/` correspond to the 36 applied migrati
 The version list is aligned to the live Supabase migration ledger. Some management-applied versions are represented remotely with `select 1;` placeholder statements even though the corresponding SQL is preserved in the local migration files. For example, the duplicate academic-admin and assignment-policy entries are explicit no-op files because those policies are already included in the primary academic-admin migration; the student completion RPC is preserved in `20261031204219`. Before any CLI `db push`, compare `supabase migration list` and the live schema; do not reset or blindly replay the production project.\n\nDefault public-schema grants are disabled for future tables, sequences, and functions. Existing app tables grant only the operations required by the RLS model; anonymous users have no access to the app tables. Future migrations must explicitly grant only the privileges their features need. Because the migrations were applied through the connected Supabase management integration, compare `supabase migration list` with remote history before running `supabase db push` from a local CLI checkout. Do not reset the production database.
 
 ## First admin / instructor setup
+
+See `docs/COLLEGE-ONBOARDING-RUNBOOK.md` for the college's Auth callback settings, account verification and academic setup sequence. See `docs/INSTITUTIONAL-PILOT-APPROVAL.md` before entering any real student data. The roster CSV is a planning worksheet, not a bulk-import feature.
 
 New signups are `STUDENT` by default. Sign in to Supabase SQL Editor and run a reviewed statement from `scripts/promote-role.sql` to assign `INSTRUCTOR` or the first `ADMIN`. The application intentionally has no self-service role escalation endpoint. Signed-in users can update only their `users.full_name` field; role, ownership, and response permissions are not client-editable. Administrators must enroll and verify a TOTP authenticator (AAL2) before accessing the admin workspace or privileged APIs. Admins can manage user roles, suspend accounts, create departments/semesters, enroll students and assign instructors. Account suspension blocks subsequent application data access.
 
