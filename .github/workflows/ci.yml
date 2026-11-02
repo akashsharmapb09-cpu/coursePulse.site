@@ -41,8 +41,8 @@ jobs:
         run: npm install --no-save --package-lock=false @playwright/test@1.64.1 axe-core@4.14.0
       - name: Install Chromium, Firefox and WebKit
         run: npx playwright install --with-deps chromium firefox webkit
-      # Read-only smoke checks against the public .site production URL; no login or database writes.
+      # Read-only smoke checks against the current .site feature-branch preview alias; no login or database writes.
       - name: Public browser smoke tests
         run: npx playwright test --config=playwright.config.mjs
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site.vercel.app
+          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
