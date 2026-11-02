@@ -12,6 +12,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
     "font-src 'self'",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "object-src 'none'",
+    "frame-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
