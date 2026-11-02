@@ -45,6 +45,36 @@ test.describe('public-page browser smoke', () => {
     await expect(page.getByRole('button', { name: /update password/i })).toBeEnabled();
   });
 
+  test('login and signup controls are reachable in a visible keyboard focus order', async ({ page }) => {
+    await page.goto('/login');
+    const loginEmail = page.getByLabel('Email address');
+    const loginPassword = page.getByLabel('Password');
+    const loginSubmit = page.getByRole('button', { name: /sign in/i });
+
+    await page.keyboard.press('Tab');
+    await expect(loginEmail).toBeFocused();
+    await expect.poll(() => loginEmail.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
+    await page.keyboard.press('Tab');
+    await expect(loginPassword).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(loginSubmit).toBeFocused();
+
+    await page.goto('/signup');
+    const signupName = page.getByLabel('Full name');
+    const signupEmail = page.getByLabel('Email address');
+    const signupPassword = page.getByLabel('Password');
+    const signupSubmit = page.getByRole('button', { name: /create account/i });
+
+    await page.keyboard.press('Tab');
+    await expect(signupName).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(signupEmail).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(signupPassword).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(signupSubmit).toBeFocused();
+  });
+
   const viewportRoutes = ['/', '/login', '/signup', '/privacy', '/terms'];
   const viewportWidths = [320, 375, 480, 768, 1024, 1280, 1440];
 
