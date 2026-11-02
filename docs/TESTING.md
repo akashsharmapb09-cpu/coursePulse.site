@@ -13,16 +13,16 @@ Commands:
 - npm test
 - npm run build
 
-Latest GitHub Actions evidence at feature commit 6a4512289c33298531df6ea55bac9132741e7b16 on 2 November 2026:
+Latest GitHub Actions PR validation run #385 completed on 2 November 2026. It tested the PR merge candidate `7b0823302d7f740c4f73ae9d9287d89230892aaa`, including feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`:
 
 - Dependency audit: 0 npm vulnerabilities reported.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
 - Vitest: 34 files / 130 tests PASS.
 - Next.js production build: PASS; static pages 19/19 generated.
-- Vercel project `coursepulse-site`: exact-HEAD preview deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX` is READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`. The production alias `coursepulse-site.vercel.app` still points to older commit `2c4bdbed`. Browser smoke has not been completed.
+- Vercel project `coursepulse-site`: deployment `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` is READY for Production from exact feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`; alias `https://coursepulse-site.vercel.app` maps to it. Browser smoke has not been completed.
 
-CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys. The same project’s Supabase live schema was separately checked on 2 November 2026: all 10 public tables have RLS enabled; the new `coursepulse_report_rate_limits` migration is present as migration version `20261102051456`; the analytics/export limiter actions were verified in a rollback-only transaction, and `anon` cannot execute the private limiter.
+CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys. The same project’s Supabase live schema was separately checked on 2 November 2026: all 10 public tables have RLS enabled; there are 36 migration-history entries through `20261102102457_coursepulse_private_fk_indexes`; authenticated analytics/export limiter actions were verified in a rollback-only transaction and `anon` cannot execute the private limiter. Two private-table foreign-key indexes were added in the latest migration; the performance advisor no longer reports unindexed foreign keys. Its remaining unused-index findings are informational on this low-traffic database.
 
 ## Automated test coverage
 
