@@ -60,3 +60,68 @@
 .trend-column-track{display:flex;align-items:end;width:100%;height:105px;border-radius:7px 7px 0 0;background:#f0f5f1;overflow:hidden}
 .trend-column-track>div{width:100%;min-height:3px;border-radius:6px 6px 0 0;background:#83ae8f}
 .trend-column>small{color:#87948b;font-size:10px;white-space:nowrap}
+
+
+/* CoursePulse motion system: meaningful entrances, scroll reveals and tactile feedback. */
+html{scroll-behavior:smooth}
+.site-nav{animation:cp-nav-enter .72s cubic-bezier(.2,.75,.25,1) both}
+.site-nav>a:first-child .brand-mark{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.site-nav>a:first-child:hover .brand-mark{transform:rotate(-10deg) scale(1.08);box-shadow:0 7px 18px rgba(36,91,62,.18)}
+.hero-section{isolation:isolate}
+.hero-section::before{content:"";position:absolute;z-index:-1;top:2%;right:-12%;width:min(52vw,620px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(188,220,195,.48) 0%,rgba(225,241,228,.28) 34%,transparent 70%);filter:blur(9px);pointer-events:none;animation:cp-ambient-drift 13s ease-in-out infinite alternate}
+.hero-copy>span:first-child{animation:cp-chip-enter .7s cubic-bezier(.2,.8,.2,1) .1s both}
+.hero-copy h1{animation:cp-rise .82s cubic-bezier(.2,.75,.25,1) .17s both}
+.hero-copy>p{animation:cp-rise .82s cubic-bezier(.2,.75,.25,1) .28s both}
+.hero-copy>div:nth-of-type(1){animation:cp-rise .82s cubic-bezier(.2,.75,.25,1) .38s both}
+.hero-copy>div:nth-of-type(2){animation:cp-rise .82s cubic-bezier(.2,.75,.25,1) .48s both}
+.hero-visual{animation:cp-visual-enter 1s cubic-bezier(.2,.75,.25,1) .18s both}
+.hero-preview{translate:0 0;animation:cp-card-float 7s ease-in-out 1.1s infinite;transition:box-shadow .35s ease,border-color .35s ease}
+.hero-preview:hover{border-color:#c6ddcc;box-shadow:0 38px 100px -35px rgba(31,76,49,.32)}
+.hero-preview>div:nth-child(2)>div{transition:transform .35s cubic-bezier(.2,.8,.2,1),background .35s ease}
+.hero-preview>div:nth-child(2)>div:hover{transform:translateY(-5px) rotate(-1deg);background:#edf6ef}
+.feedback-bar{transform:scaleY(.04);transform-origin:bottom;animation:cp-bar-rise .7s cubic-bezier(.2,.8,.2,1) forwards}
+.feedback-activity-bars:hover .feedback-bar{filter:saturate(1.2)}
+.reveal-panel{transition:border-color .3s ease,box-shadow .3s ease}
+.reveal-panel:hover{border-color:#d4e5d8;box-shadow:0 20px 55px -38px rgba(35,84,53,.24)}
+.feature-motion-card{transform:translateY(0);transition:transform .38s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .38s ease}
+.feature-motion-card:hover{transform:translateY(-8px);border-color:#cfe2d3;box-shadow:0 22px 45px -30px rgba(36,91,62,.28)}
+.feature-motion-card>span{transition:transform .38s cubic-bezier(.2,.8,.2,1),background .3s ease}
+.feature-motion-card:hover>span{transform:rotate(-7deg) scale(1.08);background:#dceee1}
+.site-cta{position:relative;isolation:isolate;overflow:hidden;transition:box-shadow .35s ease}
+.site-cta::before{content:"";position:absolute;z-index:-1;inset:-80% auto -80% -35%;width:34%;transform:rotate(18deg) translateX(-160%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:transform .9s cubic-bezier(.2,.75,.25,1)}
+.site-cta:hover::before{transform:rotate(18deg) translateX(580%)}
+.site-cta:hover{box-shadow:0 25px 65px -38px rgba(26,79,52,.5)}
+.site-cta a{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}
+.site-cta a:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(0,0,0,.13)}
+.has-scroll-motion [data-reveal]{opacity:0;transform:translateY(26px) scale(.985);transition:opacity .72s cubic-bezier(.2,.75,.25,1),transform .72s cubic-bezier(.2,.75,.25,1)}
+.has-scroll-motion [data-reveal].is-visible{opacity:1;transform:translateY(0) scale(1)}
+.has-scroll-motion .feature-motion-card[data-reveal]{transition:opacity .72s cubic-bezier(.2,.75,.25,1),transform .38s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .38s ease}
+button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ease,transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+button:active,a:active{transform:translateY(1px) scale(.985)}
+.button.primary:hover{box-shadow:0 10px 22px rgba(28,89,73,.2)}
+.metric-card,.analytics-card,.comparison-card,.rating-chart-card,.trend-chart-card{transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease}
+.metric-card:hover,.analytics-card:hover,.comparison-card:hover,.rating-chart-card:hover,.trend-chart-card:hover{transform:translateY(-4px);border-color:#cfe0d2;box-shadow:0 16px 35px -28px rgba(35,84,53,.3)}
+.metric-icon{transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease}
+.metric-card:hover .metric-icon{transform:rotate(-7deg) scale(1.08);background:#e2f1e6}
+.course-card:hover .course-art-mark{transform:translateY(-3px) rotate(-5deg);box-shadow:0 8px 18px rgba(33,79,55,.1)}
+.course-art-mark{transition:transform .3s ease,box-shadow .3s ease}
+.side-nav button{transition:background .2s ease,color .2s ease,transform .2s ease}
+.side-nav button:hover{transform:translateX(3px);background:#f4f8f5}
+.auth-card{animation:cp-rise .65s cubic-bezier(.2,.75,.25,1) both}
+.auth-icon{animation:cp-icon-breathe 4.5s ease-in-out infinite}
+@keyframes cp-nav-enter{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cp-rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cp-chip-enter{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cp-visual-enter{from{opacity:0;transform:translateY(24px) scale(.975) rotate(1deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@keyframes cp-card-float{0%,100%{translate:0 0}50%{translate:0 -9px}}
+@keyframes cp-bar-rise{to{transform:scaleY(1)}}
+@keyframes cp-ambient-drift{from{transform:translate3d(0,0,0) scale(.96)}to{transform:translate3d(-24px,16px,0) scale(1.05)}}
+@keyframes cp-icon-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media(max-width:760px){.hero-section::before{top:16%;right:-45%;width:110vw}.hero-preview{animation-duration:9s}.feature-motion-card:hover{transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ .site-nav,.hero-copy>span:first-child,.hero-copy h1,.hero-copy>p,.hero-copy>div,.hero-visual,.hero-preview,.feedback-bar,.auth-card,.auth-icon{animation:none!important}
+ .hero-preview{translate:none}
+ .has-scroll-motion [data-reveal],.has-scroll-motion [data-reveal].is-visible{opacity:1;transform:none;transition:none}
+ .site-cta::before{display:none}
+}
