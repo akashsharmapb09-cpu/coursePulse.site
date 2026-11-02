@@ -25,6 +25,26 @@ test.describe('public-page browser smoke', () => {
     });
   }
 
+
+  test('visible public header links have a 44px tap area', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/');
+    const dimensions = await page.locator('.site-nav a:visible').evaluateAll((links) =>
+      links.map((link) => ({
+        text: link.textContent?.trim(),
+        width: link.getBoundingClientRect().width,
+        height: link.getBoundingClientRect().height,
+        display: getComputedStyle(link).display,
+        minHeight: getComputedStyle(link).minHeight
+      }))
+    );
+    expect(dimensions.length).toBeGreaterThan(0);
+    expect(
+      dimensions.every((item) => item.height >= 44),
+      JSON.stringify(dimensions)
+    ).toBe(true);
+  });
+
   test('login and signup forms expose accessible labels and submit controls', async ({ page }) => {
     await page.goto('/login');
     await expect(page.getByLabel('Email address')).toBeVisible();
