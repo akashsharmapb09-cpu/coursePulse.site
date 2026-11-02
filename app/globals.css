@@ -125,3 +125,38 @@ button:active,a:active{transform:translateY(1px) scale(.985)}
  .has-scroll-motion [data-reveal],.has-scroll-motion [data-reveal].is-visible{opacity:1;transform:none;transition:none}
  .site-cta::before{display:none}
 }
+
+
+/* Authentication acceptance fixes: keep tablet layouts within the viewport
+   and render a high-contrast keyboard ring on the actual focused control. */
+@media (max-width: 900px) {
+  .auth-shell {
+    display: block !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .auth-art {
+    display: none !important;
+  }
+  .auth-panel {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-inline: clamp(16px, 5vw, 32px);
+  }
+  .auth-card {
+    width: min(100%, 390px);
+    min-width: 0;
+  }
+}
+.stack-form input:focus-visible,
+.stack-form textarea:focus-visible,
+.stack-form select:focus-visible,
+.stack-form .input-wrap input:focus-visible {
+  outline: 3px solid #2d7652 !important;
+  outline-offset: 3px;
+}
