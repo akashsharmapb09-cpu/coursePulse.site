@@ -9,10 +9,11 @@ const routes = ['/', '/about', '/contact', '/privacy', '/terms', '/cookies', '/r
 test.describe('automated WCAG A/AA accessibility checks', () => {
   for (const route of routes) {
     test(`${route} has no automated WCAG A/AA violations`, async ({ page }) => {
+      await page.addInitScript({ path: axeScript });
       await page.goto(route, { waitUntil: 'domcontentloaded' });
-      await page.addScriptTag({ path: axeScript });
 
       const results = await page.evaluate(async (tags) => {
+        if (!window.axe) throw new Error('axe-core did not initialize in the browser context');
         return window.axe.run(document, {
           runOnly: { type: 'tag', values: tags }
         });
