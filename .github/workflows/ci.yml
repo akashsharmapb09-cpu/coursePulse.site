@@ -36,16 +36,19 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
           NEXT_PUBLIC_APP_URL: https://coursepulse.example
-      # Install a pinned browser-test runner without changing the application's dependency manifest or lockfile.
+      # Install pinned browser-test tooling; clearing npm's transient cache avoids Arborist state errors
+      # seen when adding temporary tools after npm ci. The application manifest and lockfile are unchanged.
       - name: Install Playwright test runner
-        run: npm install --no-save --package-lock=false @playwright/test@1.64.1 axe-core@4.14.0 lighthouse@13.6.0
+        run: |
+          npm cache clean --force
+          npm install --no-save --package-lock=false --no-audit --no-fund --legacy-peer-deps @playwright/test@1.64.1 axe-core@4.14.0 lighthouse@13.6.0
       - name: Install Chromium, Firefox and WebKit
         run: npx playwright install --with-deps chromium firefox webkit
       # Read-only smoke checks against the current .site feature-branch preview alias; no login or database writes.
       - name: Public browser smoke tests
         run: npx playwright test --config=playwright.config.mjs
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site-sjv8xwyay-akashsharmapb09-8177.vercel.app
+          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
       - name: Run mobile Lighthouse performance audit
         run: |
           CHROME_PATH="$(node -e "process.stdout.write(require('playwright').chromium.executablePath())")"
@@ -64,7 +67,7 @@ jobs:
           console.log('CoursePulse mobile Lighthouse lab results:', JSON.stringify(summary, null, 2));
           NODE
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site-sjv8xwyay-akashsharmapb09-8177.vercel.app
+          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
       - name: Upload Lighthouse report
         if: always()
         uses: actions/upload-artifact@v4
