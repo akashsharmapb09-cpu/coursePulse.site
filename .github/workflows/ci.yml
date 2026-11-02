@@ -31,7 +31,7 @@ jobs:
           NEXT_PUBLIC_APP_URL: https://coursepulse.example
       # Install a pinned browser-test runner without changing the application's dependency manifest or lockfile.
       - name: Install Playwright test runner
-        run: npm install --no-save --package-lock=false @playwright/test@1.64.1
+        run: npm install --no-save --package-lock=false @playwright/test@1.64.1 axe-core@4.14.0
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       # Read-only smoke checks against the public .site production URL; no login or database writes.
