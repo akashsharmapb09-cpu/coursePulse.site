@@ -3,19 +3,19 @@
 Audit date: 2 November 2026  
 Repository: akashsharmapb09-cpu/coursePulse.site  
 Branch: feat/master-prompt-completion  
-Latest application commit reviewed: 6a4512289c33298531df6ea55bac9132741e7b16  
+Latest application commit reviewed: cd4a5332c497d17d5c5d221cb20689bb8e46c22a  
 Pull request: #2, open and draft  
 Production alias: https://coursepulse-site.vercel.app
 
 ## Executive verdict
 
-PARTIAL — not approved for production release. The latest feature branch has a passing CI build and a READY exact-SHA Vercel preview. The core student, instructor, administrator, academic, feedback, search, analytics and public-site functionality is substantially implemented. Production readiness still requires browser/E2E and adversarial privacy/security tests, accessibility/performance evidence, administrator MFA enrollment, Supabase Auth security configuration, institution-approved legal wording, and production smoke/sign-off.
+PARTIAL — deployed to Vercel Production, but not approved for real-college data or final production release. Exact feature HEAD `cd4a533` is mapped to the production alias and PR validation passes. Core student, instructor, administrator, academic, feedback, search, analytics and public-site functionality is substantially implemented. Remaining release gates include real-browser/E2E and adversarial privacy/security tests, accessibility/performance evidence, fresh admin MFA/recovery verification, Supabase Auth security configuration, institution-approved legal wording, backup/restore evidence and owner sign-off.
 
 A successful build is not proof of complete end-to-end operation.
 
 ## Latest automated evidence
 
-GitHub Actions runs #382 (push) and #383 (pull request) completed successfully for commit `6a4512289c33298531df6ea55bac9132741e7b16` on 2 November 2026:
+GitHub Actions PR validation run #385 completed successfully on 2 November 2026. It checked the PR merge candidate `7b0823302d7f740c4f73ae9d9287d89230892aaa`, which includes feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`:
 
 - npm audit --audit-level=moderate: 0 reported vulnerabilities.
 - Prisma schema validation: PASS.
@@ -23,7 +23,7 @@ GitHub Actions runs #382 (push) and #383 (pull request) completed successfully f
 - Vitest: 34 test files / 130 tests PASS.
 - Next.js production build: PASS; static pages 19/19 generated.
 
-Vercel built the same exact SHA and marked preview deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX` READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`. This deployment is a preview (`target=null`), not a production promotion. The production alias `https://coursepulse-site.vercel.app` is still assigned to the older feature-branch deployment at commit `2c4bdbed42eceee3de8a2a89c1058f35c95fb7f4`.
+Vercel deployment `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` is `READY`, target `production`, and built exact feature SHA `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`. Its aliases include `https://coursepulse-site.vercel.app`; a separate alias lookup confirmed that the production domain maps to this deployment. Browser-level functional smoke testing remains NOT VERIFIED.
 
 The workflow uses placeholder public Supabase settings for build-time rendering. It does not authenticate real accounts, run browser E2E, exercise every live RLS policy, or verify provider settings. Browser access to the latest Vercel preview was unavailable from the current runner, so URL/browser smoke-test status remains NOT VERIFIED.
 
@@ -42,7 +42,7 @@ The workflow uses placeholder public Supabase settings for build-time rendering.
 
 ## Live database and privacy checks
 
-The active Supabase project has 35 migration-history entries, including the aligned `20261102051456_coursepulse_report_rate_limits` migration. The repository migration versions match the remote ledger. The database contains the private eligibility ledger, anonymous answer storage, feedback version history, rate-limit ledger and data-deletion request workflow.
+The active Supabase project has 36 migration-history entries through `20261102102457_coursepulse_private_fk_indexes`. The repository migration versions match the remote ledger. The new additive migration indexes the `reviewed_by` and `changed_by` foreign-key columns in private tables. A fresh performance advisor run no longer reports unindexed foreign keys; it still reports informational unused indexes on this low-traffic database. The database contains the private eligibility ledger, anonymous answer storage, feedback version history, rate-limit ledger and data-deletion request workflow.
 
 Read-only RLS inspection confirmed:
 
@@ -66,9 +66,9 @@ Current live project has one course and one feedback form, one active ADMIN acco
 - PR #2 remains open and draft; it has not been merged.
 - The intended college-demo deployment is the Vercel project `coursepulse-site` (project ID `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`) connected to `akashsharmapb09-cpu/coursePulse.site`.
 - The verified project domain is `https://coursepulse-site.vercel.app`.
-- Current exact-HEAD preview is READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`, deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX`, branch `feat/master-prompt-completion`, commit `6a4512289c33298531df6ea55bac9132741e7b16`.
-- Production alias `https://coursepulse-site.vercel.app` is assigned to older deployment `dpl_pFf7k7AZ9jftMMp4S5dnXSrsYNjw`, commit `2c4bdbed42eceee3de8a2a89c1058f35c95fb7f4`. The current HEAD has not been promoted to that alias.
-- Browser smoke verification of the current preview is not evidenced; direct browsing from the available runner was unavailable.
+- Current feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` is deployed to Vercel Production as `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`, target `production`), branch `feat/master-prompt-completion`.
+- Production alias `https://coursepulse-site.vercel.app` is mapped to that exact deployment; `aliasError` is null.
+- Direct browser smoke verification of root/login/signup/privacy and authenticated journeys is not evidenced; the available browser/runner could not open the public routes.
 - Preview and Production environments share the same Supabase project URL. Treat preview writes as production writes; use a disposable QA DB before running browser journeys that create records.
 
 ## Master-prompt section status
@@ -99,7 +99,7 @@ Current live project has one course and one feedback form, one active ADMIN acco
 | 22. Final quality checklist | PARTIAL | Selected controls verified; production, browser, privacy, legal and performance gates open. |
 | 23. Implementation roadmap | PARTIAL | Core phases implemented; final QA/release phase not complete. |
 | 24. Engineering report | PARTIAL | This report records evidence and blockers; final PASS report awaits release-gate evidence. |
-| 25. Production-ready goal | BLOCKED | Exact-HEAD preview is ready, but the production alias still points to an older feature commit; browser smoke, staging and owner/institution gates remain. |
+| 25. Production-ready goal | BLOCKED | Exact feature HEAD is deployed to the production alias and CI passes; browser smoke, isolated staging, adversarial QA, accessibility/performance, legal and owner/institution sign-off remain. |
 
 ## Remaining release blockers
 
@@ -116,4 +116,4 @@ Current live project has one course and one feedback form, one active ADMIN acco
 
 ## Release recommendation
 
-Keep PR #2 in draft. Do not merge into main or promote this branch until public route smoke, isolated staging, role-specific E2E, adversarial security/privacy tests, accessibility/performance evidence and institution/owner decisions are complete.
+Keep PR #2 in draft. The current feature head is already serving the `.site` Vercel production alias, but do not merge into `main` or declare the college project fully accepted until public route/browser smoke, isolated staging, role-specific E2E, adversarial security/privacy tests, accessibility/performance evidence, Auth dashboard settings, and institution/owner decisions are complete.
