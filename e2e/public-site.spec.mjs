@@ -40,8 +40,8 @@ test.describe('public-page browser smoke', () => {
 
   test('password reset form exposes both password fields and an accessible submit action', async ({ page }) => {
     await page.goto('/auth/reset');
-    await expect(page.getByLabel('New password')).toBeVisible();
-    await expect(page.getByLabel('Confirm new password')).toBeVisible();
+    await expect(page.getByLabel('New password', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Confirm new password', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /update password/i })).toBeEnabled();
   });
 
