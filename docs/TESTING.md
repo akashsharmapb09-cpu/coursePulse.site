@@ -13,16 +13,16 @@ Commands:
 - npm test
 - npm run build
 
-Latest GitHub Actions evidence at feature commit 0c71aecca715e6f79c25570ee6b54896ee9cf48a on 1 November 2026:
+Latest GitHub Actions evidence at feature commit 866c70634a7e30218e217b68d4570929ca52219b on 1 November 2026:
 
 - Dependency audit: 0 npm vulnerabilities reported.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
-- Vitest: 29 files / 107 tests PASS.
-- Next.js production build: PASS; static pages 17/17 generated.
-- Vercel exact-SHA feature preview: READY; deployment ID dpl_G96JHPSwEkeJpPSZsRXy4oeNT9PT. HTTP/browser GET smoke test could not be completed because DNS resolution failed in the runner.
+- Vitest: 34 files / 130 tests PASS.
+- Next.js production build: PASS; static pages 19/19 generated.
+- Vercel project `coursepulse-site`: latest recorded READY preview is for older commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`; exact-HEAD deployment for `866c706` was blocked by the Vercel daily deployment limit. Browser smoke has not been completed.
 
-CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys.
+CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys. The same HEAD's Supabase live schema was separately checked on 2 November 2026: all 10 public tables have RLS enabled; the new `coursepulse_report_rate_limits` migration is present as migration version `20261102051456`; the analytics/export limiter actions were verified in a rollback-only transaction, and `anon` cannot execute the private limiter.
 
 ## Automated test coverage
 
@@ -75,15 +75,15 @@ Not yet evidenced for the latest feature commit:
 - Lighthouse/Core Web Vitals: LCP, INP and CLS. Do not claim the two-second target without measurements.
 - Chromium, Firefox and WebKit smoke checks.
 
-## Retention/cron verification (1 November 2026)
+## Retention/cron verification (2 November 2026)
 
 - Cron job `coursepulse-retention-cleanup` is active on schedule `17 20 * * *` UTC.
-- Last recorded job run: 31 October 2026 20:17 UTC, status `succeeded`.
+- Two successful runs are recorded; the latest began 1 November 2026 20:17 UTC.
 - Cleanup function is owned by postgres, executable by service_role, and not executable by anon/authenticated.
 - Rollback-only SQL smoke test inserted 31-day-old legacy and anonymous answer rows plus a three-day-old rate-limit row, invoked the cleanup function, and asserted that all three were deleted.
 - A follow-up query confirmed that no synthetic course/form/response fixtures persisted after rollback.
 
-This proves one recorded cron execution and the function's expiration behavior; it does not prove long-term recurring reliability or backup restoration.
+This proves two recorded successful cron executions and the function's expiration behavior; it does not prove long-term recurring reliability or backup restoration.
 
 ## Test data safety
 

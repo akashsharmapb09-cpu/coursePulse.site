@@ -62,12 +62,12 @@ Current live project has one course and one feedback form, no student/instructor
 
 ## Deployment status
 
-- PR #2 remains open and draft.
-- Exact-SHA preview for commit 0c71aecc is READY at:
-  https://coursepulse-production-kia83y858-akashsharmapb09-8177.vercel.app
-- Vercel deployment ID: dpl_G96JHPSwEkeJpPSZsRXy4oeNT9PT, project coursepulse-production, branch feat/master-prompt-completion, target=preview (not production).
-- The production alias https://coursepulse-production.vercel.app still points to an older main deployment. The feature branch has not been promoted to the production alias.
-- Direct HTTP GET/browser smoke verification of the preview could not be completed because DNS resolution failed in the available execution runner. Vercel build state READY is not the same as a browser smoke test.
+- PR #2 remains open and draft; it has not been merged.
+- The intended college-demo deployment is the Vercel project `coursepulse-site` (project ID `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`) connected to `akashsharmapb09-cpu/coursePulse.site`.
+- The verified project domain is `https://coursepulse-site.vercel.app`.
+- Latest READY preview currently recorded for this project: `https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app`, deployment `dpl_6yduj4cJ1YFn7KzR7cKnYMWURxau`, branch `feat/master-prompt-completion`, commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`. This preview is older than current branch HEAD `866c70634a7e30218e217b68d4570929ca52219b`.
+- Deployment of the exact current HEAD was blocked by the Vercel daily deployment limit. The READY state of the older preview does not prove the current HEAD is deployed or browser-tested.
+- No production alias promotion has been performed. Direct browser smoke verification remains open.
 - Preview and Production environments share the same Supabase project URL. Treat preview writes as production writes; use a disposable QA DB before running browser journeys that create records.
 
 ## Master-prompt section status
@@ -102,14 +102,16 @@ Current live project has one course and one feedback form, no student/instructor
 
 ## Remaining release blockers
 
-1. Public URL smoke: deployment state is READY but direct HTTP/browser check could not resolve DNS from the runner. Owner/user should open the preview in a browser and verify public pages.
-2. Disposable staging: Preview and Production share current Supabase project; write-based E2E requires isolated QA database.
-3. Supabase Auth settings: leaked-password protection is disabled in Security Advisor. Current Supabase project is Free tier; upgrade or a documented risk decision is required.
-4. Admin MFA: active administrator must personally enroll and verify TOTP AAL2.
-5. Backup/restore: no restore drill evidence; downloadable database backups require a paid Supabase plan.
-6. Legal/consent: institution/controller identity, verified contacts, jurisdiction, student/minor policy, legal basis, retention and policy approval must be supplied.
-7. Accessibility/performance: no WCAG 2.2 AA audit, viewport matrix or Lighthouse/Core Web Vitals results.
-8. Anonymity: minimum-five suppression is not proof against differencing; timing/re-identification review remains, and free-text comment release is not implemented.
+1. Exact-HEAD deployment: current feature HEAD `866c706` has passing GitHub CI, but no matching READY Vercel preview because deployment creation was rate-limited.
+2. Public URL smoke: the available READY preview is for an older commit; public route, signup, login and runtime behavior need real browser verification.
+3. Disposable staging: Preview and Production share the live Supabase project; write-based browser E2E requires an isolated QA database.
+4. Supabase Auth settings: leaked-password protection remains disabled in Security Advisor; enable where supported by the plan or document explicit risk acceptance.
+5. Admin MFA: active administrator must personally enroll and verify TOTP AAL2.
+6. Backup/restore: no restore drill evidence; downloadable database backups may require a paid Supabase plan.
+7. Legal/consent: institution/controller identity, verified contacts, jurisdiction, student/minor policy, legal basis, retention and policy approval must be supplied.
+8. Accessibility/performance: no WCAG 2.2 AA audit, viewport matrix or Lighthouse/Core Web Vitals results.
+9. Authorization/security: exhaustive student/instructor/admin RLS matrix, cross-resource IDOR, XSS/CSRF and distributed abuse tests remain open.
+10. Anonymity: minimum-five suppression is not proof against differencing; timing/re-identification review remains, and free-text comment release is intentionally not implemented.
 
 ## Release recommendation
 

@@ -60,10 +60,13 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
-- Latest exact-SHA preview for feature commit 0c71aecca715e6f79c25570ee6b54896ee9cf48a is READY in the Vercel coursepulse-production project at https://coursepulse-production-kia83y858-akashsharmapb09-8177.vercel.app. Vercel build log shows npm audit, typecheck, tests, Next build and 17/17 static pages passed. Direct HTTP/browser smoke tests could not be run from the available runner because DNS resolution failed. Production alias still points to an older main deployment.
-- Supabase Auth leaked-password protection is still disabled in the project security advisor; enable it in Supabase Dashboard → Authentication → Security and rerun the advisor.
-- Admin MFA enrollment must be completed by the active administrator in the app before using the admin console.
-- Institution-approved privacy/terms content and verified contact/legal details are still required.
+- GitHub Actions at feature-branch HEAD `866c70634a7e30218e217b68d4570929ca52219b` (1 November 2026) passed: npm audit (0 vulnerabilities), Prisma validation, TypeScript, 34 Vitest files / 130 tests, and the Next.js 15.5.28 production build (19/19 static pages). This CI run uses placeholder public Supabase settings and does not replace real-user browser, integration, or security testing.
+- The `.site` Vercel project is `coursepulse-site` (project `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`); its `coursepulse-site.vercel.app` domain is verified. The newest READY preview currently available is commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`, not the current branch HEAD `866c706`. An exact-HEAD deployment was blocked by Vercel's daily deployment limit. No production promotion has been made, and browser smoke testing remains open.
+- The live `.site` Supabase project `fwmovyitmtpnwhqmvrgh` now has 35 recorded migrations through `20261102051456_coursepulse_report_rate_limits`. The rate-limit migration was applied and verified: authenticated analytics/export actions are accepted, while `anon` cannot execute the private limiter. All 10 public tables have RLS enabled.
+- Retention cleanup is active at `17 20 * * *` UTC. Two successful runs are recorded; the latest began 1 November 2026 at 20:17 UTC.
+- Supabase Security Advisor still reports leaked-password protection disabled. Enable it in Supabase Dashboard → Authentication → Security where the project plan permits, then rerun the advisor.
+- Admin MFA enrollment must be completed by the active administrator before privileged workspace use. Institution-approved privacy/terms text, controller identity, verified support contacts, consent/minor policy and retention/legal decisions remain owner/institution actions.
+- Browser E2E, full role/RLS and IDOR/XSS/CSRF adversarial checks, WCAG 2.2 AA, responsive viewport review, Lighthouse/Core Web Vitals, backup/restore evidence and production smoke/rollback sign-off remain open.
 
 ## Owner decisions required
 Institution name/branding; verified support contact; department and semester catalogue; student age/minor policy; legal basis and retention schedule; cookie/analytics policy; paid/free status; official accessibility/support contact. Do not publish guessed legal statements or contacts.
