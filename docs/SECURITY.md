@@ -27,7 +27,7 @@ Every feedback form has `retention_days` constrained to 30-730 days. Supabase `p
 - Authenticated course creation, feedback form creation and response submission enforce same-origin Origin/Referer checks.
 - A private Postgres rate-limit ledger enforces per-user action windows for course/form creation, response submission and administrator updates; the API fails closed if the rate-limit RPC is unavailable.
 - Role changes and suspensions use a security-definer RPC that prevents an administrator from removing their own access or demoting/suspending the last active administrator. Privileged user and academic changes are audit logged.
-- The Next.js response headers include a baseline CSP, frame denial, MIME sniffing protection, referrer policy and permissions policy. The current CSP still permits inline/eval scripts for Next.js compatibility; nonce-based strict CSP remains future work.
+- The Next.js middleware issues a per-request nonce-based CSP with strict-dynamic, object-src none and frame-ancestors none. script-src does not allow unsafe-inline, unsafe-eval or data:. X-XSS-Protection is explicitly set to 0 because the legacy browser filter is deprecated.
 - Supabase Auth leaked-password protection is currently reported disabled by the security advisor and must be enabled in the Auth dashboard.
 
 ## Operational requirements
