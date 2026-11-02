@@ -1,7 +1,7 @@
 'use client';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, BookOpen, LoaderCircle, Mail, LockKeyhole } from 'lucide-react';
+import { Activity, ArrowRight, BookOpen, LoaderCircle, Mail, LockKeyhole } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' | 'signup' }) {
@@ -45,7 +45,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     finally { setBusy(false); }
   }
   return <div className="auth-card">
-    <div className="mobile-brand"><span className="brand-mark">◉</span> CoursePulse</div>
+    <div className="mobile-brand"><span className="brand-mark"><Activity size={19}/></span> CoursePulse</div>
     <div className="auth-icon"><BookOpen size={21}/></div>
     <span className="eyebrow">WELCOME TO COURSEPULSE</span>
     <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}</h2>
