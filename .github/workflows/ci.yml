@@ -84,7 +84,7 @@ jobs:
           console.log('CoursePulse mobile Lighthouse lab results:', JSON.stringify(summary, null, 2));
           NODE
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
+          COURSEPULSE_BASE_URL: http://127.0.0.1:3000
       - name: Stop local production server
         if: always()
         run: |
