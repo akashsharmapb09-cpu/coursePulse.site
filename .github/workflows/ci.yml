@@ -44,11 +44,28 @@ jobs:
           npm install --no-save --package-lock=false --no-audit --no-fund --legacy-peer-deps @playwright/test@1.64.1 axe-core@4.14.0 lighthouse@13.6.0
       - name: Install Chromium, Firefox and WebKit
         run: npx playwright install --with-deps chromium firefox webkit
-      # Read-only smoke checks against the current .site feature-branch preview alias; no login or database writes.
+      # Smoke-test the exact code built by this workflow instead of a potentially stale hosted preview.
+      # These public-route checks do not authenticate or write to Supabase.
+      - name: Start local production server
+        run: |
+          nohup npm run start -- --hostname 127.0.0.1 > /tmp/coursepulse-next.log 2>&1 &
+          echo $! > /tmp/coursepulse-next.pid
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/coursepulse-next.log
+          exit 1
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
+          NEXT_PUBLIC_APP_URL: https://coursepulse.example
       - name: Public browser smoke tests
         run: npx playwright test --config=playwright.config.mjs
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
+          COURSEPULSE_BASE_URL: http://127.0.0.1:3000
       - name: Run mobile Lighthouse performance audit
         run: |
           CHROME_PATH="$(node -e "process.stdout.write(require('playwright').chromium.executablePath())")"
@@ -68,6 +85,12 @@ jobs:
           NODE
         env:
           COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
+      - name: Stop local production server
+        if: always()
+        run: |
+          if [ -f /tmp/coursepulse-next.pid ]; then
+            kill "$(cat /tmp/coursepulse-next.pid)" || true
+          fi
       - name: Upload Lighthouse report
         if: always()
         uses: actions/upload-artifact@v4
