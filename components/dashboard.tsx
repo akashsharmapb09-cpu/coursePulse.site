@@ -330,7 +330,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   async function changeTab(next: typeof tab) { setTab(next); if(next==='security') { void loadMyDeletionRequests(); } if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
     <aside className="sidebar">
-      <a className="brand" href="/dashboard"><span className="brand-mark">◉</span><span>CoursePulse</span></a>
+      <a className="brand" href="/dashboard"><span className="brand-mark"><Activity size={19}/></span><span>CoursePulse</span></a>
       <div className="side-workspace"><span className="workspace-icon"><GraduationCap size={18}/></span><span><b>Learning workspace</b><small>Private environment</small></span><ChevronDown size={15}/></div>
       <span className="side-label">WORKSPACE</span>
       <nav className="side-nav" aria-label="Workspace navigation">
