@@ -45,4 +45,4 @@ jobs:
       - name: Public browser smoke tests
         run: npx playwright test --config=playwright.config.mjs
         env:
-          COURSEPULSE_BASE_URL: https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app
+          COURSEPULSE_BASE_URL: https://coursepulse-site-sjv8xwyay-akashsharmapb09-8177.vercel.app
