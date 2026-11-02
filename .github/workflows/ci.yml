@@ -9,8 +9,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Scan repository history for secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -32,8 +39,8 @@ jobs:
       # Install a pinned browser-test runner without changing the application's dependency manifest or lockfile.
       - name: Install Playwright test runner
         run: npm install --no-save --package-lock=false @playwright/test@1.64.1 axe-core@4.14.0
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium, Firefox and WebKit
+        run: npx playwright install --with-deps chromium firefox webkit
       # Read-only smoke checks against the public .site production URL; no login or database writes.
       - name: Public browser smoke tests
         run: npx playwright test --config=playwright.config.mjs
