@@ -7,7 +7,7 @@ const analytics=readFileSync(resolve(process.cwd(),'app/api/analytics/route.ts')
 const exportsRoute=readFileSync(resolve(process.cwd(),'app/api/exports/[format]/route.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
-const readRateMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261101180000_coursepulse_report_rate_limits.sql'),'utf8');
+const readRateMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261102051456_coursepulse_report_rate_limits.sql'),'utf8');
 
 describe('filtered aggregate analytics',()=>{
   it('uses a separate timestamped aggregate RPC with course, date and semester filters',()=>{
