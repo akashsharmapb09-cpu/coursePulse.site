@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, BarChart3, BookOpenCheck, ClipboardList, ShieldCheck, Users2 } from 'lucide-react';
+import { Activity, ArrowRight, BarChart3, BookOpenCheck, ClipboardList, ShieldCheck, Users2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ScrollMotion } from '@/components/scroll-motion';
 
@@ -16,7 +16,7 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) return <main className="min-h-screen grid place-items-center bg-[#f5f8f5]"><div className="text-center"><p className="text-sm text-[#62766b]">You are signed in.</p><Link className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-semibold text-white" href="/dashboard">Open your workspace <ArrowRight size={16}/></Link></div></main>;
 
-  return <main className="min-h-screen overflow-hidden bg-[#f7faf7] text-[#20352a]">
+  return <main className="min-h-screen overflow-hidden bg-[#f6f3eb] text-[#20352a]">
     <ScrollMotion />
     <header className="site-nav mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
       <Link href="/" className="flex items-center gap-3 text-lg font-extrabold tracking-tight"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#245b3e] text-white">◉</span>CoursePulse</Link>
