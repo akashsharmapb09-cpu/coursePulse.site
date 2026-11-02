@@ -160,3 +160,91 @@ button:active,a:active{transform:translateY(1px) scale(.985)}
   outline: 3px solid #2d7652 !important;
   outline-offset: 3px;
 }
+
+
+/* CoursePulse premium product theme: forest, warm ivory and restrained brass. */
+:root {
+  --ink: #172820;
+  --muted: #68736a;
+  --line: #e8e2d6;
+  --paper: #f6f3eb;
+  --white: #fffdf8;
+  --green: #174b3a;
+  --mint: #e4ece2;
+  --soft: #f1f0e7;
+  --shadow: 0 18px 48px rgba(28, 43, 32, .075);
+}
+html, body { background: var(--paper); }
+.main-area { background: var(--paper); }
+.topbar {
+  background: #fbfaf6;
+  border-bottom-color: #e8e2d6;
+}
+.content-area { color: #172820; }
+.sidebar {
+  background: #10372c;
+  border-right: 1px solid #1d4a3b;
+  color: #f7f3e9;
+}
+.sidebar .brand { color: #fffdf8; }
+.sidebar .brand-mark {
+  background: rgba(238, 228, 195, .14);
+  color: #e7d49c;
+}
+.side-workspace {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(235,232,216,.16);
+  color: #f6f2e8;
+}
+.workspace-icon {
+  background: rgba(229,211,158,.14);
+  color: #e5d19a;
+}
+.side-workspace small,
+.side-workspace > svg { color: #bdcfc3; }
+.side-label { color: #a9c0b2; }
+.sidebar .side-nav button {
+  color: #d3e0d7;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+.sidebar .side-nav button span {
+  background: rgba(255,255,255,.11);
+  color: #e5eadf;
+}
+.sidebar .side-nav button:hover {
+  background: rgba(255,255,255,.075);
+  color: #fffdf8;
+}
+.sidebar .side-nav button.active {
+  background: #1b5b43;
+  color: #fffdf8;
+  box-shadow: inset 3px 0 #d9c28b;
+}
+.sidebar .side-nav button.active svg { color: #ead8a6; }
+.sidebar .security-note {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(235,232,216,.17);
+  color: #ecdfb6;
+}
+.sidebar .security-note svg { color: #e7d19a; }
+.sidebar .security-note p { color: #c0d0c5; }
+.sidebar .user-profile { border-top-color: rgba(235,232,216,.18); }
+.sidebar .avatar {
+  background: #e5d6a8;
+  color: #183a2d;
+}
+.sidebar .user-copy b { color: #fffdf8; }
+.sidebar .user-copy small { color: #b9cbbf; }
+.sidebar .icon-button { color: #d3e0d7; }
+.sidebar .icon-button:hover { background: rgba(255,255,255,.1); }
+.metric-card, .analytics-card, .modal {
+  background: #fffdf8;
+  border-color: #e8e2d6;
+}
+.course-card { background: #fffdf8; border-color: #e8e2d6; }
+.course-card:hover { box-shadow: 0 14px 36px rgba(28,43,32,.09); }
+.global-search { background: #fffdf8; border-color: #e8e2d6; }
+.role-chip { background: #f1efe5; color: #58675c; }
+.button.primary { background: #174b3a; }
+.button.primary:hover { background: #103a2d; }
+:focus-visible { scroll-margin-block: 8px; }
