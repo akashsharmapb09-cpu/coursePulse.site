@@ -283,3 +283,16 @@ html, body { background: var(--paper); }
   opacity: 1 !important;
   transition: transform .38s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .38s ease;
 }
+
+
+/* Header links are deliberate touch targets, not just text labels. */
+.site-nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-block: 10px;
+}
+.site-nav nav a {
+  min-height: 44px;
+  padding-block: 10px;
+}
