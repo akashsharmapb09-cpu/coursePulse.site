@@ -18,6 +18,7 @@ describe('Content Security Policy', () => {
   it('blocks plugins and restricts script/object sources', () => {
     const policy = buildContentSecurityPolicy(nonce);
     expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("frame-src 'none'");
     expect(policy).toContain("base-uri 'self'");
     expect(policy).toContain("form-action 'self'");
     expect(policy).toContain("frame-ancestors 'none'");
