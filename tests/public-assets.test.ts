@@ -6,6 +6,7 @@ const layout=readFileSync(resolve(process.cwd(),'app/layout.tsx'),'utf8');
 const icon=readFileSync(resolve(process.cwd(),'public/icon.svg'),'utf8');
 const manifest=readFileSync(resolve(process.cwd(),'app/manifest.ts'),'utf8');
 const og=readFileSync(resolve(process.cwd(),'app/opengraph-image.tsx'),'utf8');
+const securityTxt=readFileSync(resolve(process.cwd(),'public/.well-known/security.txt'),'utf8');
 
 describe('public app identity assets',()=>{
   it('declares a favicon and shortcut icon in document metadata',()=>{
@@ -24,6 +25,12 @@ describe('public app identity assets',()=>{
   it('uses a visible keyboard focus indicator',()=>{
     const css=readFileSync(resolve(process.cwd(),'app/globals.css'),'utf8');
     expect(css).toContain(':focus-visible');
+  });
+  it('publishes an RFC 9116 security.txt with an HTTPS contact and expiry',()=>{
+    expect(securityTxt).toMatch(/^Contact: https:\/\//m);
+    expect(securityTxt).toMatch(/^Expires: 2027-/m);
+    expect(securityTxt).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(securityTxt).toMatch(/^Policy: https:\/\//m);
   });
   it('uses a valid scalable SVG mark and web-app manifest',()=>{
     expect(icon).toContain('<svg');
