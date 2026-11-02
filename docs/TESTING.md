@@ -13,16 +13,16 @@ Commands:
 - npm test
 - npm run build
 
-Latest GitHub Actions evidence at feature commit 866c70634a7e30218e217b68d4570929ca52219b on 1 November 2026:
+Latest GitHub Actions evidence at feature commit 6a4512289c33298531df6ea55bac9132741e7b16 on 2 November 2026:
 
 - Dependency audit: 0 npm vulnerabilities reported.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
 - Vitest: 34 files / 130 tests PASS.
 - Next.js production build: PASS; static pages 19/19 generated.
-- Vercel project `coursepulse-site`: latest recorded READY preview is for older commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`; exact-HEAD deployment for `866c706` was blocked by the Vercel daily deployment limit. Browser smoke has not been completed.
+- Vercel project `coursepulse-site`: exact-HEAD preview deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX` is READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`. The production alias `coursepulse-site.vercel.app` still points to older commit `2c4bdbed`. Browser smoke has not been completed.
 
-CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys. The same HEAD's Supabase live schema was separately checked on 2 November 2026: all 10 public tables have RLS enabled; the new `coursepulse_report_rate_limits` migration is present as migration version `20261102051456`; the analytics/export limiter actions were verified in a rollback-only transaction, and `anon` cannot execute the private limiter.
+CI uses placeholder public Supabase values for build-time rendering. It does not exercise real authentication, live database RLS, real provider settings or browser journeys. The same project’s Supabase live schema was separately checked on 2 November 2026: all 10 public tables have RLS enabled; the new `coursepulse_report_rate_limits` migration is present as migration version `20261102051456`; the analytics/export limiter actions were verified in a rollback-only transaction, and `anon` cannot execute the private limiter.
 
 ## Automated test coverage
 
@@ -67,7 +67,7 @@ Run only against a disposable Supabase QA project with synthetic accounts. Never
 
 Not yet evidenced for the latest feature commit:
 
-- Playwright browser E2E for student, instructor and admin.
+- Playwright browser E2E for student, instructor and admin, including signup confirmation and password-reset redirect verification.
 - Keyboard-only navigation, focus visibility, accessible names, semantic errors and screen-reader announcements.
 - WCAG 2.2 AA color contrast and keyboard/screen-reader review.
 - Viewport matrix: 320–480, 481–768, 769–1024, 1025–1440 and 1441+ pixels.

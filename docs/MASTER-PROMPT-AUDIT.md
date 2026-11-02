@@ -1,11 +1,11 @@
 # CoursePulse master-prompt compliance audit
 
-Audit date: 1 November 2026  
+Audit date: 2 November 2026  
 Repository: akashsharmapb09-cpu/coursePulse.site  
 Branch: feat/master-prompt-completion  
-Latest application commit reviewed: 0c71aecca715e6f79c25570ee6b54896ee9cf48a  
+Latest application commit reviewed: 6a4512289c33298531df6ea55bac9132741e7b16  
 Pull request: #2, open and draft  
-Production alias: https://coursepulse-production.vercel.app
+Production alias: https://coursepulse-site.vercel.app
 
 ## Executive verdict
 
@@ -15,17 +15,17 @@ A successful build is not proof of complete end-to-end operation.
 
 ## Latest automated evidence
 
-GitHub Actions run #326 completed successfully for commit 0c71aecc on 1 November 2026:
+GitHub Actions runs #382 (push) and #383 (pull request) completed successfully for commit `6a4512289c33298531df6ea55bac9132741e7b16` on 2 November 2026:
 
 - npm audit --audit-level=moderate: 0 reported vulnerabilities.
 - Prisma schema validation: PASS.
 - TypeScript: PASS.
-- Vitest: 29 test files / 107 tests PASS.
-- Next.js production build: PASS.
+- Vitest: 34 test files / 130 tests PASS.
+- Next.js production build: PASS; static pages 19/19 generated.
 
-Vercel built the same exact SHA (deployment dpl_G96JHPSwEkeJpPSZsRXy4oeNT9PT) and marked it READY. The build log shows dependency installation, zero npm audit vulnerabilities, typecheck, 29 tests/107 assertions, Next.js compilation, and 17/17 static pages generated.
+Vercel built the same exact SHA and marked preview deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX` READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`. This deployment is a preview (`target=null`), not a production promotion. The production alias `https://coursepulse-site.vercel.app` is still assigned to the older feature-branch deployment at commit `2c4bdbed42eceee3de8a2a89c1058f35c95fb7f4`.
 
-The workflow uses placeholder public Supabase settings for build-time rendering. It does not authenticate real accounts, run browser E2E, exercise all live RLS policies, or verify production credentials. Direct HTTP route checks from the available runner failed at DNS resolution, so URL/browser smoke-test status is NOT VERIFIED.
+The workflow uses placeholder public Supabase settings for build-time rendering. It does not authenticate real accounts, run browser E2E, exercise every live RLS policy, or verify provider settings. Browser access to the latest Vercel preview was unavailable from the current runner, so URL/browser smoke-test status remains NOT VERIFIED.
 
 ## Implemented scope
 
@@ -42,7 +42,7 @@ The workflow uses placeholder public Supabase settings for build-time rendering.
 
 ## Live database and privacy checks
 
-The active Supabase project has 34 migration-history entries. The repository migration versions match the remote ledger. The database contains the private eligibility ledger, anonymous answer storage, feedback version history, rate-limit ledger and data-deletion request workflow.
+The active Supabase project has 35 migration-history entries, including the aligned `20261102051456_coursepulse_report_rate_limits` migration. The repository migration versions match the remote ledger. The database contains the private eligibility ledger, anonymous answer storage, feedback version history, rate-limit ledger and data-deletion request workflow.
 
 Read-only RLS inspection confirmed:
 
@@ -51,23 +51,24 @@ Read-only RLS inspection confirmed:
 - public.anonymous_submissions has an explicit deny-direct-access policy for anon/authenticated.
 - Authenticated users have no direct SELECT or INSERT grant on private.data_deletion_requests.
 - Selected admin/security RPCs deny anon execution and require administrator role plus AAL2 inside the database.
-- The daily `coursepulse-retention-cleanup` cron job is active (`17 20 * * *` UTC); last observed run on 31 October 2026 20:17 UTC succeeded. The cleanup RPC is executable by `service_role` only. A rollback-only expiry smoke test proved old legacy and anonymous answers plus expired rate-limit rows are deleted; no QA rows persisted.
+- The daily `coursepulse-retention-cleanup` cron job is active (`17 20 * * *` UTC); two successful runs are recorded, latest on 1 November 2026 20:17 UTC. The cleanup RPC is executable by `service_role` only. A rollback-only expiry smoke test proved old legacy and anonymous answers plus expired rate-limit rows are deleted; no QA rows persisted.
+- All 10 public tables have RLS enabled. The report-rate-limit migration's authenticated analytics/export paths return allowed in a rollback-only check; `anon` cannot execute the private limiter.
 - Rollback-only live-schema student/instructor integration tests passed course/enrollment scoping, one-time eligibility consumption, duplicate rejection, direct answer/eligibility read denial, five-response suppression, other-instructor course isolation, weekly response aggregation and free-text exclusion; post-rollback verification found zero synthetic rows persisted.
 
 New anonymous_submissions rows do not store student identifiers or eligibility references. Eligibility is separately stored in private.feedback_eligibility. Legacy public.responses historically stores student_id alongside answers; it was empty at cutover and remains for compatibility/retention. Do not claim cryptographic anonymity. Timing inference, complementary suppression and repeated-query differencing still need independent review.
 
 Deletion requests can be submitted by users and reviewed/audited by AAL2 administrators. The app has no privileged Supabase service-role credential, so an authorized project owner must perform and verify Auth-user deletion before a request is marked complete.
 
-Current live project has one course and one feedback form, no student/instructor accounts and no feedback submissions. These checks did not create synthetic student data in production.
+Current live project has one course and one feedback form, one active ADMIN account with one verified TOTP factor, no student/instructor accounts and no feedback submissions. These checks did not create synthetic student data in production.
 
 ## Deployment status
 
 - PR #2 remains open and draft; it has not been merged.
 - The intended college-demo deployment is the Vercel project `coursepulse-site` (project ID `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`) connected to `akashsharmapb09-cpu/coursePulse.site`.
 - The verified project domain is `https://coursepulse-site.vercel.app`.
-- Latest READY preview currently recorded for this project: `https://coursepulse-site-git-feat-master-pr-49ad8a-akashsharmapb09-8177.vercel.app`, deployment `dpl_6yduj4cJ1YFn7KzR7cKnYMWURxau`, branch `feat/master-prompt-completion`, commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`. This preview is older than current branch HEAD `866c70634a7e30218e217b68d4570929ca52219b`.
-- Deployment of the exact current HEAD was blocked by the Vercel daily deployment limit. The READY state of the older preview does not prove the current HEAD is deployed or browser-tested.
-- No production alias promotion has been performed. Direct browser smoke verification remains open.
+- Current exact-HEAD preview is READY at `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app`, deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX`, branch `feat/master-prompt-completion`, commit `6a4512289c33298531df6ea55bac9132741e7b16`.
+- Production alias `https://coursepulse-site.vercel.app` is assigned to older deployment `dpl_pFf7k7AZ9jftMMp4S5dnXSrsYNjw`, commit `2c4bdbed42eceee3de8a2a89c1058f35c95fb7f4`. The current HEAD has not been promoted to that alias.
+- Browser smoke verification of the current preview is not evidenced; direct browsing from the available runner was unavailable.
 - Preview and Production environments share the same Supabase project URL. Treat preview writes as production writes; use a disposable QA DB before running browser journeys that create records.
 
 ## Master-prompt section status
@@ -94,19 +95,19 @@ Current live project has one course and one feedback form, no student/instructor
 | 18. Product analytics | NOT APPLICABLE to current build | No third-party analytics provider is configured. Do not add non-essential tracking without approved consent decision. |
 | 19. Documentation | PASS | PRD, architecture, security, code style, AGENTS, plan, API, testing and seed strategy docs present. |
 | 20. Project structure | PASS | Existing App Router structure is modular; no empty scaffolding added. |
-| 21. Testing and QA | PARTIAL | 29 Vitest files/107 tests and CI/Vercel build pass; integration, Playwright, RLS, browser, accessibility and device tests open. |
+| 21. Testing and QA | PARTIAL | 34 Vitest files/130 tests and exact-HEAD CI/Vercel preview build pass; integration, Playwright, full RLS, browser, accessibility and device tests open. |
 | 22. Final quality checklist | PARTIAL | Selected controls verified; production, browser, privacy, legal and performance gates open. |
 | 23. Implementation roadmap | PARTIAL | Core phases implemented; final QA/release phase not complete. |
 | 24. Engineering report | PARTIAL | This report records evidence and blockers; final PASS report awaits release-gate evidence. |
-| 25. Production-ready goal | BLOCKED | Preview build is ready, but production alias, browser smoke, staging and owner/institution gates remain. |
+| 25. Production-ready goal | BLOCKED | Exact-HEAD preview is ready, but the production alias still points to an older feature commit; browser smoke, staging and owner/institution gates remain. |
 
 ## Remaining release blockers
 
-1. Exact-HEAD deployment: current feature HEAD `866c706` has passing GitHub CI, but no matching READY Vercel preview because deployment creation was rate-limited.
-2. Public URL smoke: the available READY preview is for an older commit; public route, signup, login and runtime behavior need real browser verification.
+1. Public URL smoke: latest preview deployment is READY for exact HEAD, but root/login/signup/privacy routes and full browser journeys still need real-browser verification.
+2. Auth redirects: the app builds callback URLs from `NEXT_PUBLIC_APP_URL`; confirm Supabase Auth Site URL and allowed redirect URL include `https://coursepulse-site.vercel.app/auth/confirm`, then test signup confirmation and password reset. The preview environment currently shares the production database and public app origin.
 3. Disposable staging: Preview and Production share the live Supabase project; write-based browser E2E requires an isolated QA database.
-4. Supabase Auth settings: leaked-password protection remains disabled in Security Advisor; enable where supported by the plan or document explicit risk acceptance.
-5. Admin MFA: active administrator must personally enroll and verify TOTP AAL2.
+4. Supabase Auth settings: leaked-password protection remains disabled in Security Advisor; enable where supported by the Free plan or document explicit risk acceptance.
+5. Admin MFA: one active admin has a verified TOTP factor; verify fresh sign-in reaches AAL2 and recovery works.
 6. Backup/restore: no restore drill evidence; downloadable database backups may require a paid Supabase plan.
 7. Legal/consent: institution/controller identity, verified contacts, jurisdiction, student/minor policy, legal basis, retention and policy approval must be supplied.
 8. Accessibility/performance: no WCAG 2.2 AA audit, viewport matrix or Lighthouse/Core Web Vitals results.

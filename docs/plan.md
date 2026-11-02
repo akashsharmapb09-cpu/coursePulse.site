@@ -55,17 +55,19 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
 - [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan).
-- [x] PARTIAL: daily retention cron job is active (`17 20 * * *` UTC) with one successful recorded run; rollback-only expiry test confirmed legacy responses, anonymous submissions and old rate-limit rows are cleaned. Ongoing schedule monitoring remains open.
+- [x] PARTIAL: daily retention cron job is active (`17 20 * * *` UTC) with two successful recorded runs (latest 1 November 2026 at 20:17 UTC); rollback-only expiry test confirmed legacy responses, anonymous submissions and old rate-limit rows are cleaned. Ongoing schedule monitoring remains open.
 - [x] PARTIAL: PRD, architecture, code standards, security and CI documentation added; API reference, testing guide and seed strategy are documented; staging data fixtures and manual QA evidence remain open.
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
-- GitHub Actions at feature-branch HEAD `866c70634a7e30218e217b68d4570929ca52219b` (1 November 2026) passed: npm audit (0 vulnerabilities), Prisma validation, TypeScript, 34 Vitest files / 130 tests, and the Next.js 15.5.28 production build (19/19 static pages). This CI run uses placeholder public Supabase settings and does not replace real-user browser, integration, or security testing.
-- The `.site` Vercel project is `coursepulse-site` (project `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`); its `coursepulse-site.vercel.app` domain is verified. The newest READY preview currently available is commit `8bf1497f1ee02bf16c4ef29f91c3db23199fa5a6`, not the current branch HEAD `866c706`. An exact-HEAD deployment was blocked by Vercel's daily deployment limit. No production promotion has been made, and browser smoke testing remains open.
-- The live `.site` Supabase project `fwmovyitmtpnwhqmvrgh` now has 35 recorded migrations through `20261102051456_coursepulse_report_rate_limits`. The rate-limit migration was applied and verified: authenticated analytics/export actions are accepted, while `anon` cannot execute the private limiter. All 10 public tables have RLS enabled.
-- Retention cleanup is active at `17 20 * * *` UTC. Two successful runs are recorded; the latest began 1 November 2026 at 20:17 UTC.
-- Supabase Security Advisor still reports leaked-password protection disabled. Enable it in Supabase Dashboard → Authentication → Security where the project plan permits, then rerun the advisor.
-- Admin MFA enrollment must be completed by the active administrator before privileged workspace use. Institution-approved privacy/terms text, controller identity, verified support contacts, consent/minor policy and retention/legal decisions remain owner/institution actions.
+- GitHub Actions at feature-branch HEAD `6a4512289c33298531df6ea55bac9132741e7b16` (2 November 2026) passed: npm audit (0 vulnerabilities), Prisma validation, TypeScript, 34 Vitest files / 130 tests, and the Next.js 15.5.28 production build (19/19 static pages).
+- The current exact-HEAD `.site` preview is READY: `https://coursepulse-site-b2drs22w1-akashsharmapb09-8177.vercel.app` (deployment `dpl_27TdEpa7g5ksA9b3pxTYEgjN7FeX`). It is a preview, not the current production alias. The production domain `https://coursepulse-site.vercel.app` still points to an older feature deployment at commit `2c4bdbed42eceee3de8a2a89c1058f35c95fb7f4`. A browser smoke test of the exact preview could not be completed from the available runner.
+- The live `.site` Supabase project `fwmovyitmtpnwhqmvrgh` has 35 recorded migrations through `20261102051456_coursepulse_report_rate_limits`. The rate-limit migration is aligned in the repository and live ledger; authenticated analytics/export limiter actions were verified, and `anon` cannot execute the private limiter. All 10 public tables have RLS enabled.
+- Retention cleanup is active at `17 20 * * *` UTC. Two successful runs are recorded; latest began 1 November 2026 at 20:17 UTC.
+- The active administrator has one verified TOTP factor. A fresh browser sign-in proving AAL2 and the recovery path still needs live verification.
+- Supabase Security Advisor still reports leaked-password protection disabled. The Supabase organization is on the Free plan; enable it if the plan permits or record the institution's risk decision.
+- The current `.site` Vercel environment sets `NEXT_PUBLIC_APP_URL=https://coursepulse-site.vercel.app`. The README's Supabase Auth URL guidance has been corrected to this `.site` domain; the actual Auth Site URL/redirect allow-list and email confirmation/password-reset journeys still need dashboard/browser verification.
+- Institution-approved privacy/terms text, controller identity, verified support contacts, consent/minor policy and retention/legal decisions remain owner/institution actions.
 - Browser E2E, full role/RLS and IDOR/XSS/CSRF adversarial checks, WCAG 2.2 AA, responsive viewport review, Lighthouse/Core Web Vitals, backup/restore evidence and production smoke/rollback sign-off remain open.
 
 ## Owner decisions required

@@ -102,7 +102,7 @@ Import the GitHub repository into Vercel or run `vercel link` after creating it.
 - `DATABASE_URL` (server-only Postgres URL)
 - `DIRECT_URL` (server-only direct Postgres URL)
 
-Do not configure `SUPABASE_SERVICE_ROLE_KEY` for normal app functionality; the app does not need it. Use Node.js 22.x and the Next.js framework defaults. In Supabase Auth > URL Configuration, set the Site URL to `https://coursepulse-production.vercel.app` and add both `https://coursepulse-production.vercel.app` and `https://coursepulse-production.vercel.app/auth/confirm` to the allowed redirect URLs. Signup confirmation links return through the app's `/auth/confirm` route.
+Do not configure `SUPABASE_SERVICE_ROLE_KEY` for normal app functionality; the app does not need it. Use Node.js 22.x and the Next.js framework defaults. In Supabase Auth > URL Configuration, set the Site URL to `https://coursepulse-site.vercel.app` and add both `https://coursepulse-site.vercel.app` and `https://coursepulse-site.vercel.app/auth/confirm` to the allowed redirect URLs. Signup confirmation and password-reset links return through the app's `/auth/confirm` route. For this `.site` project, set `NEXT_PUBLIC_APP_URL=https://coursepulse-site.vercel.app` in Vercel and allow `https://coursepulse-site.vercel.app/auth/confirm` in Supabase Auth. For local testing, also allow `http://localhost:3000/auth/confirm`. Verify the Supabase dashboard's actual Site URL and redirect allow-list after changing these values; the repository documentation does not prove the dashboard configuration.
 
 ## GitHub
 
