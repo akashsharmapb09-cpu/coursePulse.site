@@ -38,3 +38,16 @@ Every feedback form has `retention_days` constrained to 30-730 days. Supabase `p
 - Enforce MFA for admins in the Supabase Auth project settings and verify the assurance level on privileged actions.
 - Use a strong database password and SSL (`sslmode=require`).
 - Keep retention days no longer than the actual educational purpose requires.
+
+
+## Browser security headers
+
+The application now applies a per-request Content Security Policy in middleware. A cryptographically random nonce is forwarded to Next.js and included in script-src with strict-dynamic; unsafe-inline, unsafe-eval and data: are not allowed as script sources. Plugin execution is blocked with object-src none, and framing is blocked with frame-ancestors none.
+
+The policy keeps style-src-attr unsafe-inline only for React-rendered numeric/visual style attributes used by progress indicators and charts; it is not included in script-src. Scripts still require the per-response nonce or same-origin policy.
+
+X-XSS-Protection: 0 is intentional. The old browser XSS auditor is deprecated and can create vulnerabilities; modern XSS mitigation is provided by the nonce-based CSP and framework output escaping. Do not change this to 1; mode=block merely to satisfy a legacy header scanner.
+
+A machine-readable contact file is published at /.well-known/security.txt. Its contact points to GitHub Security Advisories. Before public launch, a repository owner must enable and verify GitHub private vulnerability reporting under repository Settings > Security, and test that the contact destination accepts a private report. Do not ask researchers to post vulnerability details in a public issue.
+
+The CSP and security.txt format have automated regression tests. After deployment, verify the response headers on the public .site domain and test the nonce/hydration flow in Chromium, Firefox and WebKit. A code-level test alone is not a browser security sign-off.
