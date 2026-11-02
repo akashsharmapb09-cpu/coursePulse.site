@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import ExcelJS from 'exceljs';
-import { csvCell, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
+import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
+
+const exportRoute = readFileSync(resolve(process.cwd(), 'app/api/exports/[format]/route.ts'), 'utf8');
+const rateMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261102051456_coursepulse_report_rate_limits.sql'), 'utf8');
 
 const sample: AggregateRow = {
   course_id: 'c1', course_title: 'Physics', feedback_id: 'f1', feedback_title: 'Module pulse',
@@ -10,7 +15,21 @@ const sample: AggregateRow = {
 
 describe('aggregate exports', () => {
   it('escapes quotes and CSV delimiters', () => expect(csvCell('a,"b"')).toBe('"a,""b"""'));
-  it('neutralizes spreadsheet formulas', () => expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK"));
+  it('neutralizes spreadsheet formulas in text values before CSV, XLS and XLSX encoding', () => {
+    expect(spreadsheetSafeText('=HYPERLINK("x")')).toBe("'=HYPERLINK(\"x\")");
+    expect(spreadsheetSafeText('\t+cmd|/C calc')).toBe("'\t+cmd|/C calc");
+    expect(spreadsheetSafeText('  =1+1')).toBe("'  =1+1");
+    expect(spreadsheetSafeText('ordinary course title')).toBe('ordinary course title');
+    expect(csvCell('=HYPERLINK("x")')).toContain("'=HYPERLINK");
+  });
+  it('keeps export downloads under an authenticated per-user hourly budget', () => {
+    expect(exportRoute).toContain("checkReadRateLimit(supabase, 'exports:download', 20, 3600)");
+    expect(rateMigration).toContain("'exports:download'");
+  });
+  it('applies the shared formula sanitizer to HTML XLS and XLSX string cells', () =>{
+    expect(exportRoute).toContain('escapeHtml(spreadsheetSafeText(row[k as keyof typeof row]))');
+    expect(exportRoute).toContain("typeof value === 'string' ? spreadsheetSafeText(value) : value");
+  });
   it('contains aggregate metrics, not response answer data', () => {
     const rows = aggregateExportRows([sample]);
     expect(rows[0]['Average score']).toBe(4.25);

@@ -1,34 +1,90 @@
 'use client';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, ShieldCheck, Users, X } from 'lucide-react';
+import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { QUESTION_CATEGORIES } from '@/lib/question-categories';
+import { buildRatingDonutSegments, radarPolygonPoints, summarizeCategoryPerformance, summarizeRatingSentiment } from '@/lib/analytics-visuals';
+import { moveQuestion as reorderQuestionItems, normalizeQuestionOptions } from '@/lib/question-editor';
 
 type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
-type Course = { id: string; title: string; description: string; status: string; created_at: string; instructor_id: string };
-type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; created_at: string; form_schema?: Question[]; course?: { title: string } };
-type Question = { id: string; label: string; type: string; required: boolean; options?: string[] };
+type Course = { id: string; course_code?:string|null; title: string; description: string; status: string; created_at: string; instructor_id: string; instructor?:{id:string;full_name:string|null;email:string|null}|null; instructors?:string[]; department_id?:string|null; semester_id?:string|null; semester?:{id:string;name:string}|null; department?:{id:string;name:string;code:string}|null };
+type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; submitted?: boolean; due_at?: string|null; created_at: string; version?:number; form_schema?: Question[]; course?: { title: string } };
+type FeedbackVersion = {version:number;title:string;description:string;form_schema:Question[];due_at:string|null;changed_by:string|null;created_at:string};
+type Question = { id: string; label: string; type: 'rating'|'single_choice'|'multiple_choice'|'multiple_select'|'text'|'textarea'|'number'|'yes_no'; category?: 'Course Content'|'Teaching Effectiveness'|'Communication'|'Course Organization'|'Assessment'|'Learning Resources'|'Overall Satisfaction'; required: boolean; options?: string[] };
+type DataDeletionRequest = {id:string;status:'PENDING'|'IN_REVIEW'|'APPROVED'|'REJECTED'|'COMPLETED';created_at:string;reviewed_at:string|null;resolution_note:string|null;requester_name?:string;requester_email?:string;requester_role?:string};
+type AdminOverview = {
+  total_students:number;
+  total_instructors:number;
+  total_courses:number;
+  total_departments:number;
+  total_feedback_forms:number;
+  total_responses:number;
+  participation_rate:number|null;
+  average_rating:number|null;
+  low_participation_forms:{feedback_id:string;feedback_title:string;course_title:string;message:string}[];
+};
+type AdminUser = { id:string; email:string|null; full_name:string; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean; created_at:string; department_id:string|null };
+type AuditEvent = { id:string; action:string; target_type:string; target_id:string|null; details:Record<string,unknown>; created_at:string };
+type AcademicData = { departments:{id:string;name:string;code:string}[]; semesters:{id:string;name:string;start_date:string;end_date:string;is_active:boolean}[]; courses:{id:string;title:string;department_id:string|null;semester_id:string|null;status:string}[]; students:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; instructors:{id:string;email:string|null;full_name:string;role:string;is_active:boolean}[]; enrollments:{id:string;course_id:string;student_id:string;enrolled_at:string}[]; assignments:{id:string;course_id:string;instructor_id:string;created_at:string}[]; accounts:{id:string;email:string|null;full_name:string;role:string;is_active:boolean;department_id:string|null}[] };
+type ResponseTrend = {course_id:string;course_title:string;week_start:string;response_count:number};
+type RatingDistribution = {course_id:string;course_title:string;feedback_id:string;feedback_title:string;question_id:string;question_label:string;rating_value:number;response_count:number;question_category?:string|null};
+type SearchResults = {courses:(Pick<Course,'id'|'title'|'description'|'status'> & {course_code?:string|null})[];feedback:Pick<Feedback,'id'|'course_id'|'title'|'description'|'is_open'>[];users:Pick<AdminUser,'id'|'full_name'|'email'|'role'>[];departments:{id:string;name:string;code:string}[];instructors:{course_id:string;instructor_name:string}[]};
+type SearchTarget = {kind:'course';id:string}|{kind:'department';id:string}|{kind:'instructor-course';courseId:string}|{kind:'feedback';id:string};
+type AcademicAction = {action:'department';name:string;code:string}|{action:'semester';name:string;start_date:string;end_date:string}|{action:'enroll';course_id:string;student_id:string}|{action:'assign';course_id:string;instructor_id:string}|{action:'course_academic';course_id:string;department_id:string|null;semester_id:string|null}|{action:'department_update';department_id:string;name:string;code:string}|{action:'semester_update';semester_id:string;name:string;start_date:string;end_date:string;is_active:boolean}|{action:'user_department';user_id:string;department_id:string|null};
 
 export function Dashboard({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'analytics'>('overview');
+  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'history'|'analytics'|'admin'|'security'>('overview');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [courseModal, setCourseModal] = useState(false);
+  const [editingCourse,setEditingCourse]=useState<Course|null>(null);
   const [feedbackModal, setFeedbackModal] = useState(false);
+  const [editingFeedback,setEditingFeedback]=useState<Feedback|null>(null);
+  const [versionHistoryFeedback,setVersionHistoryFeedback]=useState<Feedback|null>(null);
+  const [feedbackVersions,setFeedbackVersions]=useState<FeedbackVersion[]>([]);
   const [responseModal, setResponseModal] = useState<Feedback|null>(null);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [courseTitle, setCourseTitle] = useState('');
+  const [courseCode, setCourseCode] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [questionLabel, setQuestionLabel] = useState('How would you rate this course?');
-  const [questionType, setQuestionType] = useState<'rating'|'text'>('rating');
+  const [formDueAt,setFormDueAt]=useState('');
+  const [questions, setQuestions] = useState<Question[]>([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]);
   const [analytics, setAnalytics] = useState<any[]>([]);
+  const [ratingDistributions,setRatingDistributions]=useState<RatingDistribution[]>([]);
+  const [responseTrends,setResponseTrends]=useState<ResponseTrend[]>([]);
+  const [compareAnalytics,setCompareAnalytics]=useState<any[]>([]);
+  const [analyticsCourseId,setAnalyticsCourseId]=useState('');
+  const [compareCourseId,setCompareCourseId]=useState('');
+  const [analyticsFromDate,setAnalyticsFromDate]=useState('');
+  const [analyticsToDate,setAnalyticsToDate]=useState('');
+  const [analyticsSemesterId,setAnalyticsSemesterId]=useState('');
+  const [analyticsDepartmentId,setAnalyticsDepartmentId]=useState('');
+  const [analyticsCategory,setAnalyticsCategory]=useState('');
+  const [adminUsers,setAdminUsers] = useState<AdminUser[]>([]);
+  const [adminAudit,setAdminAudit] = useState<AuditEvent[]>([]);
+  const [deletionRequests,setDeletionRequests]=useState<DataDeletionRequest[]>([]);
+  const [deletionLoading,setDeletionLoading]=useState(false);
+  const [deletionBusy,setDeletionBusy]=useState(false);
+  const [adminOverview,setAdminOverview]=useState<AdminOverview>({total_students:0,total_instructors:0,total_courses:0,total_departments:0,total_feedback_forms:0,total_responses:0,participation_rate:null,average_rating:null,low_participation_forms:[]});
+  const [adminAcademic,setAdminAcademic] = useState<AcademicData>({departments:[],semesters:[],courses:[],students:[],instructors:[],enrollments:[],assignments:[],accounts:[]});
+  const [searchQuery,setSearchQuery]=useState('');
+  const [searchResults,setSearchResults]=useState<SearchResults|null>(null);
+  const [searchLoading,setSearchLoading]=useState(false);
+  const [searchTarget,setSearchTarget]=useState<SearchTarget|null>(null);
+  const [searchUserId,setSearchUserId]=useState('');
+  const [currentPassword,setCurrentPassword]=useState('');
+  const [newPassword,setNewPassword]=useState('');
+  const [confirmNewPassword,setConfirmNewPassword]=useState('');
+  const [profileName,setProfileName]=useState(profile.full_name);
+  const [profileSaving,setProfileSaving]=useState(false);
 
   async function load() {
     setLoading(true); setError('');
@@ -37,93 +93,534 @@ export function Dashboard({ profile }: { profile: Profile }) {
       if (!c.ok || !f.ok) throw new Error('Could not load your workspace. Please refresh.');
       const cd = await c.json(); const fd = await f.json();
       setCourses(cd.courses ?? []); setFeedback(fd.feedback ?? []);
+      setAnalyticsCourseId(current=>current||cd.courses?.[0]?.id||'');
+      setCompareCourseId(current=>current||(cd.courses?.[1]?.id??''));
     } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load workspace.'); }
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const term=searchQuery.trim();
+    if(term.length<2){setSearchResults(null);setSearchLoading(false);return;}
+    let cancelled=false;
+    const timeout=window.setTimeout(async()=>{
+      setSearchLoading(true);
+      setSearchResults(null);
+      try {
+        const response=await fetch('/api/search?q='+encodeURIComponent(term),{cache:'no-store'});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.error??'Search failed.');
+        if(!cancelled) setSearchResults(data);
+      } catch(error) {
+        if(!cancelled) setError(error instanceof Error?error.message:'Search failed.');
+      } finally {
+        if(!cancelled) setSearchLoading(false);
+      }
+    },400);
+    return ()=>{cancelled=true;window.clearTimeout(timeout);};
+  },[searchQuery]);
   const canTeach = profile.role !== 'STUDENT';
-  const stats = useMemo(() => ({ courses: courses.length, forms: feedback.length, open: feedback.filter(f=>f.is_open).length }), [courses, feedback]);
+  const visibleCourses=useMemo(()=>{
+    if(!searchTarget)return courses;
+    if(searchTarget.kind==='course')return courses.filter(course=>course.id===searchTarget.id);
+    if(searchTarget.kind==='department')return courses.filter(course=>course.department_id===searchTarget.id);
+    if(searchTarget.kind==='instructor-course')return courses.filter(course=>course.id===searchTarget.courseId);
+    return courses;
+  },[courses,searchTarget]);
+  const visibleFeedback=useMemo(()=>searchTarget?.kind==='feedback'?feedback.filter(form=>form.id===searchTarget.id):feedback,[feedback,searchTarget]);
+  const stats = useMemo(() => { const completed=feedback.filter(f=>f.submitted).length; return { courses:courses.length, forms:feedback.length, open:feedback.filter(f=>f.is_open&&!f.submitted).length, completed, completionPercent:feedback.length?Math.round(completed/feedback.length*100):0 }; }, [courses, feedback]);
+  const trendCharts=useMemo(()=>{const groups=new Map<string,{course_title:string;points:ResponseTrend[]}>();for(const row of responseTrends){const group=groups.get(row.course_id)??{course_title:row.course_title,points:[]};group.points.push(row);groups.set(row.course_id,group);}return Array.from(groups.values()).map(group=>({...group,points:group.points.sort((a,b)=>a.week_start.localeCompare(b.week_start))}));},[responseTrends]);
+  const ratingCharts=useMemo(()=>{const groups=new Map<string,{course_title:string;feedback_title:string;question_id:string;question_label:string;values:RatingDistribution[]}>();for(const row of ratingDistributions){const key=[row.course_id,row.feedback_id,row.question_id].join(':');const group=groups.get(key)??{course_title:row.course_title,feedback_title:row.feedback_title,question_id:row.question_id,question_label:row.question_label,values:[]};group.values.push(row);groups.set(key,group);}return Array.from(groups.values()).map(group=>({...group,values:group.values.sort((a,b)=>a.rating_value-b.rating_value)}));},[ratingDistributions]);
+  const categoryPerformance=useMemo(()=>summarizeCategoryPerformance(analytics),[analytics]);
+  const ratingSentiment=useMemo(()=>summarizeRatingSentiment(ratingDistributions),[ratingDistributions]);
   async function signOut() { const supabase = createClient(); await supabase.auth.signOut(); router.replace('/login'); router.refresh(); }
+  function editCourse(course:Course){setEditingCourse(course);setCourseCode(course.course_code??'');setCourseTitle(course.title);setCourseDescription(course.description??'');setCourseModal(true);}
+  async function updateCourseStatus(course:Course){setBusy(true);setError('');try{const status=course.status==='ARCHIVED'?'PUBLISHED':'ARCHIVED';const res=await fetch('/api/courses',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:course.id,status})});const data=await res.json();if(!res.ok)throw new Error(data.error??'Could not update course status.');setNotice(status==='ARCHIVED'?'Course archived.':'Course republished.');await load();}catch(e){setError(e instanceof Error?e.message:'Could not update course.');}finally{setBusy(false);}}
   async function createCourse(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
-    try { const res = await fetch('/api/courses', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ title:courseTitle, description:courseDescription }) }); const data=await res.json(); if(!res.ok) throw new Error(data.error); setCourseModal(false); setCourseTitle(''); setCourseDescription(''); setNotice('Course created.'); await load(); }
+    try { const res = await fetch('/api/courses', { method:editingCourse?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(editingCourse?{id:editingCourse.id,course_code:courseCode.trim()||null,title:courseTitle,description:courseDescription}:{ course_code:courseCode.trim()||undefined,title:courseTitle, description:courseDescription }) }); const data=await res.json(); if(!res.ok) throw new Error(data.error); setCourseModal(false); setCourseCode(''); setCourseTitle(''); setCourseDescription(''); setNotice(editingCourse?'Course updated.':'Course created.'); setEditingCourse(null); await load(); }
     catch(e){setError(e instanceof Error?e.message:'Could not create course.');} finally{setBusy(false);}
   }
+  function editFeedback(form:Feedback) {
+    setEditingFeedback(form);setSelectedCourse(form.course_id);setFormTitle(form.title);setFormDescription(form.description??'');
+    setFormDueAt(form.due_at?toLocalDateTime(form.due_at):'');
+    setQuestions((form.form_schema??[]).map(question=>({...question,options:question.options?[...question.options]:undefined})));
+    setFeedbackModal(true);
+  }
+  async function viewFeedbackVersions(form:Feedback) {
+    setError('');setFeedbackVersions([]);setVersionHistoryFeedback(form);
+    try{
+      const response=await fetch('/api/feedback/'+encodeURIComponent(form.id)+'/versions',{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not load feedback history.');
+      setFeedbackVersions(data.versions??[]);
+    }catch(error){
+      setVersionHistoryFeedback(null);
+      setError(error instanceof Error?error.message:'Could not load feedback history.');
+    }
+  }
+  async function restoreFeedbackVersion(version:FeedbackVersion) {
+    if(!versionHistoryFeedback)return;
+    setBusy(true);setError('');
+    try{
+      const response=await fetch('/api/feedback/'+encodeURIComponent(versionHistoryFeedback.id)+'/versions',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:version.version})
+      });
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not restore this form version.');
+      await load();
+      const refreshed=await fetch('/api/feedback/'+encodeURIComponent(versionHistoryFeedback.id)+'/versions',{cache:'no-store'});
+      const history=await refreshed.json();
+      if(!refreshed.ok) throw new Error(history.error??'Version restored, but history could not be refreshed.');
+      setFeedbackVersions(history.versions??[]);
+      setVersionHistoryFeedback(current=>current?{...current,version:data.version,title:version.title}:current);
+      setNotice('Feedback form restored as version '+data.version+'.');
+    }catch(error){setError(error instanceof Error?error.message:'Could not restore this form version.');}
+    finally{setBusy(false);}
+  }
+  async function toggleFeedback(form:Feedback) {
+    setBusy(true); setError('');
+    try { const res=await fetch('/api/feedback',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:form.id,is_open:!form.is_open})}); const data=await res.json(); if(!res.ok) throw new Error(data.error??'Could not update feedback form.'); setNotice(form.is_open?'Feedback form closed.':'Feedback form reopened.'); await load(); }
+    catch(e){setError(e instanceof Error?e.message:'Could not update feedback form.');}
+    finally{setBusy(false);}
+  }
+  function moveQuestion(index:number,offset:-1|1) {
+    setQuestions(current=>{
+      const target=index+offset;
+      if(target<0||target>=current.length) return current;
+      return reorderQuestionItems(current,index,target);
+    });
+  }
+
   async function createForm(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
-    try { const schema: Question[] = [{ id:'course-pulse-question', label:questionLabel, type:questionType, required:true, ...(questionType==='rating'?{}:{}) }];
-      const res=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365})}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice('Feedback form published.'); setFormTitle(''); await load();
+    try {
+      const schema = questions.map(question => ({ ...question, id: question.id, ...(question.options ? { options: normalizeQuestionOptions(question.options) ?? [] } : {}) }));
+      if (schema.some(question => question.label.trim().length < 2)) throw new Error('Every question needs a clear label.');
+      if (schema.some(question => ['single_choice', 'multiple_choice', 'multiple_select'].includes(question.type) && (question.options?.length ?? 0) < 2)) throw new Error('Choice questions need at least two options.');
+      const deadline=formDueAt?new Date(formDueAt).toISOString():null; const payload=editingFeedback?{id:editingFeedback.id,title:formTitle,description:formDescription,form_schema:schema,due_at:deadline}:{course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365,due_at:deadline}; const res=await fetch('/api/feedback',{method:editingFeedback?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice(editingFeedback?'Feedback form updated.':'Feedback form published.'); setEditingFeedback(null); setFormTitle(''); setFormDueAt(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]); await load();
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
-  async function fetchAnalytics() { setError(''); const res=await fetch('/api/analytics',{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); }
-  async function changeTab(next: typeof tab) { setTab(next); if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } }
+  async function saveProfile(event:FormEvent) {
+    event.preventDefault();
+    setError('');setNotice('');
+    const normalized=profileName.trim();
+    if(normalized.length<2||normalized.length>100){setError('Name must be between 2 and 100 characters.');return;}
+    setProfileSaving(true);
+    try{
+      const response=await fetch('/api/account/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:normalized})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Profile could not be updated.');
+      setProfileName(data.profile.full_name);
+      setNotice('Profile information updated.');
+    }catch(error){setError(error instanceof Error?error.message:'Profile could not be updated.');}
+    finally{setProfileSaving(false);}
+  }
+
+  async function loadMyDeletionRequests() {
+    setDeletionLoading(true);
+    try {
+      const response=await fetch('/api/account/data-deletion',{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not load deletion requests.');
+      setDeletionRequests(data.requests??[]);
+    } catch(error) {
+      setError(error instanceof Error?error.message:'Could not load deletion requests.');
+    } finally { setDeletionLoading(false); }
+  }
+
+  async function submitDeletionRequest(event:FormEvent) {
+    event.preventDefault();
+    setDeletionBusy(true);setError('');setNotice('');
+    try {
+      const response=await fetch('/api/account/data-deletion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not submit deletion request.');
+      setNotice('Your data deletion request has been recorded. An administrator will review it.');
+      await loadMyDeletionRequests();
+    } catch(error) {
+      setError(error instanceof Error?error.message:'Could not submit deletion request.');
+    } finally { setDeletionBusy(false); }
+  }
+
+  async function reviewDeletionRequest(requestId:string,status:DataDeletionRequest['status'],resolutionNote:string) {
+    setBusy(true);setError('');setNotice('');
+    try {
+      const response=await fetch('/api/admin/deletion-requests',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId,status,resolution_note:resolutionNote})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Could not update deletion request.');
+      setNotice('Data deletion request status updated and audit logged.');
+      await loadAdmin();
+    } catch(error) { setError(error instanceof Error?error.message:'Could not update deletion request.'); }
+    finally { setBusy(false); }
+  }
+
+  async function changePassword(event:FormEvent) {
+    event.preventDefault();setError('');setNotice('');
+    if(newPassword.length<10||newPassword.length>72){setError('New password must be between 10 and 72 characters.');return;}
+    if(newPassword!==confirmNewPassword){setError('New passwords do not match.');return;}
+    if(newPassword===currentPassword){setError('Choose a password different from your current password.');return;}
+    setBusy(true);
+    try{
+      const response=await fetch('/api/account/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:currentPassword,new_password:newPassword})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.error??'Password could not be changed.');
+      setCurrentPassword('');setNewPassword('');setConfirmNewPassword('');
+      if(data.sessionsRevoked===false) setNotice(data.warning??'Password changed. Other sessions may still be active.');
+      router.replace('/login?password=updated');router.refresh();
+    }catch(error){setError(error instanceof Error?error.message:'Password could not be changed.');}
+    finally{setBusy(false);}
+  }
+
+  async function loadAdmin() {
+    const [usersRes,auditRes,academicRes,overviewRes,deletionRes]=await Promise.all([fetch('/api/admin/users',{cache:'no-store'}),fetch('/api/admin/audit',{cache:'no-store'}),fetch('/api/admin/academic',{cache:'no-store'}),fetch('/api/admin/overview',{cache:'no-store'}),fetch('/api/admin/deletion-requests',{cache:'no-store'})]);
+    const usersData=await usersRes.json(); const auditData=await auditRes.json(); const academicData=await academicRes.json(); const overviewData=await overviewRes.json(); const deletionData=await deletionRes.json();
+    if(!usersRes.ok) throw new Error(usersData.error??'Could not load administrator users.');
+    if(!auditRes.ok) throw new Error(auditData.error??'Could not load audit history.');
+    if(!academicRes.ok) throw new Error(academicData.error??'Could not load academic administration data.');
+    if(!overviewRes.ok) throw new Error(overviewData.error??'Could not load institution metrics.');
+    if(!deletionRes.ok) throw new Error(deletionData.error??'Could not load data deletion requests.');
+    setDeletionRequests(deletionData.requests??[]);
+    setAdminUsers(usersData.users??[]); setAdminAudit(auditData.events??[]); setAdminAcademic(academicData); setAdminOverview(overviewData.overview);
+  }
+  async function updateAdminUser(userId:string,role:AdminUser['role'],isActive:boolean) {
+    setBusy(true); setError('');
+    try {
+      const res=await fetch('/api/admin/users',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,role,is_active:isActive})});
+      const data=await res.json(); if(!res.ok) throw new Error(data.error??'Could not update account access.');
+      setNotice('Account access updated and audit logged.'); await loadAdmin();
+    } catch(e) { setError(e instanceof Error?e.message:'Could not update account.'); }
+    finally { setBusy(false); }
+  }
+  async function createAcademic(payload:AcademicAction) {
+    setBusy(true); setError('');
+    try {
+      const res=await fetch('/api/admin/academic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data=await res.json(); if(!res.ok) throw new Error(data.error??'Academic update failed.');
+      setNotice('Academic workspace updated and audit logged.'); await loadAdmin();
+    } catch(e) { setError(e instanceof Error?e.message:'Academic update failed.'); }
+    finally { setBusy(false); }
+  }
+  async function updateAcademic(payload:AcademicAction) {
+    setBusy(true); setError('');
+    try {
+      const res=await fetch('/api/admin/academic',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data=await res.json(); if(!res.ok) throw new Error(data.error??'Academic update failed.');
+      setNotice('Academic structure updated and audit logged.'); await loadAdmin();
+    } catch(e) { setError(e instanceof Error?e.message:'Academic update failed.'); }
+    finally { setBusy(false); }
+  }
+  function runSearch(event:FormEvent) {
+    event.preventDefault();
+    if(searchQuery.trim().length<2){setError('Enter at least two characters to search.');return;}
+    setError('');
+  }
+  function analyticsQuery(courseId?:string){const params=new URLSearchParams();if(courseId)params.set('course_id',courseId);if(analyticsFromDate)params.set('from_date',analyticsFromDate);if(analyticsToDate)params.set('to_date',analyticsToDate);if(analyticsSemesterId)params.set('semester_id',analyticsSemesterId);if(analyticsDepartmentId)params.set('department_id',analyticsDepartmentId);if(analyticsCategory)params.set('question_category',analyticsCategory);return params.toString();}
+  async function fetchAnalytics() { setError(''); setCompareAnalytics([]); const query=analyticsQuery(analyticsCourseId||undefined); const res=await fetch('/api/analytics'+(query?'?'+query:''),{cache:'no-store'}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setAnalytics(data.rows ?? []); setRatingDistributions(data.rating_distributions??[]); setResponseTrends(data.trends??[]); }
+  async function compareCourses() {
+    setError('');
+    if(!analyticsCourseId||!compareCourseId||analyticsCourseId===compareCourseId){setError('Choose two different courses to compare.');return;}
+    try {
+      const [first,second]=await Promise.all([fetch('/api/analytics?'+analyticsQuery(analyticsCourseId),{cache:'no-store'}),fetch('/api/analytics?'+analyticsQuery(compareCourseId),{cache:'no-store'})]);
+      const [a,b]=await Promise.all([first.json(),second.json()]);
+      if(!first.ok||!second.ok) throw new Error(a.error??b.error??'Course comparison failed.');
+      setAnalytics(a.rows??[]);setCompareAnalytics(b.rows??[]);setRatingDistributions(a.rating_distributions??[]);setResponseTrends(a.trends??[]);
+    } catch(e){setError(e instanceof Error?e.message:'Course comparison failed.');}
+  }
+  async function changeTab(next: typeof tab) { setTab(next); if(next==='security') { void loadMyDeletionRequests(); } if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="/dashboard"><span className="brand-mark">◉</span><span>CoursePulse</span></a>
       <div className="side-workspace"><span className="workspace-icon"><GraduationCap size={18}/></span><span><b>Learning workspace</b><small>Private environment</small></span><ChevronDown size={15}/></div>
       <span className="side-label">WORKSPACE</span>
-      <nav className="side-nav">
-        <button className={tab==='overview'?'active':''} onClick={()=>void changeTab('overview')}><LayoutDashboard size={17}/> Overview</button>
-        <button className={tab==='courses'?'active':''} onClick={()=>void changeTab('courses')}><BookOpen size={17}/> Courses <span>{courses.length}</span></button>
-        <button className={tab==='feedback'?'active':''} onClick={()=>void changeTab('feedback')}><FilePlus2 size={17}/> Feedback forms <span>{feedback.length}</span></button>
-        {canTeach && <button className={tab==='analytics'?'active':''} onClick={()=>void changeTab('analytics')}><FileBarChart size={17}/> Analytics</button>}
+      <nav className="side-nav" aria-label="Workspace navigation">
+        <button type="button" title="Overview" aria-label="Overview" aria-pressed={tab==='overview'} className={tab==='overview'?'active':''} onClick={()=>void changeTab('overview')}><LayoutDashboard size={17}/> Overview</button>
+        <button type="button" title="Courses" aria-label="Courses" aria-pressed={tab==='courses'} className={tab==='courses'?'active':''} onClick={()=>void changeTab('courses')}><BookOpen size={17}/> Courses <span>{courses.length}</span></button>
+        <button type="button" title="Feedback forms" aria-label="Feedback forms" aria-pressed={tab==='feedback'} className={tab==='feedback'?'active':''} onClick={()=>void changeTab('feedback')}><FilePlus2 size={17}/> Feedback forms <span>{feedback.length}</span></button>{profile.role==='STUDENT' && <button type="button" title="Submission history" aria-label="Submission history" aria-pressed={tab==='history'} className={tab==='history'?'active':''} onClick={()=>void changeTab('history')}><History size={17}/> Submission history <span>{stats.completed}</span></button>}
+        {canTeach && <button type="button" title="Analytics" aria-label="Analytics" aria-pressed={tab==='analytics'} className={tab==='analytics'?'active':''} onClick={()=>void changeTab('analytics')}><FileBarChart size={17}/> Analytics</button>}{profile.role==='ADMIN' && <button type="button" title="Administration" aria-label="Administration" aria-pressed={tab==='admin'} className={tab==='admin'?'active':''} onClick={()=>void changeTab('admin')}><Users size={17}/> Administration</button>}
+        <button type="button" title="Account security" aria-label="Account security" aria-pressed={tab==='security'} className={tab==='security'?'active':''} onClick={()=>void changeTab('security')}><ShieldCheck size={17}/> Account security</button>
       </nav>
-      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Student responses stay private. Reporting shows aggregates only.</p></div><div className="user-profile"><div className="avatar">{(profile.full_name||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{profile.full_name||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
+      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Submission eligibility is stored separately from answers. Reports show aggregates only.</p></div><div className="user-profile"><div className="avatar">{(profileName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{profileName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':'Learning analytics'}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
+      <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='history'?'Submission history':tab==='admin'?'Administration':tab==='security'?'Account security':'Learning analytics'}</h1></div><div className="top-actions"><form className="global-search" role="search" onSubmit={runSearch}><Search size={16}/><input aria-label="Search courses, feedback and users" placeholder="Search workspace…" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/><button type="submit" aria-label="Search"><Search size={15}/></button></form><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
       <section className="content-area">
-        {error && <div className="alert error page-alert"><CircleHelp size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={16}/></button></div>}{notice && <div className="alert success page-alert">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
+        {searchLoading&&<p className="fine-print" role="status">Searching…</p>}
+        {searchResults && <section className="search-results-panel"><div className="section-heading"><div><h3>Search results</h3><p>Matches for “{searchQuery.trim()}”</p></div><button className="text-button" onClick={()=>{setSearchQuery('');setSearchResults(null);setSearchTarget(null);setSearchUserId('')}}>Clear search <X size={14}/></button></div><div className="search-result-grid">
+          {searchResults.courses.map(item=><button key={item.id} className="search-result" onClick={()=>{setSearchTarget({kind:'course',id:item.id});setSearchUserId('');setTab('courses');setSearchQuery('');setSearchResults(null)}}><BookOpen size={16}/><span><b>{item.course_code?item.course_code+' · ':''}{item.title}</b><small>Course · {item.status.toLowerCase()}</small></span></button>)}
+          {searchResults.departments.map(item=><button key={item.id} className="search-result" onClick={()=>{setSearchTarget({kind:'department',id:item.id});setSearchUserId('');setTab('courses');setSearchQuery('');setSearchResults(null)}}><GraduationCap size={16}/><span><b>{item.name}</b><small>Department · {item.code}</small></span></button>)}
+          {searchResults.instructors.map(item=><button key={item.course_id||item.instructor_name} className="search-result" onClick={()=>{setSearchTarget({kind:'instructor-course',courseId:item.course_id});setSearchUserId('');setTab('courses');setSearchQuery('');setSearchResults(null)}}><Users size={16}/><span><b>{item.instructor_name}</b><small>Instructor · assigned course</small></span></button>)}
+          {searchResults.feedback.map(item=><button key={item.id} className="search-result" onClick={()=>{const found=feedback.find(form=>form.id===item.id);if(profile.role==='STUDENT'&&found?.submitted){setSearchTarget({kind:'feedback',id:item.id});setTab('history');}else if(profile.role==='STUDENT'&&found?.is_open&&!found.submitted){setResponseModal(found);}else{setSearchTarget({kind:'feedback',id:item.id});setTab('feedback');}setSearchQuery('');setSearchResults(null)}}><FilePlus2 size={16}/><span><b>{item.title}</b><small>Feedback form · {item.is_open?'open':'closed'}</small></span></button>)}
+          {searchResults.users.map(item=><button key={item.id} className="search-result" onClick={()=>{setSearchTarget(null);setSearchUserId(item.id);void changeTab('admin');setSearchQuery('');setSearchResults(null)}}><Users size={16}/><span><b>{item.full_name||item.email||'User'}</b><small>User · {item.role.toLowerCase()}</small></span></button>)}
+          {!searchResults.courses.length&&!searchResults.feedback.length&&!searchResults.users.length&&!searchResults.departments.length&&!searchResults.instructors.length&&<p className="muted">No matching courses, forms, instructors or departments were found in your permitted workspace.</p>}
+        </div></section>}
+        {error && <div className="alert error page-alert" role="alert"><CircleHelp size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={16}/></button></div>}{notice && <div className="alert success page-alert" role="status">{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={16}/></button></div>}
         {tab==='overview' && <>
-          <div className="welcome-row"><div><span className="eyebrow">{new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><h2>Good {new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, {profile.full_name?.split(' ')[0]||'there'}.</h2><p>Bring course feedback into focus and turn it into action.</p></div><div className="pulse-orb"><Activity size={26}/><span>Live workspace</span></div></div>
-          <div className="metric-grid"><Metric icon={<BookOpen size={19}/>} label="Courses" value={stats.courses} hint="In your workspace"/><Metric icon={<FilePlus2 size={19}/>} label="Feedback forms" value={stats.forms} hint={`${stats.open} currently open`}/><Metric icon={<ShieldCheck size={19}/>} label="Data protection" value="On" hint="Role-based access active"/></div>
+          <div className="welcome-row"><div><span className="eyebrow">{new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><h2>Good {new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, {profileName?.split(' ')[0]||'there'}.</h2><p>Bring course feedback into focus and turn it into action.</p></div><div className="pulse-orb"><Activity size={26}/><span>Live workspace</span></div></div>
+          <div className="metric-grid"><Metric icon={<BookOpen size={19}/>} label="Courses" value={stats.courses} hint="In your workspace"/><Metric icon={<FilePlus2 size={19}/>} label={profile.role==='STUDENT'?'Pending responses':'Feedback forms'} value={profile.role==='STUDENT'?stats.open:stats.forms} hint={profile.role==='STUDENT'?`${stats.completed} completed`:`${stats.open} currently open`}/><Metric icon={<ShieldCheck size={19}/>} label="Data protection" value="On" hint="Role-based access active"/></div>
+          {profile.role==='STUDENT'&&<section className="rounded-2xl border border-[#e5ece6] bg-white p-5 mb-7" aria-labelledby="student-progress-heading"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 id="student-progress-heading" className="text-sm font-extrabold">Your feedback progress</h3><p className="mt-1 text-xs text-[#87948b]">Based only on feedback forms available to your enrolled courses.</p></div><strong className="text-xl font-extrabold text-[#2b654b]">{stats.forms?stats.completionPercent+'%':'—'}</strong></div><div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#edf2ee]" role="progressbar" aria-label="Eligible feedback forms completed" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.completionPercent}><div className="h-full rounded-full bg-[#397b56] transition-all" style={{width:stats.completionPercent+'%'}}/></div><p className="mt-3 text-xs text-[#718178]">{stats.completed} of {stats.forms} eligible forms completed · {stats.open} pending{stats.forms===0?' · No eligible feedback forms are currently available.':''}</p></section>}
           <div className="section-heading"><div><h3>Recent courses</h3><p>Your course workspace at a glance.</p></div>{canTeach&&<button className="text-button" onClick={()=>void changeTab('courses')}>View all courses <ArrowDownToLine size={14}/></button>}</div>
-          <CourseList courses={courses.slice(0,4)} role={profile.role} loading={loading} onFeedback={(id)=>{setSelectedCourse(id);setFeedbackModal(true)}}/>
+          <CourseList courses={courses.slice(0,4)} role={profile.role} loading={loading} onFeedback={(id)=>{setSelectedCourse(id);setFeedbackModal(true)}} onEdit={editCourse} onStatus={updateCourseStatus}/>
           <div className="section-heading"><div><h3>Recent feedback</h3><p>Forms available to collect student insight.</p></div><button className="text-button" onClick={()=>void changeTab('feedback')}>View all forms <ArrowDownToLine size={14}/></button></div>
-          <FeedbackList feedback={feedback.slice(0,4)} role={profile.role} onRespond={setResponseModal}/>
+          <FeedbackList feedback={feedback.slice(0,4)} role={profile.role} onRespond={setResponseModal} onToggle={toggleFeedback} onEdit={editFeedback} onVersions={viewFeedbackVersions}/>
         </>}
-        {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div>{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div><CourseList courses={courses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}}/></>}
-        {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>Respond to an open form or manage forms you own.</p></div>{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div><FeedbackList feedback={feedback} role={profile.role} onRespond={setResponseModal}/></>}
-        {tab==='analytics' && <><div className="section-heading"><div><h3>Aggregate insights</h3><p>Only groups with at least five submissions are shown. Written answers are never included.</p></div><div className="export-actions"><a className="button subtle" href="/api/exports/csv"><ArrowDownToLine size={15}/> CSV</a><a className="button subtle" href="/api/exports/xls"><ArrowDownToLine size={15}/> XLS</a><a className="button subtle" href="/api/exports/pdf"><ArrowDownToLine size={15}/> PDF</a></div></div><div className="privacy-banner"><ShieldCheck size={18}/><span><b>Aggregate-only reporting</b><small>Response identities and free-text answers are excluded. Suppressed groups contain fewer than five responses.</small></span></div><div className="analytics-grid">{analytics.length?analytics.map((r,i)=><article className="analytics-card" key={`${r.feedback_id}-${r.question_id}-${r.option_value}-${i}`}><span className="eyebrow">{r.course_title}</span><h4>{r.question_label}</h4><p>{r.feedback_title}</p><div className="analytic-value">{r.avg_numeric_value!=null?Number(r.avg_numeric_value).toFixed(2):r.response_count}<small>{r.avg_numeric_value!=null?' average score':` responses${r.option_value?` · ${r.option_value}`:''}`}</small></div></article>):<Empty icon={<FileBarChart/>} title="No reportable groups yet" text="Reports appear once at least five students have answered a question."/>}</div></>}
+        {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{searchTarget?.kind==='course'?'Showing the selected course.':searchTarget?.kind==='department'?'Showing courses in the selected department.':searchTarget?.kind==='instructor-course'?'Showing the selected instructor course.':canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div></div><CourseList courses={visibleCourses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}} onEdit={editCourse} onStatus={updateCourseStatus}/></>}
+        {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>{searchTarget?.kind==='feedback'?'Showing the selected feedback form.':'Respond to an open form or manage forms you own.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget?.kind==='feedback'&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div></div><FeedbackList feedback={visibleFeedback} role={profile.role} onRespond={setResponseModal} onToggle={toggleFeedback} onEdit={editFeedback} onVersions={viewFeedbackVersions}/></>}
+        {tab==='history' && <><div className="section-heading"><div><h3>Completed feedback</h3><p>{searchTarget?.kind==='feedback'?'Showing the selected completed feedback form.':'Your previous submissions are listed here. Individual answers are not shown again.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget?.kind==='feedback'&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}<span className="role-chip">{stats.completed} completed</span></div></div><FeedbackList feedback={visibleFeedback.filter(form=>form.submitted)} role="STUDENT" onRespond={setResponseModal} onToggle={()=>{}} onEdit={()=>{}} onVersions={()=>{}}/></>}
+        {tab==='security' && <section className="mx-auto w-full max-w-2xl space-y-5"><div className="section-heading"><div><h3>Protect your account</h3><p>Confirm your current password before setting a new one. Other active sessions are revoked after a successful change.</p></div><ShieldCheck size={24}/></div><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={saveProfile}><div><h3 className="font-semibold">Profile information</h3><p className="fine-print">Update the name displayed across your workspace.</p></div><label>Full name<input value={profileName} onChange={e=>setProfileName(e.target.value)} minLength={2} maxLength={100} autoComplete="name" required/></label><button className="button primary self-start" disabled={profileSaving||profileName.trim()===profile.full_name}>{profileSaving?'Saving…':'Save profile'}</button></form><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" minLength={1} maxLength={72} required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} /></label><label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={newPassword} onChange={e=>setNewPassword(e.target.value)} /></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={confirmNewPassword} onChange={e=>setConfirmNewPassword(e.target.value)} /></label><p className="fine-print">Use a unique password you do not reuse on other websites. You will need to sign in again on this device after changing it.</p><button className="button primary self-start" disabled={busy||!currentPassword||!newPassword||!confirmNewPassword}>{busy?'Updating password…':'Change password'}</button></form><section className="stack-form rounded-2xl border border-amber-200 bg-white p-6">
+  <div><h3 className="font-semibold">Personal data deletion request</h3><p className="fine-print">You can request deletion of eligible account data. The institution must review legal retention requirements and any records that must be kept. Anonymous feedback answers are stored separately from your account eligibility.</p></div>
+  <form onSubmit={submitDeletionRequest}><button className="button subtle" disabled={deletionBusy||deletionLoading||deletionRequests.some(request=>request.status==='PENDING'||request.status==='IN_REVIEW'||request.status==='APPROVED')}>{deletionBusy?'Submitting…':'Request account data deletion'}</button></form>
+  <div className="space-y-2"><h4 className="text-sm font-semibold">Your requests</h4>{deletionLoading?<p className="fine-print">Loading requests…</p>:deletionRequests.length?deletionRequests.map(request=><article key={request.id} className="rounded-xl border border-[#e5ece6] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{request.status.replace('_',' ')}</b><small className="muted">{new Date(request.created_at).toLocaleString()}</small></div>{request.resolution_note&&<p className="fine-print mt-2">{request.resolution_note}</p>}</article>):<p className="fine-print">No requests submitted.</p>}</div>
+  <p className="fine-print">A request is not an automatic deletion. The institution will confirm the outcome after review.</p>
+</section></section>}
+        {tab==='admin' && <><div className="content-filter-note">{searchUserId&&<span>Showing selected user from search. <button className="text-button" onClick={()=>setSearchUserId('')}>Clear user filter</button></span>}</div><AdminConsole users={searchUserId?adminUsers.filter(user=>user.id===searchUserId):adminUsers} audit={adminAudit} academic={adminAcademic} overview={adminOverview} deletionRequests={deletionRequests} currentUserId={profile.id} busy={busy} onUpdate={updateAdminUser} onAcademicCreate={createAcademic} onAcademicUpdate={updateAcademic} onDeletionReview={reviewDeletionRequest}/></>}
+        {tab==='analytics' && <><div className="section-heading"><div><h3>Aggregate insights</h3><p>Only groups with at least five submissions are shown. Written answers are never included.</p></div><div className="export-actions"><a className="button subtle" href={'/api/exports/csv'+(analyticsQuery(analyticsCourseId||undefined)?'?'+analyticsQuery(analyticsCourseId||undefined):'')}><ArrowDownToLine size={15}/> CSV</a><a className="button subtle" href={'/api/exports/xls'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> XLS</a><a className="button subtle" href={'/api/exports/xlsx'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> XLSX</a><a className="button subtle" href={'/api/exports/pdf'+(analyticsQuery()?'?'+analyticsQuery():'')}><ArrowDownToLine size={15}/> PDF</a></div></div><div className="analytics-filters"><label>Course<select value={analyticsCourseId} onChange={e=>{setAnalyticsCourseId(e.target.value);setCompareAnalytics([])}}><option value="">All assigned courses</option>{courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Semester<select value={analyticsSemesterId} onChange={e=>{setAnalyticsSemesterId(e.target.value);setCompareAnalytics([])}}><option value="">All semesters</option>{Array.from(new Map(courses.filter(course=>course.semester_id&&course.semester).map(course=>[course.semester_id!,course.semester!])).values()).map(semester=><option key={semester.id} value={semester.id}>{semester.name}</option>)}</select></label><label>Department<select value={analyticsDepartmentId} onChange={e=>{setAnalyticsDepartmentId(e.target.value);setCompareAnalytics([])}}><option value="">All departments</option>{Array.from(new Map(courses.filter(course=>course.department_id&&course.department).map(course=>[course.department_id!,course.department!])).values()).map(department=><option key={department.id} value={department.id}>{department.name} ({department.code})</option>)}</select></label><label>From date<input type="date" value={analyticsFromDate} max={analyticsToDate||undefined} onChange={e=>{setAnalyticsFromDate(e.target.value);setCompareAnalytics([])}}/></label><label>To date<input type="date" value={analyticsToDate} min={analyticsFromDate||undefined} onChange={e=>{setAnalyticsToDate(e.target.value);setCompareAnalytics([])}}/></label><label>Question category<select value={analyticsCategory} onChange={e=>{setAnalyticsCategory(e.target.value);setCompareAnalytics([])}}><option value="">All categories</option>{QUESTION_CATEGORIES.map(category=><option key={category} value={category}>{category}</option>)}</select></label><label>Compare with<select value={compareCourseId} onChange={e=>setCompareCourseId(e.target.value)}><option value="">Select another course</option>{courses.filter(course=>course.id!==analyticsCourseId).map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><button className="button primary compact" onClick={()=>void compareCourses()} disabled={!analyticsCourseId||!compareCourseId}>Compare courses</button><button className="button subtle compact" onClick={()=>void fetchAnalytics()}>Apply filters</button></div>{compareAnalytics.length>0&&<div className="comparison-panel"><div className="section-heading"><div><h3>Course comparison</h3><p>Only matching questions with reportable cohort sizes are compared.</p></div></div><div className="comparison-grid">{analytics.filter(row=>row.avg_numeric_value!=null).map((row,index)=>{const match=compareAnalytics.find(other=>other.avg_numeric_value!=null&&other.question_label===row.question_label&&other.question_type===row.question_type);return match?<article className="comparison-card" key={row.question_id+'-'+index}><b>{row.question_label}</b><div className="comparison-values"><span><small>{row.course_title}</small><strong>{Number(row.avg_numeric_value).toFixed(2)}</strong></span><span><small>{match.course_title}</small><strong>{Number(match.avg_numeric_value).toFixed(2)}</strong></span></div><p>Difference: {(Number(row.avg_numeric_value)-Number(match.avg_numeric_value)).toFixed(2)} points</p></article>:null;})}</div></div>}<div className="privacy-banner"><ShieldCheck size={18}/><span><b>Aggregate-only reporting</b><small>Response identities and free-text answers are excluded. Suppressed groups contain fewer than five responses.</small></span></div>
+<div className="analytics-visual-grid">
+  {categoryPerformance.length>=3&&<article className="rating-chart-card">
+    <span className="eyebrow">TEACHING EFFECTIVENESS</span><h4>Category performance radar</h4>
+    <p>Weighted average of reportable 1–5 rating questions. Every displayed category has at least five responses per contributing question.</p>
+    <svg viewBox="0 0 340 290" role="img" aria-label="Radar chart of average teaching effectiveness ratings by category" style={{width:'100%',maxWidth:360,margin:'8px auto',display:'block'}}>
+      {[1,2,3,4,5].map(level=><polygon key={level} points={radarPolygonPoints(categoryPerformance.map(()=>level),86,170,130)} fill="none" stroke="#e3ebe5" strokeWidth="1"/>)}
+      {categoryPerformance.map((item,index)=>{const angle=-Math.PI/2+(index*2*Math.PI/categoryPerformance.length);const x=170+Math.cos(angle)*86;const y=130+Math.sin(angle)*86;return <line key={item.category} x1="170" y1="130" x2={x} y2={y} stroke="#dbe5de" strokeWidth="1"/>;})}
+      <polygon points={radarPolygonPoints(categoryPerformance.map(item=>item.average),86,170,130)} fill="#397b56" fillOpacity=".18" stroke="#397b56" strokeWidth="2"/>
+      {categoryPerformance.map((item,index)=>{const angle=-Math.PI/2+(index*2*Math.PI/categoryPerformance.length);const x=170+Math.cos(angle)*105;const y=130+Math.sin(angle)*105;return <text key={item.category} x={x} y={y} textAnchor={Math.cos(angle)>.3?'start':Math.cos(angle)<-.3?'end':'middle'} dominantBaseline="middle" fontSize="8" fill="#5f7567">{item.category}</text>;})}
+    </svg>
+    <div className="category-score-list">{categoryPerformance.map(item=><div key={item.category}><span>{item.category}</span><b>{item.average.toFixed(2)}/5</b><small>{item.response_count} reportable answers</small></div>)}</div>
+  </article>}
+  {ratingSentiment.total>0&&<article className="rating-chart-card">
+    <span className="eyebrow">RATING SENTIMENT</span><h4>Positive, neutral and negative ratings</h4>
+    <p>Counts across reportable rating-question bins only. Any rating bin below five is suppressed; this is not a unique-student count.</p>
+    <div style={{fontSize:28,fontWeight:800,color:'#2b654b',margin:'12px 0 20px'}}>{ratingSentiment.total}<small style={{display:'block',fontSize:10,fontWeight:500,color:'#84938a'}}>visible rating answers</small></div>
+    <div style={{display:'grid',gap:16}}>
+      {([{key:'positive',label:'Positive · 4–5',value:ratingSentiment.positive,color:'#397b56'},{key:'neutral',label:'Neutral · 3',value:ratingSentiment.neutral,color:'#a47b32'},{key:'negative',label:'Needs improvement · 1–2',value:ratingSentiment.negative,color:'#b45c4a'}] as const).map(item=><div key={item.key}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:5}}><span>{item.label}</span><b>{item.value}</b></div>
+        <div style={{height:9,borderRadius:8,background:'#edf1ed',overflow:'hidden'}}><div style={{height:'100%',width:(item.value/ratingSentiment.total*100)+'%',background:item.color,borderRadius:8}}/></div>
+      </div>)}
+    </div>
+  </article>}
+</div>
+<div className="rating-distribution-grid">{ratingCharts.map((chart,index)=>{const max=Math.max(...chart.values.map(value=>value.response_count),1);return <article className="rating-chart-card" key={chart.question_id+'-'+index}><span className="eyebrow">{chart.course_title} · {chart.feedback_title}</span><h4>{chart.question_label}</h4><p>{chart.values[0]?.question_category?`${chart.values[0].question_category} · `:''}Rating distribution · bins below five responses are suppressed</p>{(()=>{const donut=buildRatingDonutSegments(chart.values);return <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap',marginBottom:14}}>
+  <div role="img" aria-label={donut.total+' visible responses across reportable rating bins'} style={{width:126,height:126,minWidth:126,borderRadius:'50%',background:donut.gradient,display:'grid',placeItems:'center'}}>
+    <div style={{width:78,height:78,borderRadius:'50%',background:'#fff',display:'grid',placeItems:'center',alignContent:'center',boxShadow:'inset 0 0 0 1px #e8eee9'}}><b style={{fontSize:18,color:'#2b654b'}}>{donut.total}</b><small style={{fontSize:9,color:'#87948b'}}>visible bins</small></div>
+  </div>
+  <div style={{display:'grid',gap:7,flex:'1 1 130px'}}>{donut.segments.map(segment=><div key={segment.rating} style={{display:'flex',alignItems:'center',gap:7,fontSize:10,color:'#617368'}}><span style={{width:9,height:9,borderRadius:3,background:segment.color}}/><span>Rating {segment.rating}</span><b style={{marginLeft:'auto',color:'#314c3a'}}>{segment.count}</b></div>)}</div>
+</div>;})()}{chart.values.map(value=><div className="rating-bar-row" key={value.rating_value}><span>{value.rating_value}</span><div className="rating-bar-track"><div className="rating-bar-fill" style={{width:(value.response_count/max*100)+'%'}}/></div><b>{value.response_count}</b></div>)}</article>})}</div><div className="trend-chart-grid">{trendCharts.map((chart,index)=>{const max=Math.max(...chart.points.map(point=>point.response_count),1);return <article className="trend-chart-card" key={chart.course_title+'-'+index}><span className="eyebrow">{chart.course_title}</span><h4>Weekly response trend</h4><p>Only weeks with at least five submissions are shown. Weekly trends remain course-wide when a question category is selected.</p><div className="trend-columns">{chart.points.map(point=><div className="trend-column" key={point.week_start}><b>{point.response_count}</b><div className="trend-column-track"><div style={{height:(point.response_count/max*100)+'%'}}/></div><small>{new Date(point.week_start+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}</small></div>)}</div></article>})}</div><div className="analytics-grid">{analytics.length?analytics.map((r,i)=><article className="analytics-card" key={`${r.feedback_id}-${r.question_id}-${r.option_value}-${i}`}><span className="eyebrow">{r.course_title}</span><h4>{r.question_label}</h4><p>{r.feedback_title}{r.question_category?` · ${r.question_category}`:''}</p><div className="analytic-value">{r.avg_numeric_value!=null?Number(r.avg_numeric_value).toFixed(2):r.response_count}<small>{r.avg_numeric_value!=null?' average score':` responses${r.option_value?` · ${r.option_value}`:''}`}</small></div></article>):<Empty icon={<FileBarChart/>} title="No reportable groups yet" text="Reports appear once at least five students have answered a question."/>}</div></>}
       </section>
     </main>
-    {courseModal&&<Modal title="Create a course" onClose={()=>setCourseModal(false)}><form className="stack-form" onSubmit={createCourse}><label>Course title<input value={courseTitle} onChange={e=>setCourseTitle(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Introduction to Biology"/></label><label>Description<textarea value={courseDescription} onChange={e=>setCourseDescription(e.target.value)} maxLength={5000} rows={3} placeholder="What will students learn?"/></label><button className="button primary full" disabled={busy}>Create course</button></form></Modal>}
-    {feedbackModal&&<Modal title="Create feedback form" onClose={()=>setFeedbackModal(false)}><form className="stack-form" onSubmit={createForm}><label>Course<select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Form title<input value={formTitle} onChange={e=>setFormTitle(e.target.value)} required maxLength={160} placeholder="End-of-module feedback"/></label><label>Description<textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} maxLength={3000} rows={2}/></label><label>First question<input value={questionLabel} onChange={e=>setQuestionLabel(e.target.value)} required maxLength={180}/></label><label>Question type<select value={questionType} onChange={e=>setQuestionType(e.target.value as 'rating'|'text')}><option value="rating">Rating (1 to 5)</option><option value="text">Written response</option></select></label><p className="fine-print">This quick form creates one question. You can extend the form schema through the API with additional validated question types.</p><button className="button primary full" disabled={busy}>Publish feedback form</button></form></Modal>}
-    {responseModal&&<Modal title={responseModal.title} onClose={()=>setResponseModal(null)}><ResponseForm item={responseModal} onDone={()=>{setResponseModal(null);setNotice('Your response was submitted. Thank you.')}}/></Modal>}
+    {courseModal&&<Modal title={editingCourse?'Edit course':'Create a course'} onClose={()=>{setCourseModal(false);setEditingCourse(null);}}><form className="stack-form" onSubmit={createCourse}><label>Course code (optional)<input value={courseCode} onChange={e=>setCourseCode(e.target.value)} minLength={2} maxLength={30} placeholder="e.g. CSE-101"/></label><label>Course title<input value={courseTitle} onChange={e=>setCourseTitle(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Introduction to Biology"/></label><label>Description<textarea value={courseDescription} onChange={e=>setCourseDescription(e.target.value)} maxLength={5000} rows={3} placeholder="What will students learn?"/></label><button className="button primary full" disabled={busy}>{editingCourse?'Save course changes':'Create course'}</button></form></Modal>}
+    {feedbackModal&&<Modal title={editingFeedback?'Edit feedback form':'Create feedback form'} onClose={()=>{setFeedbackModal(false);setEditingFeedback(null);}}><form className="stack-form" onSubmit={createForm}><label>Course<select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Form title<input value={formTitle} onChange={e=>setFormTitle(e.target.value)} required maxLength={160} placeholder="End-of-module feedback"/></label><label>Description<textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} maxLength={3000} rows={2}/></label><label>Submission deadline (optional)<input type="datetime-local" value={formDueAt} min={toLocalDateTime(new Date(Date.now()+60000).toISOString())} onChange={e=>setFormDueAt(e.target.value)}/><small className="fine-print">Students cannot submit after this time.</small></label><div className="section-heading"><div><h3>Questions</h3><p>Add up to 30 questions to this form.</p></div><button type="button" className="button subtle compact" disabled={questions.length>=30} onClick={()=>setQuestions(current=>[...current,{id:`q-${crypto.randomUUID().replaceAll('-','')}`,label:'',type:'rating',category:'Course Content',required:true}])}><Plus size={14}/> Add question</button></div>{questions.map((question,index)=><fieldset key={question.id} className="stack-form rounded-xl border border-[#e5ece6] p-4"><legend className="px-1 text-xs font-bold text-[#62766b]">Question {index+1}</legend><div className="flex items-center gap-2"><span className="fine-print">Question order: {index+1}</span><button type="button" className="icon-button" aria-label={`Move question ${index+1} up`} title="Move up" disabled={index===0} onClick={()=>moveQuestion(index,-1)}><ArrowUp size={15}/></button><button type="button" className="icon-button" aria-label={`Move question ${index+1} down`} title="Move down" disabled={index===questions.length-1} onClick={()=>moveQuestion(index,1)}><ArrowDown size={15}/></button></div><label>Question text<input value={question.label} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,label:e.target.value}:item))} required minLength={2} maxLength={180} placeholder="What should students answer?"/></label><label>Answer type<select value={question.type} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,type:e.target.value as Question['type'],options:['single_choice','multiple_choice','multiple_select'].includes(e.target.value)?(item.options??['Option 1','Option 2']):undefined}:item))}><option value="rating">Rating (1 to 5)</option><option value="number">Number</option><option value="text">Short text</option><option value="textarea">Long text</option><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option><option value="multiple_select">Multiple selection (checkboxes)</option><option value="yes_no">Yes / No</option></select></label><label>Question category<select value={question.category??'Course Content'} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,category:e.target.value as Question['category']}:item))}><option>Course Content</option><option>Teaching Effectiveness</option><option>Communication</option><option>Course Organization</option><option>Assessment</option><option>Learning Resources</option><option>Overall Satisfaction</option></select></label>{['single_choice','multiple_choice','multiple_select'].includes(question.type)&&<label>Options (comma separated)<input value={(question.options??[]).join(', ')} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,options:e.target.value.split(',').map(option=>option.trim()).filter(Boolean)}:item))} placeholder="Option 1, Option 2"/></label>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={question.required} onChange={e=>setQuestions(current=>current.map((item,i)=>i===index?{...item,required:e.target.checked}:item))}/> Required question</label>{questions.length>1&&<button type="button" className="text-button self-start" onClick={()=>setQuestions(current=>current.filter((_,i)=>i!==index))}>Remove question</button>}</fieldset>)}<button className="button primary full" disabled={busy}>{editingFeedback?'Save feedback changes':'Publish feedback form'}</button></form></Modal>}
+    {versionHistoryFeedback&&<Modal title={'Version history · '+versionHistoryFeedback.title} onClose={()=>setVersionHistoryFeedback(null)}><div className="space-y-3"><p className="fine-print">Current version: {versionHistoryFeedback.version??1}. Previous versions contain form definitions only—not student submissions or answers.</p>{feedbackVersions.length?feedbackVersions.map(version=><article key={version.version} className="rounded-xl border border-[#e5ece6] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><b>Version {version.version}</b><small className="muted">{new Date(version.created_at).toLocaleString()}</small></div><p className="mt-2 font-semibold">{version.title}</p><p className="fine-print">{version.form_schema?.length??0} questions{version.due_at?' · Due '+new Date(version.due_at).toLocaleString():''}</p><button type="button" className="button subtle compact mt-3" disabled={busy} onClick={()=>void restoreFeedbackVersion(version)}>Restore this version</button></article>):<p className="muted">No previous versions yet. Changes to title, description, questions or deadline are saved automatically.</p>}</div></Modal>}
+    {responseModal&&<Modal title={responseModal.title} onClose={()=>setResponseModal(null)}><ResponseForm item={responseModal} onDone={()=>{router.push('/feedback/thank-you?feedback='+encodeURIComponent(responseModal.id));router.refresh();}}/></Modal>}
   </div>;
 }
+function toLocalDateTime(value:string){const date=new Date(value);date.setMinutes(date.getMinutes()-date.getTimezoneOffset());return date.toISOString().slice(0,16);}
 function Metric({icon,label,value,hint}:{icon:React.ReactNode;label:string;value:React.ReactNode;hint:string}){return <article className="metric-card"><div className="metric-icon">{icon}</div><span>{label}</span><strong>{value}</strong><small>{hint}</small></article>}
-function CourseList({courses,role,loading,onFeedback}:{courses:Course[];role:string;loading:boolean;onFeedback:(id:string)=>void}){if(loading)return <div className="loading-panel">Loading courses…</div>;if(!courses.length)return <Empty icon={<BookOpen/>} title="No courses yet" text={role==='STUDENT'?'Published courses will appear here.':'Create your first course to get started.'}/>;return <div className="course-grid">{courses.map(c=><article className="course-card" key={c.id}><div className="course-art"><span className="course-art-mark"><GraduationCap size={25}/></span><span className={`status-badge ${c.status.toLowerCase()}`}>{c.status.toLowerCase()}</span></div><div className="course-card-body"><h4>{c.title}</h4><p>{c.description||'No course description yet.'}</p><div className="course-footer"><small>Added {new Date(c.created_at).toLocaleDateString()}</small>{role!=='STUDENT'&&<button className="mini-action" onClick={()=>onFeedback(c.id)}><Plus size={14}/> Feedback</button>}</div></div></article>)}</div>}
-function FeedbackList({feedback,role,onRespond}:{feedback:Feedback[];role:string;onRespond:(f:Feedback)=>void}){if(!feedback.length)return <Empty icon={<FilePlus2/>} title="Nothing here yet" text="When feedback forms are created, they will appear here."/>;return <div className="feedback-list">{feedback.map(f=><article className="feedback-row" key={f.id}><div className="feedback-icon"><FilePlus2 size={18}/></div><div className="feedback-copy"><b>{f.title}</b><span>{f.description||'Feedback form'} · {new Date(f.created_at).toLocaleDateString()}</span></div><span className={`status-badge ${f.is_open?'published':'archived'}`}>{f.is_open?'open':'closed'}</span>{role==='STUDENT'&&f.is_open&&<button className="button subtle compact" onClick={()=>onRespond(f)}>Respond <ArrowDownToLine size={14}/></button>}</article>)}</div>}
+function CourseList({courses,role,loading,onFeedback,onEdit,onStatus}:{courses:Course[];role:string;loading:boolean;onFeedback:(id:string)=>void;onEdit:(course:Course)=>void;onStatus:(course:Course)=>void}){if(loading)return <div className="loading-panel">Loading courses…</div>;if(!courses.length)return <Empty icon={<BookOpen/>} title="No courses yet" text={role==='STUDENT'?'Published courses will appear here.':'Create your first course to get started.'}/>;return <div className="course-grid">{courses.map(c=><article className="course-card" key={c.id}><div className="course-art"><span className="course-art-mark"><GraduationCap size={25}/></span><span className={`status-badge ${c.status.toLowerCase()}`}>{c.status.toLowerCase()}</span></div><div className="course-card-body"><div className="flex flex-wrap items-center gap-2">{c.course_code&&<span className="role-chip">{c.course_code}</span>}<h4>{c.title}</h4></div><p>{c.description||'No course description yet.'}</p>{role==='STUDENT'&&<div className="course-meta"><small>Instructor: {c.instructors?.length?c.instructors.join(', '):c.instructor?.full_name||c.instructor?.email||'Not assigned'}</small><small>Department: {c.department?.name||'Not assigned'}</small><small>Semester: {c.semester?.name||'Not assigned'}</small></div>}<div className="course-footer"><small>Added {new Date(c.created_at).toLocaleDateString()}</small>{role!=='STUDENT'&&<div className="flex flex-wrap gap-2"><button className="mini-action" onClick={()=>onFeedback(c.id)}><Plus size={14}/> Feedback</button><button className="mini-action" onClick={()=>onEdit(c)}><Pencil size={13}/> Edit</button><button className="mini-action" onClick={()=>onStatus(c)}>{c.status==='ARCHIVED'?'Republish':'Archive'}</button></div>}</div></div></article>)}</div>}
+function FeedbackList({feedback,role,onRespond,onToggle,onEdit,onVersions}:{feedback:Feedback[];role:string;onRespond:(f:Feedback)=>void;onToggle:(f:Feedback)=>void;onEdit:(f:Feedback)=>void;onVersions:(f:Feedback)=>void}){if(!feedback.length)return <Empty icon={<FilePlus2/>} title="Nothing here yet" text="When feedback forms are created, they will appear here."/>;return <div className="feedback-list">{feedback.map(f=>{const expired=Boolean(f.due_at&&new Date(f.due_at).getTime()<=Date.now());return <article className="feedback-row" key={f.id}><div className="feedback-icon"><FilePlus2 size={18}/></div><div className="feedback-copy"><b>{f.title}</b><span>{f.description||'Feedback form'} · {new Date(f.created_at).toLocaleDateString()}{f.due_at?` · Due ${new Date(f.due_at).toLocaleString()}`:''}</span></div><span className={`status-badge ${f.submitted?'published':f.is_open?'published':'archived'}`}>{f.submitted?'completed':expired?'expired':f.is_open?'open':'closed'}</span>{role==='STUDENT'&&f.is_open&&!f.submitted&&!expired&&<button className="button subtle compact" onClick={()=>onRespond(f)}>Respond <ArrowDownToLine size={14}/></button>}{role!=='STUDENT'&&<><button className="button subtle compact" onClick={()=>onEdit(f)}><Pencil size={13}/> Edit</button><button className="button subtle compact" onClick={()=>onVersions(f)}>Versions</button><button className="button subtle compact" onClick={()=>onToggle(f)}>{f.is_open?'Close form':'Reopen form'}</button></>}</article>})}</div>}
 function Empty({icon,title,text}:{icon:React.ReactNode;title:string;text:string}){return <div className="empty-state"><div>{icon}</div><h4>{title}</h4><p>{text}</p></div>}
-function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){return <div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="modal" role="dialog" aria-modal="true" aria-label={title}><header><h3>{title}</h3><button className="icon-button" onClick={onClose} aria-label="Close"><X size={18}/></button></header>{children}</section></div>}
+function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){
+  const headingId=useId();
+  const dialogRef=useRef<HTMLElement|null>(null);
+  const closeRef=useRef(onClose);
+  closeRef.current=onClose;
+
+  useEffect(()=>{
+    const dialogElement=dialogRef.current;
+    if(dialogElement===null)return;
+    const dialog:HTMLElement=dialogElement;
+    const previouslyFocused=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    const previousBodyOverflow=document.body.style.overflow;
+    const focusableSelector='a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const getFocusable=()=>Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)).filter(element=>!element.hasAttribute('hidden')&&element.getAttribute('aria-hidden')!=='true');
+
+    document.body.style.overflow='hidden';
+    (getFocusable()[0]??dialog).focus();
+
+    function handleKeyDown(event:KeyboardEvent){
+      if(event.key==='Escape'){
+        event.preventDefault();
+        closeRef.current();
+        return;
+      }
+      if(event.key!=='Tab')return;
+      const items=getFocusable();
+      if(!items.length){
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first=items[0];
+      const last=items[items.length-1];
+      if(event.shiftKey&&(document.activeElement===first||!dialog.contains(document.activeElement))){
+        event.preventDefault();
+        last.focus();
+      }else if(!event.shiftKey&&(document.activeElement===last||!dialog.contains(document.activeElement))){
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown',handleKeyDown);
+    return ()=>{
+      document.removeEventListener('keydown',handleKeyDown);
+      document.body.style.overflow=previousBodyOverflow;
+      previouslyFocused?.focus();
+    };
+  },[]);
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeRef.current()}}>
+    <section ref={dialogRef} className="modal" role="dialog" aria-modal="true" aria-labelledby={headingId} tabIndex={-1}>
+      <header><h3 id={headingId}>{title}</h3><button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={18}/></button></header>
+      {children}
+    </section>
+  </div>;
+}
 function ResponseForm({item,onDone}:{item:Feedback;onDone:()=>void}) {
-  const question = item.form_schema?.[0];
-  const [answer,setAnswer] = useState<string>('');
+  const questions = item.form_schema ?? [];
+  const [answers,setAnswers] = useState<Record<string,string|string[]>>({});
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
   async function submit(e:FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
     try {
-      if (!question) throw new Error('This form has no questions.');
-      let value: unknown = answer;
-      if (question.type === 'rating' || question.type === 'number') value = Number(answer);
-      if (question.type === 'multiple_choice') value = answer ? [answer] : [];
-      const res = await fetch('/api/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback_id:item.id,answers:{[question.id]:value}})});
-      const payload = await res.json(); if(!res.ok) throw new Error(payload.error); onDone();
+      if (!questions.length) throw new Error('This form has no questions.');
+      const payload: Record<string,unknown> = {};
+      for (const question of questions) {
+        const value = answers[question.id];
+        const unanswered = value === undefined || (typeof value === 'string' && value.trim().length === 0) || (Array.isArray(value) && value.length === 0);
+        if (question.required && unanswered) throw new Error(`Please answer: ${question.label}`);
+        if (unanswered) continue;
+        if (question.type === 'rating' || question.type === 'number') payload[question.id] = Number(value);
+        else payload[question.id] = value;
+      }
+      const res = await fetch('/api/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback_id:item.id,answers:payload})});
+      const result = await res.json(); if(!res.ok) throw new Error(result.error); onDone();
     } catch(e) { setError(e instanceof Error?e.message:'Could not submit response.'); }
     finally { setBusy(false); }
   }
-  if (!question) return <p className="alert error">This form has no questions.</p>;
+  if (!questions.length) return <p className="alert error">This form has no questions.</p>;
   return <form className="stack-form" onSubmit={submit}>
-    <p className="muted">Your response is private. Instructors only see aggregate summaries, never individual submissions.</p>
-    <label>{question.label}
-      {question.type === 'rating' ? <select value={answer} onChange={e=>setAnswer(e.target.value)} required><option value="">Choose a rating</option><option value="1">1 · Needs work</option><option value="2">2 · Fair</option><option value="3">3 · Good</option><option value="4">4 · Very good</option><option value="5">5 · Excellent</option></select> : null}
-      {question.type === 'number' ? <input type="number" value={answer} onChange={e=>setAnswer(e.target.value)} min="-1000000" max="1000000" step="any" required/> : null}
-      {question.type === 'text' || question.type === 'textarea' ? <textarea value={answer} onChange={e=>setAnswer(e.target.value)} rows={4} maxLength={2000} required={question.required} placeholder="Share a thought…"/> : null}
-      {question.type === 'single_choice' || question.type === 'multiple_choice' ? <select value={answer} onChange={e=>setAnswer(e.target.value)} required><option value="">Choose an option</option>{(question.options ?? []).map(option=><option key={option} value={option}>{option}</option>)}</select> : null}
-    </label>
-    {error&&<p className="alert error">{error}</p>}
-    <button className="button primary full" disabled={busy}>Submit feedback</button>
+    <p className="muted">Your answers are stored separately from your one-time eligibility record. Instructors and administrators only see aggregate summaries, never individual submissions.</p>
+    {questions.map(question=><fieldset key={question.id} aria-required={question.required} className="stack-form rounded-xl border border-[#e5ece6] p-4"><legend className="px-1 font-semibold">{question.label}{question.required&&<span className="fine-print ml-2">Required</span>}</legend>{question.category&&<small className="fine-print block">{question.category}</small>}
+      {question.type === 'rating' && <select aria-label={question.label} value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} required={question.required}><option value="">Choose a rating</option><option value="1">1 · Needs work</option><option value="2">2 · Fair</option><option value="3">3 · Good</option><option value="4">4 · Very good</option><option value="5">5 · Excellent</option></select>}
+      {question.type === 'yes_no' && <select aria-label={question.label} value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} required={question.required}><option value="">Choose Yes or No</option><option value="Yes">Yes</option><option value="No">No</option></select>}
+      {question.type === 'number' && <input aria-label={question.label} type="number" value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} min="-1000000" max="1000000" step="any" required={question.required}/>}
+      {(question.type === 'text' || question.type === 'textarea') && <textarea aria-label={question.label} value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} rows={question.type==='textarea'?4:2} maxLength={2000} required={question.required} placeholder="Share a thought…"/>}
+      {question.type === 'single_choice' && <select aria-label={question.label} value={typeof answers[question.id]==='string'?answers[question.id] as string:''} onChange={e=>setAnswers(current=>({...current,[question.id]:e.target.value}))} required={question.required}><option value="">Choose an option</option>{(question.options??[]).map(option=><option key={option} value={option}>{option}</option>)}</select>}
+      {question.type === 'multiple_select' && <div className="grid gap-2 rounded-xl border border-[#e5ece6] p-3">{(question.options??[]).map(option=><label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label={question.label+': '+option} checked={Array.isArray(answers[question.id])&&(answers[question.id] as string[]).includes(option)} onChange={e=>setAnswers(current=>{const selected=Array.isArray(current[question.id])?[...(current[question.id] as string[])]:[];return {...current,[question.id]:e.target.checked?[...selected,option]:selected.filter(value=>value!==option)};})}/><span>{option}</span></label>)}</div>}
+      {question.type === 'multiple_choice' && <select multiple value={Array.isArray(answers[question.id])?answers[question.id] as string[]:[]} onChange={e=>{const selected=Array.from(e.currentTarget.selectedOptions,option=>option.value);setAnswers(current=>({...current,[question.id]:selected}));}} required={question.required} aria-label={question.label} className="min-h-28">{(question.options??[]).map(option=><option key={option} value={option}>{option}</option>)}</select>}
+    </fieldset>)}
+    {error&&<p className="alert error" role="alert">{error}</p>}
+    <button className="button primary full" disabled={busy}>{busy?'Submitting…':'Submit feedback'}</button>
   </form>;
+}
+
+function AdminDeletionRequest({request,busy,onSave}:{request:DataDeletionRequest;busy:boolean;onSave:(id:string,status:DataDeletionRequest['status'],note:string)=>void}) {
+  const [status,setStatus]=useState<DataDeletionRequest['status']>(request.status);
+  const [note,setNote]=useState(request.resolution_note??'');
+  const options=request.status==='PENDING'?['IN_REVIEW','APPROVED','REJECTED']:request.status==='IN_REVIEW'?['APPROVED','REJECTED']:request.status==='APPROVED'?['COMPLETED','REJECTED']:[];
+  return <article className="feedback-row">
+    <div className="feedback-icon"><ShieldCheck size={18}/></div>
+    <div className="feedback-copy min-w-0">
+      <b>{request.requester_name||'Account no longer present'} · {request.requester_role??'—'}</b>
+      <span>{request.requester_email??'No email'} · Requested {new Date(request.created_at).toLocaleString()}</span>
+      {request.reviewed_at&&<small>Last reviewed {new Date(request.reviewed_at).toLocaleString()}</small>}
+      <label className="mt-2 block text-xs">Resolution note<textarea value={note} maxLength={500} rows={2} onChange={e=>setNote(e.target.value)} placeholder="Explain the review or retention exception."/></label>
+      {request.status==='APPROVED'&&<p className="fine-print">Before marking completed, delete eligible account data through the authorized Supabase process and verify required retention exceptions. This app does not have privileged Auth deletion credentials.</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <select aria-label={'Review status for request '+request.id} value={status} onChange={e=>setStatus(e.target.value as DataDeletionRequest['status'])} disabled={options.length===0}>
+          {options.map(option=><option key={option} value={option}>{option.replace('_',' ')}</option>)}
+          {options.length===0&&<option value={request.status}>{request.status.replace('_',' ')}</option>}
+        </select>
+        <button className="button subtle compact" disabled={busy||options.length===0||status===request.status||note.trim().length===0} onClick={()=>onSave(request.id,status,note)}>Save review</button>
+      </div>
+    </div>
+    <span className={'status-badge '+(request.status==='COMPLETED'?'published':request.status==='REJECTED'?'archived':'draft')}>{request.status.replace('_',' ').toLowerCase()}</span>
+  </article>;
+}
+
+function AdminConsole({users,audit,academic,overview,deletionRequests,currentUserId,busy,onUpdate,onAcademicCreate,onAcademicUpdate,onDeletionReview}:{users:AdminUser[];audit:AuditEvent[];academic:AcademicData;overview:AdminOverview;deletionRequests:DataDeletionRequest[];currentUserId:string;busy:boolean;onUpdate:(id:string,role:AdminUser['role'],active:boolean)=>void;onAcademicCreate:(payload:AcademicAction)=>void;onAcademicUpdate:(payload:AcademicAction)=>void;onDeletionReview:(requestId:string,status:DataDeletionRequest['status'],note:string)=>void}) {
+  return <div className="space-y-8">
+    <section>
+      <div className="section-heading"><div><h3>Institution overview</h3><p>Live totals from the database. Average rating includes only question groups with at least five submissions.</p></div></div>
+      <div className="metric-grid">
+        <Metric icon={<Users size={19}/>} label="Students" value={overview.total_students} hint="Active student accounts"/>
+        <Metric icon={<GraduationCap size={19}/>} label="Instructors" value={overview.total_instructors} hint="Active instructor accounts"/>
+        <Metric icon={<BookOpen size={19}/>} label="Courses" value={overview.total_courses} hint="All course records"/>
+        <Metric icon={<Users size={19}/>} label="Departments" value={overview.total_departments} hint="Institution departments"/>
+        <Metric icon={<FilePlus2 size={19}/>} label="Feedback forms" value={overview.total_feedback_forms} hint="All forms"/>
+        <Metric icon={<Activity size={19}/>} label="Responses" value={overview.total_responses} hint="Retained submissions"/>
+        <Metric icon={<Activity size={19}/>} label="Participation" value={overview.participation_rate==null?'—':Number(overview.participation_rate).toFixed(1)+'%'} hint="Across enrolled places in forms"/>
+        <Metric icon={<FileBarChart size={19}/>} label="Average rating" value={overview.average_rating==null?'—':Number(overview.average_rating).toFixed(2)+'/5'} hint="Reportable rating groups only"/>
+      </div>
+    </section>
+    <section>
+      <div className="section-heading"><div><h3>Low participation alerts</h3><p>Open forms with at least five enrolled students but fewer than five submissions. Individual identities and exact small-cohort counts are not shown.</p></div></div>
+      {overview.low_participation_forms.length?<div className="feedback-list">{overview.low_participation_forms.map(form=><article className="feedback-row" key={form.feedback_id}><div className="feedback-icon"><Activity size={18}/></div><div className="feedback-copy"><b>{form.feedback_title}</b><span>{form.course_title} · {form.message}</span></div><span className="status-badge archived">Needs attention</span></article>)}</div>:<Empty icon={<ShieldCheck/>} title="No low-participation alerts" text="No open feedback form currently meets the alert criteria."/>}
+    </section>
+    <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
+    {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
+    <AdminAcademicManager data={academic} busy={busy} onCreate={onAcademicCreate} onUpdate={onAcademicUpdate}/>
+    <section><div className="section-heading"><div><h3>Data deletion requests</h3><p>Review privacy requests. Only mark COMPLETED after eligible account deletion is carried out and verified through the institution's authorized process.</p></div><span className="role-chip">{deletionRequests.filter(request=>['PENDING','IN_REVIEW','APPROVED'].includes(request.status)).length} active</span></div>{deletionRequests.length?<div className="feedback-list">{deletionRequests.map(request=><AdminDeletionRequest key={request.id} request={request} busy={busy} onSave={onDeletionReview}/>)}</div>:<Empty icon={<ShieldCheck/>} title="No deletion requests" text="User privacy requests will appear here for review."/>}</section>
+    <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account and academic actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator actions will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replace(/\./g,' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
+  </div>;
+}
+
+function AdminAcademicManager({data,busy,onCreate,onUpdate}:{data:AcademicData;busy:boolean;onCreate:(payload:AcademicAction)=>void;onUpdate:(payload:AcademicAction)=>void}) {
+  const [departmentName,setDepartmentName]=useState('');
+  const [departmentCode,setDepartmentCode]=useState('');
+  const [semesterName,setSemesterName]=useState('');
+  const [semesterStart,setSemesterStart]=useState('');
+  const [semesterEnd,setSemesterEnd]=useState('');
+  const [editDepartmentId,setEditDepartmentId]=useState('');
+  const [editDepartmentName,setEditDepartmentName]=useState('');
+  const [editDepartmentCode,setEditDepartmentCode]=useState('');
+  const [editSemesterId,setEditSemesterId]=useState('');
+  const [editSemesterName,setEditSemesterName]=useState('');
+  const [editSemesterStart,setEditSemesterStart]=useState('');
+  const [editSemesterEnd,setEditSemesterEnd]=useState('');
+  const [editSemesterActive,setEditSemesterActive]=useState(false);
+  const [departmentUserId,setDepartmentUserId]=useState('');
+  const [departmentUserDepartment,setDepartmentUserDepartment]=useState('');
+  const [enrollCourse,setEnrollCourse]=useState('');
+  const [enrollStudent,setEnrollStudent]=useState('');
+  const [assignCourse,setAssignCourse]=useState('');
+  const [assignInstructor,setAssignInstructor]=useState('');
+  const [academicCourse,setAcademicCourse]=useState('');
+  const [academicDepartment,setAcademicDepartment]=useState('');
+  const [academicSemester,setAcademicSemester]=useState('');
+  useEffect(()=>{
+    if(!editDepartmentId&&data.departments.length){
+      const item=data.departments[0];
+      setEditDepartmentId(item.id);setEditDepartmentName(item.name);setEditDepartmentCode(item.code);
+    }
+  },[data.departments,editDepartmentId]);
+  useEffect(()=>{
+    if(!editSemesterId&&data.semesters.length){
+      const item=data.semesters[0];
+      setEditSemesterId(item.id);setEditSemesterName(item.name);setEditSemesterStart(item.start_date);setEditSemesterEnd(item.end_date);setEditSemesterActive(item.is_active);
+    }
+  },[data.semesters,editSemesterId]);
+  useEffect(()=>{
+    const selected=data.accounts.find(item=>item.id===departmentUserId);
+    if(!departmentUserId&&data.accounts.length){
+      const first=data.accounts[0];
+      setDepartmentUserId(first.id);
+      setDepartmentUserDepartment(first.department_id??'');
+    }else if(selected&&selected.department_id!==departmentUserDepartment){
+      setDepartmentUserDepartment(selected.department_id??'');
+    }
+  },[data.accounts,departmentUserId]);
+  return <section className="space-y-5"><div className="section-heading"><div><h3>Academic structure</h3><p>Manage departments, terms, student enrollments and instructor course assignments.</p></div></div>
+    <div className="grid gap-5 lg:grid-cols-2">
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'department',name:departmentName,code:departmentCode});setDepartmentName('');setDepartmentCode('');}}><h4 className="font-extrabold">Create department</h4><label>Department name<input required minLength={2} maxLength={120} value={departmentName} onChange={e=>setDepartmentName(e.target.value)} placeholder="Computer Science"/></label><label>Department code<input required minLength={2} maxLength={20} value={departmentCode} onChange={e=>setDepartmentCode(e.target.value)} placeholder="CSE"/></label><button className="button primary" disabled={busy}>Add department</button><p className="fine-print">{data.departments.length} departments configured</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'semester',name:semesterName,start_date:semesterStart,end_date:semesterEnd});setSemesterName('');setSemesterStart('');setSemesterEnd('');}}><h4 className="font-extrabold">Create academic semester</h4><label>Semester name<input required minLength={2} maxLength={100} value={semesterName} onChange={e=>setSemesterName(e.target.value)} placeholder="Fall 2026"/></label><label>Start date<input type="date" required value={semesterStart} onChange={e=>setSemesterStart(e.target.value)}/></label><label>End date<input type="date" required min={semesterStart||undefined} value={semesterEnd} onChange={e=>setSemesterEnd(e.target.value)}/></label><button className="button primary" disabled={busy}>Add semester</button><p className="fine-print">{data.semesters.length} semesters configured</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onUpdate({action:'department_update',department_id:editDepartmentId,name:editDepartmentName,code:editDepartmentCode});}}><h4 className="font-extrabold">Update department</h4><label>Department<select required value={editDepartmentId} onChange={e=>{const item=data.departments.find(value=>value.id===e.target.value);setEditDepartmentId(e.target.value);setEditDepartmentName(item?.name??'');setEditDepartmentCode(item?.code??'');}}><option value="">Select department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><label>Department name<input required minLength={2} maxLength={120} value={editDepartmentName} onChange={e=>setEditDepartmentName(e.target.value)}/></label><label>Department code<input required minLength={2} maxLength={20} value={editDepartmentCode} onChange={e=>setEditDepartmentCode(e.target.value)}/></label><button className="button subtle" disabled={busy||!editDepartmentId}>Save department</button></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onUpdate({action:'semester_update',semester_id:editSemesterId,name:editSemesterName,start_date:editSemesterStart,end_date:editSemesterEnd,is_active:editSemesterActive});}}><h4 className="font-extrabold">Update semester</h4><label>Semester<select required value={editSemesterId} onChange={e=>{const item=data.semesters.find(value=>value.id===e.target.value);setEditSemesterId(e.target.value);setEditSemesterName(item?.name??'');setEditSemesterStart(item?.start_date??'');setEditSemesterEnd(item?.end_date??'');setEditSemesterActive(item?.is_active??false);}}><option value="">Select semester</option>{data.semesters.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Semester name<input required minLength={2} maxLength={100} value={editSemesterName} onChange={e=>setEditSemesterName(e.target.value)}/></label><div className="grid gap-4 sm:grid-cols-2"><label>Start date<input type="date" required value={editSemesterStart} onChange={e=>setEditSemesterStart(e.target.value)}/></label><label>End date<input type="date" required min={editSemesterStart||undefined} value={editSemesterEnd} onChange={e=>setEditSemesterEnd(e.target.value)}/></label></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editSemesterActive} onChange={e=>setEditSemesterActive(e.target.checked)}/> Active semester</label><button className="button subtle self-start" disabled={busy||!editSemesterId}>Save semester</button></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5 lg:col-span-2" onSubmit={e=>{e.preventDefault();onCreate({action:'user_department',user_id:departmentUserId,department_id:departmentUserDepartment||null});}}><h4 className="font-extrabold">Assign user department</h4><p className="fine-print">Set or clear the department for an account. This action requires admin MFA and creates an audit event.</p><label>User account<select required value={departmentUserId} onChange={e=>{const selected=data.accounts.find(item=>item.id===e.target.value);setDepartmentUserId(e.target.value);setDepartmentUserDepartment(selected?.department_id??'');}}><option value="">Select user</option>{data.accounts.map(item=><option key={item.id} value={item.id}>{item.full_name||item.email||item.id} · {item.role}{item.is_active?'':' · Suspended'}</option>)}</select></label><label>Department<select value={departmentUserDepartment} onChange={e=>setDepartmentUserDepartment(e.target.value)}><option value="">No department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><button className="button primary self-start" disabled={busy||!departmentUserId}>Save user department</button></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'enroll',course_id:enrollCourse,student_id:enrollStudent});}}><h4 className="font-extrabold">Enroll student in course</h4><label>Course<select required value={enrollCourse} onChange={e=>setEnrollCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Student<select required value={enrollStudent} onChange={e=>setEnrollStudent(e.target.value)}><option value="">Select student</option>{data.students.map(student=><option key={student.id} value={student.id}>{student.full_name||student.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.students.length||!data.courses.length}>Enroll student</button><p className="fine-print">{data.enrollments.length} course enrollments</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'assign',course_id:assignCourse,instructor_id:assignInstructor});}}><h4 className="font-extrabold">Assign instructor</h4><label>Course<select required value={assignCourse} onChange={e=>setAssignCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Instructor<select required value={assignInstructor} onChange={e=>setAssignInstructor(e.target.value)}><option value="">Select instructor</option>{data.instructors.map(instructor=><option key={instructor.id} value={instructor.id}>{instructor.full_name||instructor.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.instructors.length||!data.courses.length}>Assign instructor</button><p className="fine-print">{data.assignments.length} instructor assignments</p></form>
+      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5 lg:col-span-2" onSubmit={e=>{e.preventDefault();onCreate({action:'course_academic',course_id:academicCourse,department_id:academicDepartment||null,semester_id:academicSemester||null});}}><h4 className="font-extrabold">Set course department and semester</h4><label>Course<select required value={academicCourse} onChange={e=>setAcademicCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label>Department<select value={academicDepartment} onChange={e=>setAcademicDepartment(e.target.value)}><option value="">No department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><label>Semester<select value={academicSemester} onChange={e=>setAcademicSemester(e.target.value)}><option value="">No semester</option>{data.semesters.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><button className="button primary self-start" disabled={busy||!academicCourse}>Save course structure</button></form>
+    </div>
+  </section>;
 }
