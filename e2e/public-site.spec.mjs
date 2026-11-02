@@ -118,7 +118,10 @@ test.describe('public-page browser smoke', () => {
         .map((script) => script.nonce)
     );
     expect(scriptNonces.length).toBeGreaterThan(0);
-    expect(scriptNonces.every((value) => value === nonce)).toBe(true);
+    expect(
+      scriptNonces.every((value) => value === nonce),
+      JSON.stringify({ nonce, scriptNonces })
+    ).toBe(true);
 
     expect(policy).toContain("object-src 'none'");
     expect(policy).toContain("frame-src 'none'");
