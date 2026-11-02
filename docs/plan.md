@@ -15,9 +15,11 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: account suspension blocks application access through active-profile checks and role helper. Global token revocation remains outstanding.
 - [x] DONE: admin workspace and admin RPCs require TOTP AAL2; user and academic actions write audit events.
 - [x] DONE: database-backed per-user/action rate limits and same-origin checks cover course, form, response, admin and signed-in password-change mutations. Auth-provider rate limits still require dashboard verification.
-- [x] DONE: baseline Content-Security-Policy added; nonce-based strict CSP and browser validation remain open.
+- [x] DONE: per-request nonce-based strict CSP added through middleware. script-src uses nonce + strict-dynamic with no unsafe-inline/unsafe-eval/data sources; object-src/frame-src are none and frame-ancestors is none. Browser header/nonce verification is included in Playwright and awaits exact-HEAD browser run.
 - [x] PARTIAL: password reset uses generic confirmation; consistent generic sign-in error normalization and provider-level rate-limit verification remain open.
-- [ ] Supabase leaked-password protection (dashboard setting; unavailable on current Free tier), secret-history scan and credential rotation evidence.
+- [x] DONE: CI gitleaks secret-history scan passes on current PR runs; static XSS sink regression test prohibits raw HTML assignment, document.write, eval and Function constructors.
+- [x] DONE: RFC 9116 security.txt published under public/.well-known with HTTPS contact, policy, canonical and expiry fields. Owner must still enable and verify GitHub private vulnerability reporting.
+- [ ] Supabase leaked-password protection (Auth dashboard setting, unavailable through current Free-tier integration) and credential-rotation evidence.
 
 ## P2 — Academic administration
 - [x] PARTIAL: departments and semesters can be created and edited; semester active state can be changed; courses can be linked to departments/semesters; users can be assigned/cleared from departments through an MFA-protected, audited RPC. Full archival/lifecycle controls remain open.
@@ -49,9 +51,10 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [x] DONE: custom not-found and error pages; full navigation audit remains open.
 
 ## P6 — QA and operations
-- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, 29 Vitest files/107 tests and a Next.js production build. Real role-by-role integration and browser E2E remain open.
+- [x] PARTIAL: GitHub CI runs dependency audit, Prisma validation, TypeScript, Vitest (35+ files / 136+ tests on recent runs) and a Next.js production build; secret-history scan also passes. Real role-by-role integration and authenticated browser E2E remain open.
 - [x] PARTIAL: selected rollback-only student/instructor RLS, duplicate-prevention and aggregate-suppression integration tests passed. Full role-matrix, cross-resource IDOR, adversarial XSS/CSRF and distributed abuse tests remain open.
-- [ ] WCAG 2.2 AA, keyboard and screen-reader review.
+- [x] PARTIAL: keyboard focus and 768px auth overflow regressions were fixed; automated Axe scans then exposed reduced-contrast animation frames. Entrance/scroll motion now moves via transforms without fading text opacity; exact-HEAD WCAG rerun remains in progress.
+- [ ] WCAG 2.2 AA manual review, screen-reader review and full device matrix.
 - [ ] Mobile/tablet/desktop browser matrix.
 - [ ] Lighthouse/Core Web Vitals and query performance.
 - [ ] Backup/restore evidence (downloadable backups require a paid Supabase plan).
@@ -60,15 +63,17 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 - [ ] Production smoke test and evidence-based sign-off.
 
 ## Current external blockers
+- Security hardening adds a per-request nonce CSP, explicit legacy XSS-auditor disable header (`X-XSS-Protection: 0`), security.txt, unsafe DOM/script sink checks and Playwright assertions for response nonce propagation and security.txt HTTP delivery.
+- The browser workflow now starts the exact local production build and targets localhost for Playwright/Lighthouse rather than relying on the Vercel preview alias. Recent runs through #470 pass npm ci, audit, Prisma, typecheck, unit tests and build; the newest local-browser workflow run #471 is still in progress.
 - GitHub Actions PR validation run #385 completed successfully on 2 November 2026. The PR merge candidate included feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` (merge commit `7b0823302d7f740c4f73ae9d9287d89230892aaa`): `npm ci`, npm audit (0 vulnerabilities), Prisma validation, TypeScript, 34 Vitest files / 130 tests, and the Next.js 15.5.28 production build (19/19 static pages) all passed.
-- The exact feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` is deployed to Vercel Production as deployment `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`, `aliasError=null`). The production alias `https://coursepulse-site.vercel.app` maps to that deployment. Independent real-browser smoke verification remains NOT VERIFIED from the available runner.
+- The previous feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` remains deployed to Vercel Production as `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`). Current branch HEAD is newer and is not deployed. Vercel deployment creation returned HTTP 402 `api-deployments-free-per-day`; do not claim new CSP/security.txt behavior is live until a new deployment is verified.
 - The live `.site` Supabase project `fwmovyitmtpnwhqmvrgh` has 36 recorded migrations through `20261102102457_coursepulse_private_fk_indexes`. The new migration adds indexes to `private.data_deletion_requests(reviewed_by)` and `private.feedback_versions(changed_by)`; the live migration ledger and repository file are aligned. The post-change performance advisor no longer reports unindexed foreign keys. It reports 15 informational unused-index findings, which are not removed on a low-traffic demo database without workload evidence. All 10 public tables have RLS enabled.
 - Retention cleanup is active at `17 20 * * *` UTC. Two successful runs are recorded; latest began 1 November 2026 at 20:17 UTC.
 - The active administrator has one verified TOTP factor. A fresh browser sign-in proving AAL2 and the recovery path still needs live verification.
 - Supabase Security Advisor still reports leaked-password protection disabled. The Supabase organization is on the Free plan and the available integration cannot change the Auth dashboard setting; an owner must enable it if available or record an explicit institutional risk decision.
 - The current `.site` Vercel environment sets `NEXT_PUBLIC_APP_URL=https://coursepulse-site.vercel.app`. The README's Supabase Auth URL guidance has been corrected to this `.site` domain; the actual Auth Site URL/redirect allow-list and email confirmation/password-reset journeys still need dashboard/browser verification.
 - Institution-approved privacy/terms text, controller identity, verified support contacts, consent/minor policy and retention/legal decisions remain owner/institution actions.
-- Browser E2E, full role/RLS and IDOR/XSS/CSRF adversarial checks, WCAG 2.2 AA, responsive viewport review, Lighthouse/Core Web Vitals, backup/restore evidence and production smoke/rollback sign-off remain open.
+- Exact-HEAD local browser E2E and CSP/security.txt HTTP checks are awaiting the latest CI run; full role/RLS and IDOR/XSS/CSRF adversarial checks, WCAG 2.2 AA manual review, Lighthouse/Core Web Vitals, backup/restore evidence, exact-HEAD deployment/live headers, and production smoke/rollback sign-off remain open.
 
 ## Owner decisions required
 Institution name/branding; verified support contact; department and semester catalogue; student age/minor policy; legal basis and retention schedule; cookie/analytics policy; paid/free status; official accessibility/support contact. Do not publish guessed legal statements or contacts.
