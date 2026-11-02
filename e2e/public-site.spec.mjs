@@ -112,16 +112,24 @@ test.describe('public-page browser smoke', () => {
     const nonceMatch = scriptSource.match(/'nonce-([^']+)'/);
     expect(nonceMatch).not.toBeNull();
     const nonce = nonceMatch[1];
-    const scriptNonces = await page.locator('script').evaluateAll((scripts) =>
+    const executableScripts = await page.locator('script').evaluateAll((scripts) =>
       scripts
         .filter((script) => !['application/json', 'application/ld+json', 'importmap'].includes(script.type))
-        .map((script) => script.nonce)
+        .map((script) => ({
+          nonce: script.nonce,
+          type: script.type,
+          src: script.src,
+          id: script.id,
+          dataNscript: script.dataset.nscript,
+          preview: script.textContent?.slice(0, 80)
+        }))
     );
-    expect(scriptNonces.length).toBeGreaterThan(0);
+    expect(executableScripts.length).toBeGreaterThan(0);
     expect(
-      scriptNonces.every((value) => value === nonce),
-      JSON.stringify({ nonce, scriptNonces })
+      executableScripts.every((script) => script.nonce === nonce),
+      JSON.stringify({ nonce, executableScripts })
     ).toBe(true);
+    expect(response.headers()['x-xss-protection']).toBe('0');
 
     expect(policy).toContain("object-src 'none'");
     expect(policy).toContain("frame-src 'none'");
