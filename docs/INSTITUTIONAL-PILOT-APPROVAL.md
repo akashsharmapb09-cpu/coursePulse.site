@@ -1,6 +1,6 @@
 # CoursePulse Institutional Pilot Approval and Data-Use Record
 
-<escape>**Status: PENDING — NOT APPROVED**</escape>  
+**Status: PENDING — NOT APPROVED**  
 **Project:** CoursePulse `.site`  
 **Public URL:** https://coursepulse-site.vercel.app  
 **Supabase region:** `us-east-1` (United States)  
