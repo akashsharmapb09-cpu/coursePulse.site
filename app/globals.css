@@ -248,3 +248,38 @@ html, body { background: var(--paper); }
 .button.primary { background: #174b3a; }
 .button.primary:hover { background: #103a2d; }
 :focus-visible { scroll-margin-block: 8px; }
+
+
+/* Accessible motion: animate position, never fade readable text through
+   low-contrast intermediate opacity states during browser accessibility scans. */
+@keyframes cp-nav-enter {
+  from { transform: translateY(-12px); }
+  to { transform: translateY(0); }
+}
+@keyframes cp-rise {
+  from { transform: translateY(22px); }
+  to { transform: translateY(0); }
+}
+@keyframes cp-chip-enter {
+  from { transform: translateY(12px) scale(.96); }
+  to { transform: translateY(0) scale(1); }
+}
+@keyframes cp-visual-enter {
+  from { transform: translateY(24px) scale(.975) rotate(1deg); }
+  to { transform: translateY(0) scale(1) rotate(0); }
+}
+.has-scroll-motion [data-reveal],
+.has-scroll-motion [data-reveal].is-visible {
+  opacity: 1 !important;
+  transition: transform .72s cubic-bezier(.2,.75,.25,1);
+}
+.has-scroll-motion [data-reveal] {
+  transform: translateY(18px) scale(.995);
+}
+.has-scroll-motion [data-reveal].is-visible {
+  transform: translateY(0) scale(1);
+}
+.has-scroll-motion .feature-motion-card[data-reveal] {
+  opacity: 1 !important;
+  transition: transform .38s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .38s ease;
+}
