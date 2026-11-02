@@ -42,7 +42,7 @@ Every feedback form has `retention_days` constrained to 30-730 days. Supabase `p
 
 ## Browser security headers
 
-The application now applies a per-request Content Security Policy in middleware. A cryptographically random nonce is forwarded to Next.js and included in script-src with strict-dynamic; unsafe-inline, unsafe-eval and data: are not allowed as script sources. Plugin execution is blocked with object-src none, and framing is blocked with frame-ancestors none.
+The application now applies a per-request Content Security Policy in middleware. A cryptographically random nonce is forwarded to Next.js and included in script-src with strict-dynamic; unsafe-inline, unsafe-eval and data: are not allowed as script sources. Plugin execution and embedded frames are blocked with object-src none and frame-src none; framing of the CoursePulse app is blocked with frame-ancestors none.
 
 The policy keeps style-src-attr unsafe-inline only for React-rendered numeric/visual style attributes used by progress indicators and charts; it is not included in script-src. Scripts still require the per-response nonce or same-origin policy.
 
