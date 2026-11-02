@@ -8,6 +8,8 @@ const rateLimitMigration = readFileSync(
 );
 const http = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
 const nextConfig = readFileSync(resolve(process.cwd(), 'next.config.ts'), 'utf8');
+const csp = readFileSync(resolve(process.cwd(), 'lib/security-csp.ts'), 'utf8');
+const middleware = readFileSync(resolve(process.cwd(), 'middleware.ts'), 'utf8');
 
 describe('mutation security contract', () => {
   it('stores rate-limit buckets in a private, non-readable ledger', () => {
@@ -35,9 +37,19 @@ describe('mutation security contract', () => {
     expect(http).toMatch(/account:password-change/);
   });
 
-  it('sets a baseline content security policy', () => {
-    expect(nextConfig).toMatch(/Content-Security-Policy/);
-    expect(nextConfig).toMatch(/frame-ancestors 'none'/);
-    expect(nextConfig).toMatch(/object-src 'none'/);
+  it('uses a per-request nonce CSP without unsafe script execution sources', () => {
+    expect(middleware).toMatch(/crypto\.randomUUID\(\)/);
+    expect(middleware).toMatch(/requestHeaders\.set\('Content-Security-Policy'/);
+    expect(middleware).toMatch(/response\.headers\.set\('Content-Security-Policy'/);
+    expect(csp).toMatch(/script-src 'self' 'nonce-\$\{nonce\}' 'strict-dynamic'/);
+    expect(csp).not.toMatch(/script-src[^\n]*unsafe-inline/);
+    expect(csp).not.toMatch(/script-src[^\n]*unsafe-eval/);
+    expect(csp).not.toMatch(/script-src[^\n]*data:/);
+    expect(csp).toMatch(/object-src 'none'/);
+    expect(csp).toMatch(/frame-ancestors 'none'/);
+  });
+
+  it('does not rely on the deprecated browser XSS auditor', () => {
+    expect(nextConfig).toMatch(/X-XSS-Protection', value: '0'/);
   });
 });
