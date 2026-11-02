@@ -286,13 +286,21 @@ html, body { background: var(--paper); }
 
 
 /* Header links are deliberate touch targets, not just text labels. */
-.site-nav a {
+.site-nav > a,
+.site-nav nav a[href="/login"],
+.site-nav nav a[href="/signup"] {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   padding-block: 10px;
 }
-.site-nav nav a {
-  min-height: 44px;
-  padding-block: 10px;
+@media (min-width: 640px) {
+  .site-nav nav a[href="/about"],
+  .site-nav nav a[href="#features"],
+  .site-nav nav a[href="/contact"] {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-block: 10px;
+  }
 }
