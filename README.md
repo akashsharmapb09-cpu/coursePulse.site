@@ -10,6 +10,7 @@
 - docs/SEEDING.md — isolated test-data strategy.
 - docs/plan.md — current implementation plan.
 - docs/MASTER-PROMPT-AUDIT.md — evidence-based compliance status.
+- docs/COLLEGE-SUBMISSION-REPORT.md — verified submission summary, test evidence and open acceptance gates.
 
 
 CoursePulse is a role-isolated course feedback application built with Next.js App Router, TypeScript, Supabase Auth/Postgres, Prisma schema tooling, and aggregate-only reporting.
