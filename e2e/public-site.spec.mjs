@@ -95,6 +95,43 @@ test.describe('public-page browser smoke', () => {
     }
   }
 
+
+  test('serves a nonce-based CSP and RFC 9116 security contact', async ({ page, request }) => {
+    const response = await page.goto('/');
+    expect(response).not.toBeNull();
+
+    const policy = response.headers()['content-security-policy'];
+    expect(policy).toBeTruthy();
+    const scriptSource = policy.split(';').find((directive) => directive.trim().startsWith('script-src'));
+    expect(scriptSource).toBeTruthy();
+    expect(scriptSource).toContain("'strict-dynamic'");
+    expect(scriptSource).not.toContain("'unsafe-inline'");
+    expect(scriptSource).not.toContain("'unsafe-eval'");
+    expect(scriptSource).not.toContain('data:');
+
+    const nonceMatch = scriptSource.match(/'nonce-([^']+)'/);
+    expect(nonceMatch).not.toBeNull();
+    const nonce = nonceMatch[1];
+    const scriptNonces = await page.locator('script').evaluateAll((scripts) =>
+      scripts
+        .filter((script) => !['application/json', 'application/ld+json', 'importmap'].includes(script.type))
+        .map((script) => script.nonce)
+    );
+    expect(scriptNonces.length).toBeGreaterThan(0);
+    expect(scriptNonces.every((value) => value === nonce)).toBe(true);
+
+    expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("frame-src 'none'");
+    expect(policy).toContain("frame-ancestors 'none'");
+
+    const securityResponse = await request.get('/.well-known/security.txt');
+    expect(securityResponse.status()).toBe(200);
+    expect(securityResponse.headers()['content-type']).toContain('text/plain');
+    const securityText = await securityResponse.text();
+    expect(securityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
+    expect(securityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+  });
+
   test('home page has working sign-in and sign-up navigation targets', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('a[href="/login"]').first()).toBeVisible();
