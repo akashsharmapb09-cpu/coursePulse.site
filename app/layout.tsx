@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { DM_Sans, Manrope } from 'next/font/google';
 import './globals.css';
 
+// A per-request CSP nonce must be available during server rendering; static
+// prerendering would emit Next.js scripts without the request nonce.
+export const dynamic = 'force-dynamic';
+
 const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-dm-sans' });
 const manrope = Manrope({ subsets: ['latin'], display: 'swap', variable: '--font-manrope' });
 
