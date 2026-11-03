@@ -1,0 +1,42 @@
+{
+  "snapshotType": "framer-code-components",
+  "project": {
+    "title": "CoursePulse | Premium Landing Page",
+    "editorUrl": "https://framer.com/projects/JRiLySC0W07eTJbLMSAd",
+    "publishedUrl": "https://plum-badger-573658.framer.app",
+    "publishingStatus": "ready",
+    "productionUrl": "https://plum-badger-573658.framer.app"
+  },
+  "sourceFiles": [
+    {
+      "path": "framer-export/components/CoursePulseScrollStory.tsx",
+      "characters": 25309
+    },
+    {
+      "path": "framer-export/components/CoursePulseAnalyticsChart.tsx",
+      "characters": 12188
+    },
+    {
+      "path": "framer-export/components/CoursePulseMobileNav.tsx",
+      "characters": 9288
+    },
+    {
+      "path": "framer-export/components/MotionInteractions.tsx",
+      "characters": 5343
+    },
+    {
+      "path": "framer-export/components/CoursePulseShader.tsx",
+      "characters": 9433
+    },
+    {
+      "path": "framer-export/components/CoursePulseScrollProgress.tsx",
+      "characters": 1707
+    }
+  ],
+  "scope": {
+    "includesVisualCanvas": false,
+    "includesCustomCodeComponents": true,
+    "integratedIntoNextApp": false,
+    "note": "Framer canvas/layout remains managed and hosted in Framer; this is a custom code-component snapshot only."
+  }
+}
