@@ -12,3 +12,190 @@
 @media(max-width:760px){.auth-shell{display:block}.auth-art{display:none}.auth-panel{min-height:100vh;padding:28px 22px}.mobile-brand{display:flex}.auth-icon{margin-bottom:20px}.app-shell{display:block}.sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;flex-direction:row;align-items:center;gap:16px}.sidebar .brand{padding:0;font-size:16px}.side-workspace,.side-label,.sidebar-bottom{display:none}.side-nav{display:flex;gap:3px;margin-left:auto}.side-nav button{padding:9px;font-size:0;gap:0}.side-nav button span{display:none}.side-nav button svg{width:19px;height:19px}.topbar{height:auto;min-height:88px;padding:17px 21px}.topbar h1{font-size:20px}.content-area{padding:25px 20px 50px}.welcome-row h2{font-size:23px}.pulse-orb{width:105px;height:70px;font-size:9px;flex-direction:column;gap:4px}.metric-grid{gap:9px}.metric-card{padding:13px;grid-template-columns:31px 1fr;column-gap:8px}.metric-icon{width:30px;height:30px}.metric-card strong{font-size:18px}.course-grid,.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.sidebar{padding:12px 14px}.sidebar .brand{font-size:0;gap:0}.sidebar .brand-mark{font-size:20px}.side-nav{margin:0 auto}.topbar{padding:15px 16px;align-items:flex-start}.top-actions{gap:7px;flex-direction:column;align-items:flex-end}.top-actions .button{padding:8px 10px;font-size:10px}.role-chip{font-size:9px}.content-area{padding:23px 14px 40px}.welcome-row{align-items:flex-start}.welcome-row h2{font-size:20px}.welcome-row p{font-size:11px;max-width:250px}.pulse-orb{display:none}.metric-grid{grid-template-columns:1fr;gap:8px}.metric-card{grid-template-columns:36px 1fr;grid-template-rows:auto auto auto}.metric-icon{grid-row:span 3;width:34px;height:34px}.section-heading{align-items:flex-start;flex-direction:column}.section-heading .button{align-self:flex-start}.course-grid,.analytics-grid{grid-template-columns:1fr}.feedback-row{gap:8px;padding:10px}.feedback-row .button{font-size:0;width:36px;height:32px;padding:0}.export-actions{flex-wrap:wrap}.export-actions .button{font-size:10px;padding:8px}.privacy-banner small{line-height:1.45}.modal{padding:17px}.art-footer{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* CoursePulse premium motion system */
+:root {
+  --motion-out: cubic-bezier(.22, 1, .36, 1);
+  --motion-soft: cubic-bezier(.2, .75, .25, 1);
+  --motion-duration: 680ms;
+}
+
+@keyframes cp-page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cp-sidebar-enter {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes cp-topbar-enter {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cp-rise-in {
+  from { opacity: 0; transform: translateY(18px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cp-soft-scale {
+  from { opacity: 0; transform: translateY(12px) scale(.965); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cp-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cp-modal-in {
+  from { opacity: 0; transform: translateY(18px) scale(.965); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cp-gentle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes cp-orb-glow {
+  0%, 100% { opacity: .35; transform: scale(.94); }
+  50% { opacity: .72; transform: scale(1.04); }
+}
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* First paint: staged, short entrances */
+.auth-shell { animation: cp-page-enter 720ms var(--motion-out) both; }
+.auth-art .brand { animation: cp-rise-in 620ms var(--motion-out) 70ms both; }
+.auth-art .art-copy { animation: cp-rise-in 760ms var(--motion-out) 170ms both; }
+.auth-art .art-footer { animation: cp-page-enter 620ms var(--motion-out) 300ms both; }
+.auth-card { animation: cp-rise-in 760ms var(--motion-out) 100ms both; }
+.auth-icon { animation: cp-soft-scale 660ms var(--motion-out) 220ms both; }
+
+.app-shell { animation: cp-page-enter 620ms var(--motion-out) both; }
+.sidebar { animation: cp-sidebar-enter 700ms var(--motion-out) both; }
+.topbar { animation: cp-topbar-enter 680ms var(--motion-out) 70ms both; }
+.content-area > * { animation: cp-rise-in 680ms var(--motion-out) both; }
+.content-area > :nth-child(2) { animation-delay: 70ms; }
+.content-area > :nth-child(3) { animation-delay: 130ms; }
+.content-area > :nth-child(4) { animation-delay: 190ms; }
+.content-area > :nth-child(5) { animation-delay: 250ms; }
+.welcome-row > * { animation: cp-rise-in 720ms var(--motion-out) 120ms both; }
+
+.metric-card {
+  animation: cp-rise-in 720ms var(--motion-out) both;
+  transition: transform 420ms var(--motion-out), box-shadow 420ms var(--motion-out), border-color 300ms var(--motion-soft);
+}
+.metric-card:nth-child(1) { animation-delay: 80ms; }
+.metric-card:nth-child(2) { animation-delay: 150ms; }
+.metric-card:nth-child(3) { animation-delay: 220ms; }
+
+.course-card {
+  animation: cp-rise-in 720ms var(--motion-out) both;
+  transition: transform 460ms var(--motion-out), box-shadow 460ms var(--motion-out), border-color 300ms var(--motion-soft);
+}
+.course-card:nth-child(2) { animation-delay: 65ms; }
+.course-card:nth-child(3) { animation-delay: 130ms; }
+.course-card:nth-child(4) { animation-delay: 195ms; }
+.course-card:nth-child(5) { animation-delay: 260ms; }
+.course-card:nth-child(6) { animation-delay: 325ms; }
+.course-art-mark { transition: transform 520ms var(--motion-out), background-color 300ms var(--motion-soft); }
+
+.feedback-row {
+  animation: cp-rise-in 620ms var(--motion-out) both;
+  transition: background-color 280ms var(--motion-soft), padding-left 280ms var(--motion-out);
+}
+.feedback-row:nth-child(2) { animation-delay: 55ms; }
+.feedback-row:nth-child(3) { animation-delay: 110ms; }
+.feedback-row:nth-child(4) { animation-delay: 165ms; }
+.analytics-card {
+  animation: cp-rise-in 680ms var(--motion-out) both;
+  transition: transform 420ms var(--motion-out), box-shadow 420ms var(--motion-out);
+}
+.analytics-card:nth-child(2) { animation-delay: 70ms; }
+.analytics-card:nth-child(3) { animation-delay: 140ms; }
+
+/* Tactile controls and focused navigation */
+.button {
+  transition: transform 360ms var(--motion-out), background-color 260ms var(--motion-soft),
+    border-color 260ms var(--motion-soft), box-shadow 360ms var(--motion-out), color 220ms var(--motion-soft);
+}
+.button:active { transform: translateY(1px) scale(.975); }
+.button:disabled:active { transform: none; }
+.icon-button, .text-button, .mini-action {
+  transition: transform 320ms var(--motion-out), color 240ms var(--motion-soft),
+    background-color 240ms var(--motion-soft);
+}
+.side-nav button {
+  position: relative;
+  transition: transform 360ms var(--motion-out), color 240ms var(--motion-soft), background-color 240ms var(--motion-soft);
+}
+.side-nav button.active { box-shadow: inset 2px 0 0 #4d9368; }
+.side-nav button:active { transform: scale(.985); }
+.brand-mark { transition: transform 440ms var(--motion-out), box-shadow 440ms var(--motion-out); }
+.stack-form input, .stack-form textarea, .stack-form select, .input-wrap {
+  transition: border-color 260ms var(--motion-soft), box-shadow 300ms var(--motion-out), background-color 260ms var(--motion-soft);
+}
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid rgba(72, 133, 93, .34);
+  outline-offset: 3px;
+}
+
+/* Spatial feedback for the dashboard's signature elements */
+.pulse-orb { position: relative; isolation: isolate; overflow: hidden; animation: cp-gentle-float 6s ease-in-out 1.1s infinite; }
+.pulse-orb::before {
+  content: "";
+  position: absolute;
+  width: 82px;
+  height: 82px;
+  right: -26px;
+  top: -38px;
+  border-radius: 50%;
+  background: rgba(126, 180, 139, .16);
+  animation: cp-orb-glow 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.pulse-orb > * { position: relative; z-index: 1; }
+.alert { animation: cp-rise-in 440ms var(--motion-out) both; }
+.empty-state, .loading-panel { animation: cp-rise-in 620ms var(--motion-out) both; }
+
+/* Dialogs use a quick fade + spring-like settle */
+.modal-backdrop { animation: cp-backdrop-in 220ms var(--motion-soft) both; }
+.modal { transform-origin: center; animation: cp-modal-in 440ms var(--motion-out) both; }
+.modal > header .icon-button:hover { transform: rotate(90deg); }
+
+/* Hover lift is enabled only where a hover pointer exists */
+@media (hover: hover) and (pointer: fine) {
+  .button:not(:disabled):hover { transform: translateY(-2px); }
+  .button.primary:not(:disabled):hover { box-shadow: 0 10px 22px rgba(28, 89, 73, .18); }
+  .icon-button:hover { transform: translateY(-1px); }
+  .side-nav button:hover { transform: translateX(3px); }
+  .metric-card:hover { transform: translateY(-4px); border-color: #d4e4d8; box-shadow: 0 14px 34px rgba(31, 58, 47, .075); }
+  .course-card:hover { transform: translateY(-5px); border-color: #d5e4d9; box-shadow: 0 18px 42px rgba(31, 58, 47, .10); }
+  .course-card:hover .course-art-mark { transform: translateY(-3px) rotate(-4deg) scale(1.06); background: rgba(255,255,255,.82); }
+  .feedback-row:hover { background: #f8fbf8; padding-left: 19px; }
+  .analytics-card:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(31, 58, 47, .075); }
+  .brand:hover .brand-mark { transform: rotate(-7deg) scale(1.06); box-shadow: 0 7px 18px rgba(44, 100, 76, .16); }
+  .text-button:hover, .mini-action:hover { transform: translateX(2px); }
+}
+
+/* Small screens: restrained movement and no horizontal entrance */
+@media (max-width: 760px) {
+  .sidebar { animation: cp-page-enter 520ms var(--motion-out) both; }
+  .pulse-orb { animation: none; }
+  .course-card:hover, .metric-card:hover, .analytics-card:hover { transform: none; }
+  .feedback-row:hover { padding-left: 11px; }
+}
+
+/* Accessibility: completely remove non-essential motion when requested */
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell, .auth-art .brand, .auth-art .art-copy, .auth-art .art-footer, .auth-card, .auth-icon,
+  .app-shell, .sidebar, .topbar, .content-area > *, .content-area > :nth-child(n), .welcome-row > *,
+  .metric-card, .course-card, .feedback-row, .analytics-card, .alert, .empty-state, .loading-panel,
+  .modal-backdrop, .modal, .pulse-orb, .pulse-orb::before {
+    animation: none !important;
+  }
+  .button, .icon-button, .text-button, .mini-action, .side-nav button, .metric-card, .course-card,
+  .course-art-mark, .feedback-row, .analytics-card, .brand-mark, .stack-form input,
+  .stack-form textarea, .stack-form select, .input-wrap {
+    transition: none !important;
+  }
+  .button:active, .side-nav button:active { transform: none !important; }
+}
