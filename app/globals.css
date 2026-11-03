@@ -60,3 +60,144 @@
 .trend-column-track{display:flex;align-items:end;width:100%;height:105px;border-radius:7px 7px 0 0;background:#f0f5f1;overflow:hidden}
 .trend-column-track>div{width:100%;min-height:3px;border-radius:6px 6px 0 0;background:#83ae8f}
 .trend-column>small{color:#87948b;font-size:10px;white-space:nowrap}
+
+
+/* CoursePulse premium motion layer: additive UI polish only.
+   This release is based on the currently live production snapshot. */
+:root {
+  --cp-motion-out: cubic-bezier(.22, 1, .36, 1);
+  --cp-motion-soft: cubic-bezier(.2, .75, .25, 1);
+}
+@keyframes cp-enter-up {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(.992); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cp-enter-left {
+  from { opacity: 0; transform: translate3d(-13px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cp-enter-top {
+  from { opacity: 0; transform: translate3d(0, -10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cp-dialog-enter {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(.97); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cp-orb-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Calm staged first paint for sign-in and workspace surfaces */
+.auth-shell { animation: cp-enter-up 700ms var(--cp-motion-out) both; }
+.auth-art .brand { animation: cp-enter-up 620ms var(--cp-motion-out) 60ms both; }
+.auth-art .art-copy { animation: cp-enter-up 760ms var(--cp-motion-out) 150ms both; }
+.auth-art .art-footer { animation: cp-enter-up 620ms var(--cp-motion-out) 260ms both; }
+.auth-card { animation: cp-enter-up 760ms var(--cp-motion-out) 100ms both; }
+.auth-icon { animation: cp-enter-up 650ms var(--cp-motion-out) 220ms both; }
+
+.app-shell { animation: cp-enter-up 650ms var(--cp-motion-out) both; }
+.sidebar { animation: cp-enter-left 680ms var(--cp-motion-out) both; }
+.topbar { animation: cp-enter-top 620ms var(--cp-motion-out) 50ms both; }
+.content-area > * { animation: cp-enter-up 650ms var(--cp-motion-out) both; }
+.content-area > :nth-child(2) { animation-delay: 55ms; }
+.content-area > :nth-child(3) { animation-delay: 110ms; }
+.content-area > :nth-child(4) { animation-delay: 165ms; }
+.content-area > :nth-child(5) { animation-delay: 220ms; }
+.content-area > :nth-child(6) { animation-delay: 275ms; }
+
+/* Stagger key data surfaces while keeping the page geometry stable */
+.metric-grid > *,
+.course-grid > *,
+.analytics-grid > *,
+.search-result-grid > *,
+.comparison-grid > *,
+.rating-distribution-grid > *,
+.trend-chart-grid > * {
+  animation: cp-enter-up 660ms var(--cp-motion-out) both;
+}
+.metric-grid > :nth-child(2), .course-grid > :nth-child(2),
+.analytics-grid > :nth-child(2), .search-result-grid > :nth-child(2),
+.comparison-grid > :nth-child(2), .rating-distribution-grid > :nth-child(2),
+.trend-chart-grid > :nth-child(2) { animation-delay: 65ms; }
+.metric-grid > :nth-child(3), .course-grid > :nth-child(3),
+.analytics-grid > :nth-child(3), .search-result-grid > :nth-child(3),
+.comparison-grid > :nth-child(3), .rating-distribution-grid > :nth-child(3),
+.trend-chart-grid > :nth-child(3) { animation-delay: 130ms; }
+.course-grid > :nth-child(4), .analytics-grid > :nth-child(4),
+.search-result-grid > :nth-child(4), .comparison-grid > :nth-child(4),
+.trend-chart-grid > :nth-child(4) { animation-delay: 195ms; }
+.course-grid > :nth-child(5), .search-result-grid > :nth-child(5) { animation-delay: 260ms; }
+.course-grid > :nth-child(6), .search-result-grid > :nth-child(6) { animation-delay: 325ms; }
+
+.feedback-list > *,
+.admin-table tbody tr {
+  animation: cp-enter-up 560ms var(--cp-motion-out) both;
+}
+.feedback-list > :nth-child(2), .admin-table tbody tr:nth-child(2) { animation-delay: 55ms; }
+.feedback-list > :nth-child(3), .admin-table tbody tr:nth-child(3) { animation-delay: 110ms; }
+.feedback-list > :nth-child(4), .admin-table tbody tr:nth-child(4) { animation-delay: 165ms; }
+
+/* Tactile interaction feedback */
+.button, .icon-button, .text-button, .mini-action, .side-nav button, .search-result {
+  transition: transform 360ms var(--cp-motion-out), color 240ms var(--cp-motion-soft),
+    background-color 260ms var(--cp-motion-soft), border-color 260ms var(--cp-motion-soft),
+    box-shadow 360ms var(--cp-motion-out);
+}
+.button:not(:disabled):active, .icon-button:active, .text-button:active,
+.mini-action:active, .search-result:active { transform: scale(.975); }
+.metric-card, .analytics-card, .comparison-card, .rating-chart-card,
+.trend-chart-card, .course-card {
+  transition: transform 440ms var(--cp-motion-out), border-color 300ms var(--cp-motion-soft),
+    box-shadow 440ms var(--cp-motion-out);
+}
+.course-art-mark { transition: transform 440ms var(--cp-motion-out), box-shadow 440ms var(--cp-motion-out); }
+.feedback-row { transition: transform 360ms var(--cp-motion-out), background-color 280ms var(--cp-motion-soft); }
+.pulse-orb { animation: cp-orb-breathe 5.8s ease-in-out 900ms infinite; }
+
+@media (hover: hover) and (pointer: fine) {
+  .button:not(:disabled):hover { transform: translateY(-2px); }
+  .button.primary:not(:disabled):hover { box-shadow: 0 10px 24px rgba(28, 89, 73, .19); }
+  .icon-button:hover { transform: translateY(-1px); }
+  .side-nav button:hover { transform: translateX(3px); }
+  .metric-card:hover, .analytics-card:hover, .comparison-card:hover,
+  .rating-chart-card:hover, .trend-chart-card:hover {
+    transform: translateY(-5px);
+    border-color: #cfe0d2;
+    box-shadow: 0 16px 35px -28px rgba(35, 84, 53, .3);
+  }
+  .course-card:hover { transform: translateY(-5px); }
+  .course-card:hover .course-art-mark { transform: translateY(-3px) rotate(-5deg) scale(1.04); }
+  .feedback-row:hover { transform: translateX(3px); background: rgba(238, 246, 239, .58); }
+  .brand:hover .brand-mark { transform: rotate(-7deg) scale(1.06); }
+  .text-button:hover, .mini-action:hover { transform: translateX(2px); }
+}
+
+.modal-backdrop { animation: cp-enter-up 220ms var(--cp-motion-soft) both; }
+.modal { transform-origin: center; animation: cp-dialog-enter 440ms var(--cp-motion-out) both; }
+.alert, .empty-state, .loading-panel { animation: cp-enter-up 440ms var(--cp-motion-out) both; }
+
+@media (max-width: 760px) {
+  .app-shell, .sidebar, .topbar { animation-duration: 480ms; }
+  .pulse-orb { animation: none; }
+  .feedback-row:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell, .auth-art .brand, .auth-art .art-copy, .auth-art .art-footer,
+  .auth-card, .auth-icon, .app-shell, .sidebar, .topbar, .content-area > *,
+  .metric-grid > *, .course-grid > *, .analytics-grid > *, .search-result-grid > *,
+  .comparison-grid > *, .rating-distribution-grid > *, .trend-chart-grid > *,
+  .feedback-list > *, .admin-table tbody tr, .modal-backdrop, .modal, .alert,
+  .empty-state, .loading-panel, .pulse-orb {
+    animation: none !important;
+  }
+  .button, .icon-button, .text-button, .mini-action, .side-nav button, .search-result,
+  .metric-card, .analytics-card, .comparison-card, .rating-chart-card,
+  .trend-chart-card, .course-card, .course-art-mark, .feedback-row {
+    transition: none !important;
+  }
+  .button:active, .icon-button:active, .text-button:active, .mini-action:active,
+  .search-result:active, .feedback-row:hover { transform: none !important; }
+}
