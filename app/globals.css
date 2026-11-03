@@ -323,3 +323,12 @@ html, body { background: var(--paper); }
     line-height: 1.2;
   }
 }
+
+
+/* WCAG 2.2 target sizing: keep desktop navigation controls comfortably tappable. */
+.site-nav nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
