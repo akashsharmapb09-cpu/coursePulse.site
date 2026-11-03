@@ -106,11 +106,11 @@ export default async function Home() {
             <span className="cp-eyebrow"><span className="cp-eyebrow-mark" /> COURSE FEEDBACK, MADE USEFUL</span>
             <h1>Turn student feedback into <em>meaningful progress.</em></h1>
             <p className="cp-hero-description">
-              Collect course feedback, understand student experiences and make better academic decisions with CoursePulse.
+              Collect course feedback, understand student experiences and use those insights to shape better learning experiences.
             </p>
             <div className="cp-hero-actions">
               <Link href="/signup" className="cp-button cp-button-dark">Get started <ArrowRight size={17} /></Link>
-              <a href="#product" className="cp-button cp-button-quiet">Explore the product <ArrowDownRight size={17} /></a>
+              <a href="#features" className="cp-button cp-button-quiet">Explore features <ArrowDownRight size={17} /></a>
             </div>
             <div className="cp-hero-assurance">
               <span><ShieldCheck size={16} /> Role-aware access</span>
@@ -297,7 +297,7 @@ export default async function Home() {
           <div className="cp-footer-links">
             <div><strong>Explore</strong><a href="#product">Product</a><a href="#features">Features</a><a href="#workflow">How it works</a><a href="#security">Security</a></div>
             <div><strong>Workspace</strong><Link href="/login">Sign in</Link><Link href="/signup">Get started</Link><Link href="/contact">Contact</Link></div>
-            <div><strong>Information</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/refunds">Refunds</Link></div>
+            <div><strong>Information</strong><Link href="/about">About</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/cookies">Cookies</Link><Link href="/refunds">Refunds</Link></div>
           </div>
         </div>
         <div className="cp-footer-bottom"><span>© {new Date().getFullYear()} CoursePulse</span><span>Built for more thoughtful course feedback.</span></div>
