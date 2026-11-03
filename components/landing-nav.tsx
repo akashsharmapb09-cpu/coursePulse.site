@@ -17,7 +17,7 @@ export function LandingNav() {
           <span>CoursePulse</span>
         </Link>
 
-        <nav className={open ? 'cp-nav-links is-open' : 'cp-nav-links'} aria-label="Main navigation">
+        <nav className={open ? 'cp-nav-links is-open' : 'cp-nav-links'} id="coursepulse-navigation" aria-label="Main navigation">
           <a href="#product" onClick={close}>Product</a>
           <a href="#features" onClick={close}>Features</a>
           <a href="#workflow" onClick={close}>How it works</a>
