@@ -465,3 +465,15 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   .metric-card, .course-card, .feedback-row, .rating-chart-card, .trend-chart-card, .analytics-card { animation: none !important; }
 }
+
+
+/* Keep pointer tilt stronger than legacy hover transforms on workspace cards. */
+.metric-card.cp-tilt-card:hover,
+.course-card.cp-tilt-card:hover,
+.analytics-card.cp-tilt-card:hover,
+.rating-chart-card.cp-tilt-card:hover,
+.trend-chart-card.cp-tilt-card:hover,
+.comparison-card.cp-tilt-card:hover,
+.search-result.cp-tilt-card:hover {
+  transform: perspective(1000px) rotateX(var(--cp-tilt-x,0deg)) rotateY(var(--cp-tilt-y,0deg)) !important;
+}
