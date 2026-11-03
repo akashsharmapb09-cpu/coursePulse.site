@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 const ALLOWED_TYPES: EmailOtpType[] = ['signup', 'invite', 'magiclink', 'recovery', 'email_change'];
 
@@ -9,10 +10,7 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get('code');
   const tokenHash = url.searchParams.get('token_hash');
   const rawType = url.searchParams.get('type');
-  const rawNext = url.searchParams.get('next');
-  const nextPath = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')
-    ? rawNext
-    : '/dashboard';
+  const nextPath = safeRedirectPath(url.searchParams.get('next'), url.origin);
 
   const hasTokenHash = Boolean(tokenHash && rawType && ALLOWED_TYPES.includes(rawType as EmailOtpType));
   if (!code && !hasTokenHash) {

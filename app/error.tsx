@@ -1,0 +1,4 @@
+'use client';
+export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return <main className="grid min-h-screen place-items-center bg-[#f7faf7] px-6 text-center text-[#20352a]"><div><p className="text-sm font-bold tracking-widest text-[#a15b43]">SOMETHING WENT WRONG</p><h1 className="mt-4 text-3xl font-extrabold">We couldn’t load this page.</h1><p className="mt-4 text-sm text-[#718178]">Please try again. If the issue continues, contact your institution administrator.</p><button onClick={reset} className="mt-7 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Try again</button></div></main>;
+}

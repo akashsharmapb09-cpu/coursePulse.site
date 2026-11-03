@@ -1,141 +1,125 @@
-# Master Prompt Compliance Audit
+# CoursePulse master-prompt compliance audit
 
-**Audit date:** 2026-11-01  
-**Prompt reviewed:** `ULTIMATE MASTER DEVELOPMENT PROMPT — SMART COURSE FEEDBACK & ANALYTICS PORTAL` (1,926 lines / 25 sections)  
-**Repository reviewed:** `akashsharmapb09-cpu/coursePulse.site`, branch `main`  
-**Production:** `https://coursepulse-production.vercel.app`
+Audit date: 2 November 2026  
+Repository: akashsharmapb09-cpu/coursePulse.site  
+Branch: feat/master-prompt-completion  
+Latest application commit reviewed: 01c4f461fb60905b3a1ed0f94745428353ec5d25  
+Pull request: #2, open and draft  
+Production alias: https://coursepulse-site.vercel.app
 
 ## Executive verdict
 
-**NOT COMPLETE.** The project is a deployed, working foundation with authentication, basic course/feedback flows, database-backed aggregate reporting, export APIs, and initial security controls. It does not yet meet the master prompt's definition of a complete university feedback and analytics product.
+PARTIAL — the previous feature build is deployed to Vercel Production, but the newer feature branch hardening is not deployed yet and the project is not approved for real-college data or final production release. Core student, instructor, administrator, academic, feedback, search, analytics and public-site functionality is substantially implemented. Remaining release gates include exact-HEAD deployment and live-header verification, authenticated role journeys, adversarial privacy/security tests, accessibility/performance evidence, fresh admin MFA/recovery verification, Supabase Auth security configuration, institution-approved legal wording, backup/restore evidence and owner sign-off.
 
-This is a source-code and configuration audit. A feature is not marked PASS merely because a route or component exists. The user-facing and real database behavior must be tested before sign-off.
+A successful build is not proof of complete end-to-end operation.
 
-## Verified baseline
+## Latest automated evidence
 
-- Latest inspected production deployment is Vercel `READY`; the production alias returns HTTP 200 and serves the CoursePulse login page.
-- Latest build completed TypeScript checking, 5 Vitest tests, Next.js production compilation, and static generation.
-- Production dependency install audited 399 packages with 0 reported npm vulnerabilities.
-- Supabase has five applied migrations; the four core public tables have RLS enabled.
-- Supabase security advisor returned zero lints at the time of review.
-- The daily `coursepulse-retention-cleanup` cron job exists and is active at `17 20 * * *` (20:17 UTC).
-- Least-privilege grants were tightened: anonymous access to the four app tables is removed; authenticated users can update `users.full_name`, not `users.role`; authenticated users cannot delete response records.
-- `akashsharmapb09@gmail.com` has a verified Supabase account and its profile role is `ADMIN`.
-- Public route headers checked include HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. A Content-Security-Policy header was not present in the inspected response.
+GitHub Actions PR validation run #385 completed successfully on 2 November 2026. It checked the PR merge candidate `7b0823302d7f740c4f73ae9d9287d89230892aaa`, which includes feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`:
 
-## Section-by-section result
+- npm audit --audit-level=moderate: 0 reported vulnerabilities.
+- Prisma schema validation: PASS.
+- TypeScript: PASS.
+- Vitest: 34 test files / 130 tests PASS.
+- Next.js production build: PASS; static pages 19/19 generated.
 
-| Master prompt section | Status | Audit result |
+Vercel deployment `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` is `READY`, target `production`, and built exact feature SHA `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`. Its aliases include `https://coursepulse-site.vercel.app`; a separate alias lookup confirmed that the production domain maps to this deployment. Browser-level functional smoke testing remains NOT VERIFIED.
+
+The workflow uses placeholder public Supabase settings for build-time and local browser checks. The browser suite is being moved to the exact locally built production bundle so it does not rely on a stale hosted preview and does not write to Supabase. It does not authenticate real accounts, exercise every live RLS policy, or verify provider settings.
+
+## Implemented scope
+
+- Three roles with server-side profile lookup, RLS and admin TOTP AAL2 gates.
+- Separate new anonymous answer store and private eligibility/duplicate-prevention ledger. The legacy public.responses table remains for compatibility and was empty at cutover; it must not be described as anonymous legacy data.
+- Multi-question feedback forms with rating, number, choice, multiple select, yes/no and text types; seven categories; stable question IDs; reorder; deadlines; lifecycle and version restore.
+- Course management, course codes, departments, semesters, student enrollment and instructor-course assignments.
+- Student pending/completed form state, submission confirmation, eligible-form completion progress, display-name updates and deletion-request tracking.
+- Instructor/admin aggregate analytics, filters, rating distributions, donut charts, sentiment bars, reportable category-weighted radar, weekly trends, two-course comparison and CSV/XLS/XLSX/PDF exports.
+- Admin user management, audit history, academic setup, institution overview, low-participation alerts and deletion-request review.
+- Password reset/change, same-origin mutation checks, per-user rate limits and permission-aware debounced search with filtered navigation.
+- Public landing page with required headline/CTAs, About and Contact pages, Features section, footer, honest free-project refund information, technical policy pages, canonical/OG metadata, robots/sitemap, custom 404/error pages, SVG icon and web-app manifest.
+- Premium forest-green / warm-ivory workspace styling and consistent CoursePulse pulse mark across public, authentication and dashboard surfaces.
+- Per-request nonce-based CSP using `script-src 'self' 'nonce-…' 'strict-dynamic'`, with no `unsafe-inline`, `unsafe-eval` or `data:` in `script-src`; `object-src 'none'`, `frame-src 'none'`, `frame-ancestors 'none'` and `X-XSS-Protection: 0`.
+- RFC 9116 `/.well-known/security.txt` with HTTPS contact/policy/expiry/canonical fields; repository private vulnerability reporting still requires owner-side enablement and verification.
+- Static XSS sink regression checks prohibit raw HTML assignment, `dangerouslySetInnerHTML`, `document.write`, `eval` and `new Function` in app/components/lib code.
+- Playwright browser coverage now checks actual CSP nonce propagation into executable script tags and the security.txt HTTP response.
+- PRD, architecture, security, code style, API reference, testing guide, seed strategy, plan and current compliance audit.
+
+## Live database and privacy checks
+
+The active Supabase project has 36 migration-history entries through `20261102102457_coursepulse_private_fk_indexes`. The repository migration versions match the remote ledger. The new additive migration indexes the `reviewed_by` and `changed_by` foreign-key columns in private tables. A fresh performance advisor run no longer reports unindexed foreign keys; it still reports informational unused indexes on this low-traffic database. The database contains the private eligibility ledger, anonymous answer storage, feedback version history, rate-limit ledger and data-deletion request workflow.
+
+Read-only RLS inspection confirmed:
+
+- Student course SELECT policy requires a published course and matching course_enrollments row.
+- Student feedback SELECT requires enrollment in the published course and an open form, or a consumed eligibility record for a completed form.
+- public.anonymous_submissions has an explicit deny-direct-access policy for anon/authenticated.
+- Authenticated users have no direct SELECT or INSERT grant on private.data_deletion_requests.
+- Selected admin/security RPCs deny anon execution and require administrator role plus AAL2 inside the database.
+- The daily `coursepulse-retention-cleanup` cron job is active (`17 20 * * *` UTC); two successful runs are recorded, latest on 1 November 2026 20:17 UTC. The cleanup RPC is executable by `service_role` only. A rollback-only expiry smoke test proved old legacy and anonymous answers plus expired rate-limit rows are deleted; no QA rows persisted.
+- All 10 public tables have RLS enabled. The report-rate-limit migration's authenticated analytics/export paths return allowed in a rollback-only check; `anon` cannot execute the private limiter.
+- Rollback-only live-schema student/instructor integration tests passed course/enrollment scoping, one-time eligibility consumption, duplicate rejection, direct answer/eligibility read denial, five-response suppression, other-instructor course isolation, weekly response aggregation and free-text exclusion; post-rollback verification found zero synthetic rows persisted.
+
+New anonymous_submissions rows do not store student identifiers or eligibility references. Eligibility is separately stored in private.feedback_eligibility. Legacy public.responses historically stores student_id alongside answers; it was empty at cutover and remains for compatibility/retention. Do not claim cryptographic anonymity. Timing inference, complementary suppression and repeated-query differencing still need independent review.
+
+Deletion requests can be submitted by users and reviewed/audited by AAL2 administrators. The app has no privileged Supabase service-role credential, so an authorized project owner must perform and verify Auth-user deletion before a request is marked complete.
+
+Current live project has one course and one feedback form, one active ADMIN account with one verified TOTP factor, no student/instructor accounts and no feedback submissions. These checks did not create synthetic student data in production.
+
+## Deployment status
+
+- PR #2 remains open and draft; it has not been merged.
+- The intended college-demo deployment is the Vercel project `coursepulse-site` (project ID `prj_qUCS5b2uHOwwyqvOMg2FrC5uKnKd`) connected to `akashsharmapb09-cpu/coursePulse.site`.
+- The verified project domain is `https://coursepulse-site.vercel.app`.
+- Previous feature HEAD `cd4a5332c497d17d5c5d221cb20689bb8e46c22a` remains deployed to Vercel Production as `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i` (`READY`, target `production`); production alias `https://coursepulse-site.vercel.app` maps to it.
+- Current feature HEAD `01c4f461fb60905b3a1ed0f94745428353ec5d25` is committed to `feat/master-prompt-completion` and remains in draft PR #2; it is not the current production deployment.
+- Latest known READY branch-preview deployment is still the older CSP-helper commit `5aab9b17526ebd354ec22b81afddc89233a58fea`; therefore its HTTP headers do not yet verify the newer middleware/CSP/security.txt changes.
+- A new Vercel deployment could not be created during this work because the Vercel API returned the account's `api-deployments-free-per-day` limit (HTTP 402). Do not claim the branch head is live or promote an unverified build.
+- Preview and Production environments share the same Supabase project URL. Treat preview writes as production writes; use a disposable QA DB before running browser journeys that create records.
+
+## Master-prompt section status
+
+| Section | Status | Evidence / remaining work |
 |---|---|---|
-| 1. Role and expectations | PARTIAL | A working implementation exists, but the required full audit, feature coverage, tests, and final acceptance evidence are not complete. |
-| 2. Existing project audit | PARTIAL | Repository, dependencies, routes, schema, auth, headers, and deployment were inspected in this review. No complete pre-change audit report, broken-link sweep, secret-history scan, console audit, or viewport test evidence was found. |
-| 3. Project overview | PARTIAL | The product domain and three roles are reflected in the code. Department, semester, enrollment, institution-wide workflows, and complete user journeys are absent. |
-| 4. Technology stack | PARTIAL | Next.js App Router, React, TypeScript, Tailwind, Lucide, Zod, Supabase/Postgres, and a Prisma schema exist. shadcn/ui, Recharts, Framer Motion, React Hook Form, and a real Prisma-backed application data layer are not present. |
-| 5. Roles and permissions | PARTIAL | STUDENT, INSTRUCTOR, and ADMIN roles plus server-side checks and RLS exist. User/role management, instructor assignment, department/semester management, and admin audit logging UI are missing. |
-| 6. Core application features | PARTIAL | Basic auth, courses, one-question form creation, student response submission, aggregate analytics, and export endpoints exist. Many required workflows listed below are missing or incomplete. |
-| 7. Database design and minimization | PARTIAL | Four tables, foreign keys, constraints, indexes, RLS, and retention exist. The broader entity model (profiles, departments, enrollment, instructor assignment, semesters, eligibility/submission separation, comments, audit logs, consent, deletion requests) is not implemented. |
-| 8. Security | PARTIAL | Auth provider, server-side role checks, input schemas, RLS, restricted grants, and several security headers exist. Rate limiting, CSRF/Origin controls, CSP, security test suite, admin audit log, MFA enforcement, secret scanning evidence, and session/password recovery controls are missing or unverified. |
-| 9. Privacy, children, deletion | PARTIAL | Basic minimization and retention are present. Anonymous eligibility/answer separation, a user deletion-request workflow, consent records, children's data process, cookie consent, and a published privacy policy are absent. |
-| 10. Navigation and clickable-element audit | PARTIAL | Logo links to the dashboard and the current dashboard navigation works at a basic level. A full clickable-element audit, public footer, email/telephone links, deep-linked KPI cards, and all prompt navigation destinations are absent. |
-| 11. Smart search | FAIL | No global permission-aware search UI or search API exists. |
-| 12. SEO and page structure | FAIL | Root redirects to login; there is no public marketing landing page, sitemap, robots route, canonical/OG setup, or per-page metadata strategy. Private routes are not explicitly documented as noindex in metadata. |
-| 13. No AI-generated filler | PARTIAL | No AI-generated features or fabricated testimonials were found in the inspected app. A full content truthfulness audit has not been recorded. |
-| 14. Performance | FAIL | No Lighthouse or Core Web Vitals measurements are recorded. The under-2-second target, INP, CLS, mobile/desktop route performance, and query latency have not been measured. |
-| 15. Premium UI/UX and accessibility | PARTIAL | The existing interface has a coherent custom design and responsive CSS breakpoints. The requested palette/components differ; contrast, WCAG 2.2 AA, keyboard, focus, assistive technology, and the full viewport matrix are not tested. |
-| 16. Website experience | FAIL | No public landing page, full footer, feature/about/contact pages, sticky public CTA, dedicated feedback thank-you page, or branded custom 404/error boundary was found. |
-| 17. Legal/privacy pages | FAIL | Privacy, terms, and cookie preference pages/components are absent. Refund policy is conditional on payment; the product must first establish whether it is free or paid before policy wording is created. |
-| 18. Product analytics installation | FAIL | No analytics provider/configuration or consent-aware event delivery was found. |
-| 19. Documentation | PARTIAL | README, security documentation, Prisma schema, environment example, migrations, and a small test exist. PRD, architecture, codestyle, AGENTS, plan, seed, API reference, and testing documentation are missing. |
-| 20. Recommended project structure | PARTIAL | The current small App Router structure is modular enough for the implemented scope, but the student/instructor/admin modules, services, security helpers, and test layers from the proposed structure are largely absent. |
-| 21. Testing and QA | PARTIAL | Typecheck, production build, npm audit, and five export-focused unit tests pass. There is no evidence of integration, E2E, browser, RLS role-matrix, IDOR, CSRF, XSS, rate-limit, navigation, SEO, accessibility, or performance testing. |
-| 22. Final security and quality checklist | FAIL | A subset of security/deployment items is verified; most detailed security, privacy, functionality, SEO, performance, accessibility, and documentation checkboxes remain open. |
-| 23. Implementation roadmap | PARTIAL | Foundation phases have been implemented, but there is no `plan.md` and phases for full dashboards, administration, analytics/comparison, search, SEO, legal/privacy, hardening, QA, and full documentation are not complete. |
-| 24. Final engineering report | PARTIAL | This audit records current evidence and remaining risks. Several measurements and security tests still need to be executed before a final PASS report is possible. |
-| 25. Final senior developer instruction | PARTIAL | The project is deployed and some hardening is verified, but the final product goal is not achieved yet. |
+| 1. Engineering role and quality | PARTIAL | Feature branch and CI pass; end-to-end acceptance not met. |
+| 2. Existing project audit | PARTIAL | Repository, routes, schema, DB, CI and deployment reviewed; browser link/button/console audit and smoke test open. |
+| 3. Product and personas | PASS | PRD describes student, instructor and admin workflows. |
+| 4. Technology stack | PASS | Next.js 15.5.28, React 19, TypeScript, Supabase, Prisma schema tooling, Zod and exports. |
+| 5. Roles and permissions | PARTIAL | RBAC/RLS and AAL2 controls exist; exhaustive role-matrix, cross-resource IDOR and re-identification tests open. |
+| 6. Core application functionality | PARTIAL | Core academic, feedback, student, admin and instructor flows present; privacy-reviewed comments and advanced reporting remain open. |
+| 7. Database design | PARTIAL | Entity model, RLS and anonymity/eligibility separation present; full migration replay on disposable DB and adversarial role matrix open. |
+| 8. Application security | PARTIAL | Auth, RLS, Zod, same-origin checks, rate limits, audit and MFA gates; nonce CSP, RFC 9116 security.txt and unsafe-sink regression tests added. Private reporting enablement, live header check and adversarial XSS/CSRF/IDOR review remain open. |
+| 9. Privacy, minors and deletion | PARTIAL | Technical privacy docs and deletion request flow; actual Auth deletion owner operation, consent/minor policy and legal approval open. |
+| 10. Navigation and clickable elements | PARTIAL | Core navigation, search-result filters, landing/footer and custom errors exist; complete browser click/link audit open. |
+| 11. Smart search | PASS | Debounced authorized search, filtered result navigation and per-user rate limit; answer text excluded. |
+| 12. SEO and page structure | PARTIAL | Metadata, canonical/OG, robots/sitemap, private noindex, SVG icon and manifest exist; final custom-domain and browser validation open. |
+| 13. Authentic product content | PASS | No fabricated partnerships, testimonials or live metrics; hero artwork is labelled illustrative. |
+| 14. Performance | BLOCKED | No Lighthouse or field Core Web Vitals measurements yet. |
+| 15. UI/UX and accessibility | PARTIAL | Responsive interface exists; WCAG 2.2 AA, contrast, keyboard and screen-reader checks unverified. |
+| 16. Public website | PARTIAL | Landing, About, Contact, Features, footer, refund info and error pages exist; verified institution support details remain missing. |
+| 17. Legal/privacy policies | BLOCKED | Policy pages are technical drafts; institution identity, jurisdiction, legal basis, retention, minor policy and legal approval required. |
+| 18. Product analytics | NOT APPLICABLE to current build | No third-party analytics provider is configured. Do not add non-essential tracking without approved consent decision. |
+| 19. Documentation | PASS | PRD, architecture, security, code style, AGENTS, plan, API, testing and seed strategy docs present. |
+| 20. Project structure | PASS | Existing App Router structure is modular; no empty scaffolding added. |
+| 21. Testing and QA | PARTIAL | Unit/type/build checks and XSS/CSP contract tests pass on recent branch CI runs; exact-HEAD browser suite is being rerun locally against the build. Live deployment smoke, role-specific E2E, full RLS and device/accessibility evidence remain open. |
+| 22. Final quality checklist | PARTIAL | Selected controls verified; production, browser, privacy, legal and performance gates open. |
+| 23. Implementation roadmap | PARTIAL | Core phases implemented; final QA/release phase not complete. |
+| 24. Engineering report | PARTIAL | This report records evidence and blockers; final PASS report awaits release-gate evidence. |
+| 25. Production-ready goal | BLOCKED | Current branch HEAD is not deployed; only the earlier feature build is on the production alias. Exact-HEAD deploy, isolated staging, adversarial QA, accessibility/performance, legal and owner/institution sign-off remain. |
 
-## Core functional gaps
+## Remaining release blockers
 
-### Authentication and account lifecycle
+1. Public URL smoke: latest preview deployment is READY for exact HEAD, but root/login/signup/privacy routes and full browser journeys still need real-browser verification.
+2. Auth redirects: the app builds callback URLs from `NEXT_PUBLIC_APP_URL`; confirm Supabase Auth Site URL and allowed redirect URL include `https://coursepulse-site.vercel.app/auth/confirm`, then test signup confirmation and password reset. The preview environment currently shares the production database and public app origin.
+3. Disposable staging: Preview and Production share the live Supabase project; write-based browser E2E requires an isolated QA database.
+4. Supabase Auth settings: leaked-password protection remains disabled in Security Advisor; enable where supported by the Free plan or document explicit risk acceptance.
+5. Admin MFA: one active admin has a verified TOTP factor; verify fresh sign-in reaches AAL2 and recovery works.
+6. Backup/restore: no restore drill evidence; downloadable database backups may require a paid Supabase plan.
+7. Legal/consent: institution/controller identity, verified contacts, jurisdiction, student/minor policy, legal basis, retention and policy approval must be supplied.
+8. Accessibility/performance: no WCAG 2.2 AA audit, viewport matrix or Lighthouse/Core Web Vitals results.
+9. Authorization/security: exhaustive student/instructor/admin RLS matrix, cross-resource IDOR, XSS/CSRF and distributed abuse tests remain open.
+10. Anonymity: minimum-five suppression is not proof against differencing; timing/re-identification review remains, and free-text comment release is intentionally not implemented.
 
-**Present:** signup, password login, logout, email confirmation callback, protected dashboard route, server-side profile/role lookup.
+## Release recommendation
 
-**Missing or not verified:** forgot password, recovery completion, authenticated password change, session revocation after credential change, account suspension, user enumeration resistance tests, login/signup/password-reset rate limits, and admin MFA enforcement.
-
-### Student experience
-
-**Present:** published course visibility under RLS, open form listing, response submission, duplicate submission constraint.
-
-**Missing:** enrollment model, pending/completed state, submission history, course codes, instructor/department details, due dates, participation progress, and course-specific feedback deadlines.
-
-### Feedback form management
-
-The dashboard's quick-create form creates exactly one question and exposes only rating or text in its UI. The API schema supports up to 30 questions and additional types, but this is not a complete administrator form builder.
-
-Missing UI/workflows include form list management by admin, edit/delete, activate/deactivate, deadlines, assign-to-course workflows, question add/edit/delete/reorder, categories, mandatory configuration, and form version/change controls.
-
-### Anonymous feedback
-
-The current `responses` table stores `student_id` alongside `answers` and has a unique constraint on `(feedback_id, student_id)`. This prevents duplicate submissions but keeps a direct identity-to-response relationship. Instructors are denied raw response reads and the aggregate RPC suppresses groups under five; administrators have a raw-response read policy.
-
-**Therefore the current design is access-restricted/pseudonymous feedback, not anonymous feedback as specified.** The prompt explicitly requires separating eligibility from anonymous answers. This requires a redesigned submission/eligibility model and careful migration; the current UI should not promise complete anonymity.
-
-### Instructor and administrator experiences
-
-The same dashboard component is rendered for all roles with some role-based controls. There is no separate full admin console.
-
-Missing: instructor KPI suite, category charts, rating distribution, semester trends, anonymized comments/theme views, historical comparison, and course comparison. Admin user/role, instructor assignment, department, semester, form/question, settings, audit-log, institution KPI, low-participation, and department comparison workflows are missing.
-
-### Analytics and exports
-
-**Present:** database-backed aggregate RPC, course scoping, minimum group size 5, CSV/XLS/XLSX/PDF export API.
-
-**Missing:** all prompt filters, chart visualizations, category/semester/institution comparisons, course comparison UI, report metadata (instructor/semester/category trends), and an XLSX download link in the dashboard UI. The XLS endpoint is documented as an HTML Spreadsheet document served with an Excel MIME type, not a native BI workbook.
-
-## Security and operational gaps
-
-- CSP was not present in the inspected live response.
-- Rate limiting/distributed throttling and bot protection were not found in the app.
-- CSRF token / Origin / Referer checks for mutations were not found in the inspected handlers.
-- No dedicated security integration/E2E test suite exists.
-- No admin action audit log table or UI exists.
-- The current response model retains student identity mapping; this conflicts with the required anonymous-submission separation.
-- Private file storage/upload flows are not implemented; this item is not currently applicable to an app with no upload feature, but must be addressed before adding uploads.
-- No webhooks or AI features were found; webhook signature and prompt-injection controls are therefore not applicable to the current feature set.
-- The PostgreSQL default-privilege hardening migration covers objects created by role `postgres`; the Supabase-managed `supabase_admin` role retains its existing default ACL. Review this with Supabase's managed-role constraints before claiming blanket future-object defaults are hardened.
-- Production environment listing showed Supabase URL, publishable key, and app URL. `DATABASE_URL` and `DIRECT_URL` for Prisma CLI operations were not present in the reviewed Vercel environment list. The runtime app currently uses Supabase session clients rather than Prisma queries.
-- No repository-history secret scan or verified credential rotation report was found. `.gitignore` excludes `.env*` other than `.env.example`; this is not a substitute for a historical scan.
-
-## SEO, content, and public site
-
-The root currently sends signed-out visitors to `/login`. There is no public landing page carrying the prompt's specified headline, description, and CTAs. No privacy/terms/contact/features pages or footer exist. There are no sitemap/robots endpoints or Open Graph/canonical strategy. The current shared metadata gives the login page a title/description but does not satisfy the per-page SEO requirements.
-
-## Documentation and QA gaps
-
-Existing: `README.md`, `docs/SECURITY.md`, `prisma/schema.prisma`, `.env.example`, `.gitignore`, five Supabase migrations, `tests/exports.test.ts`.
-
-Missing: `PRD.md`, `architecture.md`, `codestyle.md`, `AGENTS.md`, `plan.md`, seed script, API documentation, testing guide, and dedicated integration/E2E/security test directories. The current five tests focus on CSV escaping, spreadsheet formula neutralization, aggregate projection, empty CSV headers, and XLSX archive generation.
-
-## Prioritized completion plan
-
-1. **Privacy model redesign:** separate eligibility/duplicate prevention from anonymous answer storage; define exactly what admins may see; migrate safely; update UI copy and test instructor/admin/student RLS.
-2. **Identity lifecycle:** password recovery/change, session invalidation, suspension, MFA policy, rate limits, generic auth responses, and audit trails.
-3. **Admin management:** users/roles, instructors, departments, semesters, courses/assignments, form/question lifecycle, deadlines, settings, audit logs.
-4. **Student experience:** enrollments, pending/completed forms, deadlines, participation, history, submission confirmation.
-5. **Instructor analytics:** real charts, course/category/semester filters, historical trends, anonymized comment treatment, insights, course comparison.
-6. **Reporting:** complete UI download options and context-rich reports, preserving aggregate privacy.
-7. **Search/navigation:** permission-aware global search and a full link/button audit.
-8. **Public website/SEO/legal:** landing page, verified content, footer, policy pages reviewed by the institution, cookie controls if needed, metadata, canonical, robots, sitemap, OG, and custom error pages.
-9. **Security hardening:** CSP, CSRF/Origin, distributed rate limiting, bot controls where appropriate, secret/history scanning, RLS role-matrix tests, IDOR/XSS tests, privacy and admin audit.
-10. **Accessibility/performance:** WCAG 2.2 AA review, full viewport/browser tests, Lighthouse and real Core Web Vitals measurements, pagination/query optimization.
-11. **Documentation/QA:** required documentation set, seed strategy, API docs, integration/E2E/security tests, final evidence-backed report.
-12. **Deployment sign-off:** production smoke tests for all roles and flows after migrations; verify backups/restore strategy and cron execution history.
-
-## Owner/institution inputs needed later
-
-The code can be prepared without inventing these facts, but production policy copy and institution workflows require decisions from the owner/institution: institution name/branding, department and semester catalogue, verified support contact, academic deadlines, whether students may be minors and the institution's consent policy, data retention/legal basis, paid/free status, and analytics/cookie-consent policy.
-
-## Sign-off
-
-**Current status: NOT READY for the master prompt's final acceptance.**
-
-Production deployment is healthy for the current implemented scope, but production health is not equivalent to feature completeness. Do not mark the whole master prompt PASS until all missing items above are implemented and independently tested.
+Keep PR #2 in draft. The current feature head is not yet serving the `.site` production alias. Do not merge into `main` or declare the college project fully accepted until the exact branch head is deployed, nonce CSP and security.txt are verified over HTTPS, public/browser and role-specific E2E pass, isolated staging and adversarial security/privacy tests are evidenced, accessibility/performance checks are complete, and Auth dashboard plus institution/owner decisions are signed off.
