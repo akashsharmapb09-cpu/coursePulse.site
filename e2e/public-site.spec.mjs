@@ -161,6 +161,13 @@ test.describe('public-page browser smoke', () => {
     const securityText = await securityResponse.text();
     expect(securityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
     expect(securityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+
+    const rootSecurityResponse = await request.get('/security.txt');
+    expect(rootSecurityResponse.status()).toBe(200);
+    expect(rootSecurityResponse.headers()['content-type']).toContain('text/plain');
+    const rootSecurityText = await rootSecurityResponse.text();
+    expect(rootSecurityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
+    expect(rootSecurityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
   });
 
   test('home page has working sign-in and sign-up navigation targets', async ({ page }) => {
