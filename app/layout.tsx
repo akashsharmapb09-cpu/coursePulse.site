@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-dm-sans' });
 const manrope = Manrope({ subsets: ['latin'], display: 'swap', variable: '--font-manrope' });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coursepulse-production.vercel.app';
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coursepulse-site.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
