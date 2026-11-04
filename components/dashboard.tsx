@@ -1,10 +1,10 @@
 'use client';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, KeyRound, LayoutDashboard, LogOut, Plus, Save, Settings as SettingsIcon, ShieldCheck, UserRound, Users, X } from 'lucide-react';
+import { Activity, ArrowDownToLine, BookOpen, Camera, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, KeyRound, LayoutDashboard, LogOut, Plus, Save, Settings as SettingsIcon, ShieldCheck, Trash2, UserRound, Users, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT' };
+type Profile = { id: string; email: string | null; full_name: string; role: 'ADMIN'|'INSTRUCTOR'|'STUDENT'; avatar_path?: string | null; avatar_url?: string | null };
 type Course = { id: string; title: string; description: string; status: string; created_at: string; instructor_id: string };
 type Feedback = { id: string; course_id: string; title: string; description: string; is_open: boolean; created_at: string; form_schema?: Question[]; course?: { title: string } };
 type Question = { id: string; label: string; type: string; required: boolean; options?: string[] };
@@ -34,6 +34,10 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url ?? null);
+  const [avatarPath, setAvatarPath] = useState<string | null>(profile.avatar_path ?? null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true); setError('');
@@ -72,6 +76,68 @@ export function Dashboard({ profile }: { profile: Profile }) {
       setAccountName(name); setSavedAccountName(name); setNotice('Your account details have been updated.'); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not update your account.'); }
     finally { setBusy(false); }
+  }
+  async function uploadAvatar(e: ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    setAvatarBusy(true); setError(''); setNotice('');
+    try {
+      const extensions: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+      const extension = extensions[file.type];
+      if (!extension) throw new Error('Choose a JPG, PNG, or WEBP image.');
+      if (file.size > 2 * 1024 * 1024) throw new Error('Profile photos must be 2 MB or smaller.');
+      const supabase = createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error('Your session has expired. Please sign in again.');
+      const objectPath = `${user.id}/avatar-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(objectPath, file, {
+        cacheControl: '3600',
+        contentType: file.type,
+        upsert: false,
+      });
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: signedData, error: signedError } = await supabase.storage.from('avatars').createSignedUrl(objectPath, 3600);
+      if (signedError || !signedData?.signedUrl) {
+        await supabase.storage.from('avatars').remove([objectPath]);
+        throw new Error(signedError?.message || 'Could not prepare the profile photo preview.');
+      }
+      const { error: metadataError } = await supabase.auth.updateUser({ data: { avatar_path: objectPath } });
+      if (metadataError) {
+        await supabase.storage.from('avatars').remove([objectPath]);
+        throw new Error(metadataError.message);
+      }
+      const previousPath = avatarPath;
+      setAvatarPath(objectPath);
+      setAvatarUrl(signedData.signedUrl);
+      setNotice('Your profile photo has been updated.');
+      if (previousPath && previousPath !== objectPath) {
+        await supabase.storage.from('avatars').remove([previousPath]);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not upload your profile photo.');
+    } finally {
+      setAvatarBusy(false);
+      input.value = '';
+    }
+  }
+  async function removeAvatar() {
+    if (!avatarPath) return;
+    setAvatarBusy(true); setError(''); setNotice('');
+    try {
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({ data: { avatar_path: null } });
+      if (updateError) throw new Error(updateError.message);
+      const previousPath = avatarPath;
+      setAvatarPath(null); setAvatarUrl(null);
+      const { error: removeError } = await supabase.storage.from('avatars').remove([previousPath]);
+      if (removeError) throw new Error(removeError.message);
+      setNotice('Your profile photo has been removed.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove your profile photo.');
+    } finally {
+      setAvatarBusy(false);
+    }
   }
   async function updatePassword(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
@@ -124,7 +190,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
         <button className={tab==='settings'?'active':''} onClick={()=>void changeTab('settings')}><SettingsIcon size={17}/> Settings</button>
         <button className={tab==='faq'?'active':''} onClick={()=>void changeTab('faq')}><CircleHelp size={17}/> FAQ & help</button>
       </nav>
-      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Student responses stay private. Reporting shows aggregates only.</p></div><div className="user-profile"><div className="avatar">{(savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{savedAccountName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
+      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Student responses stay private. Reporting shows aggregates only.</p></div><div className="user-profile"><div className="avatar">{avatarUrl ? <img src={avatarUrl} alt="" /> : (savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{savedAccountName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
     </aside>
     <main className="main-area">
       <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{pageTitle[tab]}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
@@ -144,6 +210,21 @@ export function Dashboard({ profile }: { profile: Profile }) {
         {tab==='account' && <div className="account-grid">
           <section className="settings-panel">
             <div className="settings-panel-head"><span className="settings-icon"><UserRound size={19}/></span><div><h3>Personal information</h3><p>Manage the details shown across your CoursePulse workspace.</p></div></div>
+            <div className="profile-photo-control">
+              <div className="account-avatar-large profile-avatar-preview">{avatarUrl ? <img src={avatarUrl} alt="Your current profile photo" /> : (savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div>
+              <div className="profile-photo-copy">
+                <b>Profile photo</b>
+                <p>Choose a clear photo so your workspace feels personal.</p>
+                <div className="profile-photo-actions">
+                  <button type="button" className="button subtle compact" onClick={()=>avatarInputRef.current?.click()} disabled={avatarBusy}>
+                    <Camera size={15}/> {avatarBusy ? 'Uploading…' : avatarUrl ? 'Change photo' : 'Upload photo'}
+                  </button>
+                  {avatarUrl && <button type="button" className="text-button remove-avatar-button" onClick={()=>void removeAvatar()} disabled={avatarBusy}><Trash2 size={14}/> Remove</button>}
+                </div>
+                <small>JPG, PNG or WEBP · Up to 2 MB · Private to your account</small>
+                <input ref={avatarInputRef} className="visually-hidden-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} disabled={avatarBusy} tabIndex={-1} aria-label="Choose profile photo"/>
+              </div>
+            </div>
             <form className="stack-form settings-form" onSubmit={saveAccount}>
               <label>Full name<input value={accountName} onChange={e=>setAccountName(e.target.value)} minLength={2} maxLength={120} required placeholder="Your name"/></label>
               <label>Email address<input value={profile.email||''} disabled readOnly/><small className="field-hint">Your sign-in email is managed by your authentication account.</small></label>
@@ -152,7 +233,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
             </form>
           </section>
           <aside className="settings-panel account-summary">
-            <div className="account-avatar-large">{(savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div>
+            <div className="account-avatar-large">{avatarUrl ? <img src={avatarUrl} alt="" /> : (savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div>
             <span className="eyebrow">YOUR WORKSPACE IDENTITY</span>
             <h3>{savedAccountName||'CoursePulse user'}</h3>
             <p>{profile.email||'Email not available'}</p>
@@ -187,6 +268,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
               <details className="faq-item"><summary><span>How do students submit feedback?</span><ChevronDown size={17}/></summary><p>Students can open an available feedback form from a published course and submit their response while signed in.</p></details>
               <details className="faq-item"><summary><span>Can I export analytics?</span><ChevronDown size={17}/></summary><p>Members with analytics access can export the available aggregate reports in CSV, XLS, or PDF format.</p></details>
               <details className="faq-item"><summary><span>How do I change my name or password?</span><ChevronDown size={17}/></summary><p>Open Account to update your display name. Open Settings to change your sign-in password and manage your interface motion preference.</p></details>
+              <details className="faq-item"><summary><span>How do I add or change my profile photo?</span><ChevronDown size={17}/></summary><p>Open Account and use Upload photo or Change photo. JPG, PNG, and WEBP images up to 2 MB are supported. Your photo is stored privately and only your signed-in account can access it.</p></details>
               <details className="faq-item"><summary><span>How is workspace access protected?</span><ChevronDown size={17}/></summary><p>CoursePulse uses signed-in accounts and role-based permissions. Your available workspace actions depend on the role assigned to your account.</p></details>
             </div>
             <aside className="faq-support-panel"><span className="settings-icon"><Users size={19}/></span><h3>Need a hand?</h3><p>Start with your account details or workspace settings to manage your access and preferences.</p><button className="button subtle full" onClick={()=>void changeTab('account')}><UserRound size={15}/> Open account</button><button className="button primary full" onClick={()=>void changeTab('settings')}><SettingsIcon size={15}/> Open settings</button></aside>
