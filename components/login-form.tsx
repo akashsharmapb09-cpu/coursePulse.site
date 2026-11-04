@@ -232,9 +232,7 @@ export function LoginForm() {
           {phoneStep === 'number' ? (
             <form onSubmit={e=>{
               e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const enteredPhone = String(formData.get('phone') ?? '');
-              void requestPhoneCode(enteredPhone);
+              void requestPhoneCode(phoneNumber);
             }} className="stack-form">
               {mode === 'signup' && (
                 <label>Full name
@@ -250,17 +248,17 @@ export function LoginForm() {
                   id="coursepulse-phone-number"
                   className="phone-number-input"
                   name="phone"
-                  type="text"
+                  type="tel"
                   inputMode="numeric"
-                  autoComplete="tel-national"
+                  autoComplete="tel"
                   autoCapitalize="off"
                   spellCheck={false}
                   maxLength={15}
-                  defaultValue={phoneNumber}
+                  value={phoneNumber}
+                  onChange={e => setPhoneNumber(e.currentTarget.value.replace(/[^0-9]/g, '').slice(0, 15))}
                   required
                   placeholder="9876543210"
                   aria-label="Mobile number"
-                  style={{ position: 'relative', zIndex: 3, pointerEvents: 'auto', userSelect: 'text', WebkitUserSelect: 'text', touchAction: 'manipulation' }}
                 />
               </div>
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
