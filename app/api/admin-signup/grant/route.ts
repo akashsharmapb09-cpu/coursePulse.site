@@ -49,7 +49,11 @@ export async function POST(request: NextRequest) {
     if (provider !== 'google' && !providers.includes('google')) {
       return NextResponse.json({ error: 'Complete Google sign-in to activate this admin account.' }, { status: 403 });
     }
-  } else if (!hasDirectCode) {
+  } else if (hasDirectCode) {
+    if (!(user.email_confirmed_at || user.phone_confirmed_at || user.confirmed_at)) {
+      return NextResponse.json({ error: 'Verify your email or mobile number before activating Admin.' }, { status: 403 });
+    }
+  } else {
     return NextResponse.json({ needsCode: true });
   }
 
