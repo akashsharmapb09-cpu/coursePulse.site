@@ -96,9 +96,10 @@ export function LoginForm() {
     }
   }
 
-  async function requestPhoneCode() {
+  async function requestPhoneCode(rawPhone: string = phoneNumber) {
     clearMessages();
-    const digits = phoneNumber.replace(/[^0-9]/g, '');
+    const digits = rawPhone.replace(/[^0-9]/g, '');
+    setPhoneNumber(digits);
     if (digits.length < 7 || digits.length > 15) {
       setError('Enter a valid mobile number, including the correct country code.');
       return;
@@ -229,35 +230,39 @@ export function LoginForm() {
       ) : (
         <div className="auth-method-form">
           {phoneStep === 'number' ? (
-            <form onSubmit={e=>{e.preventDefault();void requestPhoneCode();}} className="stack-form">
+            <form onSubmit={e=>{
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const enteredPhone = String(formData.get('phone') ?? '');
+              void requestPhoneCode(enteredPhone);
+            }} className="stack-form">
               {mode === 'signup' && (
                 <label>Full name
                   <input autoComplete="name" value={name} onChange={e=>setName(e.target.value)} maxLength={120} required placeholder="Your name"/>
                 </label>
               )}
-              <label htmlFor="coursepulse-phone-number">Mobile number
-                <div className="phone-input-wrap">
-                  <select aria-label="Country calling code" value={countryCode} onChange={e=>setCountryCode(e.target.value)}>
-                    {COUNTRY_CODES.map((country,index)=><option key={`${country.value}-${country.label}-${index}`} value={country.value}>{country.label}</option>)}
-                  </select>
-                  <input
-                    id="coursepulse-phone-number"
-                    className="phone-number-input"
-                    name="phone"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    maxLength={15}
-                    value={phoneNumber}
-                    onChange={e=>setPhoneNumber(e.currentTarget.value.replace(/\D/g,'').slice(0,15))}
-                    required
-                    placeholder="9876543210"
-                    aria-label="Mobile number"
-                  />
-                </div>
-              </label>
+              <label htmlFor="coursepulse-phone-number">Mobile number</label>
+              <div className="phone-input-wrap">
+                <select aria-label="Country calling code" value={countryCode} onChange={e=>setCountryCode(e.target.value)}>
+                  {COUNTRY_CODES.map((country,index)=><option key={`${country.value}-${country.label}-${index}`} value={country.value}>{country.label}</option>)}
+                </select>
+                <input
+                  id="coursepulse-phone-number"
+                  className="phone-number-input"
+                  name="phone"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  maxLength={15}
+                  defaultValue={phoneNumber}
+                  required
+                  placeholder="9876543210"
+                  aria-label="Mobile number"
+                  style={{ position: 'relative', zIndex: 3, pointerEvents: 'auto', userSelect: 'text', WebkitUserSelect: 'text', touchAction: 'manipulation' }}
+                />
+              </div>
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
               {error && <p className="alert error" role="alert">{error}</p>}
               {notice && <p className="alert success" role="status">{notice}</p>}
