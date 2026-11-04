@@ -570,3 +570,25 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .google-auth-button,.auth-method-tabs button { transition: none !important; }
 }
+
+/* Protected Student/Admin signup selector and account completion screen */
+.signup-role-picker { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:0 0 16px; }
+.signup-role-picker button {
+  display:grid; gap:5px; text-align:left; padding:12px 13px; border:1px solid #e1e9e3;
+  border-radius:11px; background:#fff; color:#53675d;
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.signup-role-picker button.active { border-color:#78a88a; background:#f1f8f3; color:#245b41; box-shadow:0 0 0 2px rgba(76,132,94,.08); }
+.signup-role-picker button.active.admin { border-color:#b4a16d; background:#fbf8ef; color:#685529; }
+.role-choice-title { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; }
+.role-choice-copy { font-size:10px; color:#829087; }
+.admin-code-field { display:grid; gap:7px; margin:0 0 16px; font-size:12px; font-weight:700; color:#40574d; }
+.admin-code-field small { font-size:10px; font-weight:500; color:#849189; }
+.auth-complete-shell { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 15% 10%,#eaf4ed,transparent 35%),#f7f8f6; }
+.auth-complete-card { width:min(100%,440px); padding:34px; border:1px solid #e4ebe5; border-radius:18px; background:#fff; box-shadow:0 18px 60px rgba(31,58,47,.08); }
+.auth-complete-icon { width:48px; height:48px; display:grid; place-items:center; margin-bottom:22px; border-radius:14px; background:#e7f3ea; color:#347451; }
+.auth-complete-card h1 { margin:10px 0; font:800 25px/1.2 Manrope,sans-serif; letter-spacing:-.8px; color:#203b2f; }
+.auth-complete-card>p:not(.eyebrow) { margin:0 0 22px; color:#718078; font-size:13px; line-height:1.65; }
+.auth-complete-card .stack-form { margin-top:20px; }
+.auth-complete-loading { display:inline-flex; align-items:center; gap:9px; color:#537360; font-size:12px; }
+@media (max-width:520px) { .auth-complete-card { padding:25px 21px; } .signup-role-picker { gap:7px; } .signup-role-picker button { padding:11px 9px; } }
