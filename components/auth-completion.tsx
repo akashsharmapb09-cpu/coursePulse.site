@@ -54,10 +54,10 @@ export function AuthCompletion() {
       <section className="auth-complete-card">
         <span className="auth-complete-icon"><ShieldCheck size={24}/></span>
         <p className="eyebrow">COURSEPULSE ACCOUNT SECURITY</p>
-        <h1>{needsCode ? 'Finish Admin activation' : 'Finishing your account setup'}</h1>
+        <h1>{needsCode ? 'Confirm Admin activation' : 'Finishing your account setup'}</h1>
         {needsCode ? (
           <>
-            <p>Your sign-in is complete, but the Admin verification did not carry over. Enter the special code to activate Admin access.</p>
+            <p>Your sign-in is complete, but the Re-enter the administrator special code to confirm and activate Admin access.</p>
             <form className="stack-form" onSubmit={event => { event.preventDefault(); void finish(code); }}>
               <label>Admin special code
                 <span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete="off" value={code} onChange={event => setCode(event.target.value)} required placeholder="Enter admin code"/></span>
