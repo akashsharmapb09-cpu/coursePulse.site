@@ -12,3 +12,113 @@
 @media(max-width:760px){.auth-shell{display:block}.auth-art{display:none}.auth-panel{min-height:100vh;padding:28px 22px}.mobile-brand{display:flex}.auth-icon{margin-bottom:20px}.app-shell{display:block}.sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;flex-direction:row;align-items:center;gap:16px}.sidebar .brand{padding:0;font-size:16px}.side-workspace,.side-label,.sidebar-bottom{display:none}.side-nav{display:flex;gap:3px;margin-left:auto}.side-nav button{padding:9px;font-size:0;gap:0}.side-nav button span{display:none}.side-nav button svg{width:19px;height:19px}.topbar{height:auto;min-height:88px;padding:17px 21px}.topbar h1{font-size:20px}.content-area{padding:25px 20px 50px}.welcome-row h2{font-size:23px}.pulse-orb{width:105px;height:70px;font-size:9px;flex-direction:column;gap:4px}.metric-grid{gap:9px}.metric-card{padding:13px;grid-template-columns:31px 1fr;column-gap:8px}.metric-icon{width:30px;height:30px}.metric-card strong{font-size:18px}.course-grid,.analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.sidebar{padding:12px 14px}.sidebar .brand{font-size:0;gap:0}.sidebar .brand-mark{font-size:20px}.side-nav{margin:0 auto}.topbar{padding:15px 16px;align-items:flex-start}.top-actions{gap:7px;flex-direction:column;align-items:flex-end}.top-actions .button{padding:8px 10px;font-size:10px}.role-chip{font-size:9px}.content-area{padding:23px 14px 40px}.welcome-row{align-items:flex-start}.welcome-row h2{font-size:20px}.welcome-row p{font-size:11px;max-width:250px}.pulse-orb{display:none}.metric-grid{grid-template-columns:1fr;gap:8px}.metric-card{grid-template-columns:36px 1fr;grid-template-rows:auto auto auto}.metric-icon{grid-row:span 3;width:34px;height:34px}.section-heading{align-items:flex-start;flex-direction:column}.section-heading .button{align-self:flex-start}.course-grid,.analytics-grid{grid-template-columns:1fr}.feedback-row{gap:8px;padding:10px}.feedback-row .button{font-size:0;width:36px;height:32px;padding:0}.export-actions{flex-wrap:wrap}.export-actions .button{font-size:10px;padding:8px}.privacy-banner small{line-height:1.45}.modal{padding:17px}.art-footer{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* CoursePulse motion system: restrained scroll reveals + tactile auth feedback. */
+@keyframes cp-login-enter {
+  from { opacity: 0; transform: translate3d(0, 22px, 0) scale(.985); filter: blur(7px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+@keyframes cp-art-enter {
+  from { opacity: 0; transform: translate3d(-24px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cp-scroll-progress { to { transform: scaleX(1); } }
+@keyframes cp-scroll-reveal {
+  from { opacity: .15; transform: translate3d(0, 34px, 0) scale(.985); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cp-float-soft {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+body::before {
+  content: '';
+  position: fixed;
+  z-index: 100;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #2e7657, #83b99a);
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+.auth-art .brand, .auth-art .art-copy, .auth-art .art-footer {
+  animation: cp-art-enter .8s cubic-bezier(.2,.75,.25,1) both;
+}
+.auth-art .art-copy { animation-delay: .12s; }
+.auth-art .art-footer { animation-delay: .24s; }
+.auth-card { animation: cp-login-enter .75s cubic-bezier(.2,.8,.2,1) both; }
+.auth-icon { animation: cp-float-soft 4.5s ease-in-out 1s infinite; }
+.auth-card .stack-form > label { animation: cp-login-enter .55s cubic-bezier(.2,.8,.2,1) both; }
+.auth-card .stack-form > label:nth-child(1) { animation-delay: .08s; }
+.auth-card .stack-form > label:nth-child(2) { animation-delay: .15s; }
+.auth-card .stack-form > label:nth-child(3) { animation-delay: .22s; }
+.auth-card .stack-form > .button { animation: cp-login-enter .55s .28s both; }
+.auth-card .button.primary { transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+.auth-card .button.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(28,89,73,.2);
+}
+.auth-card .button.primary:active:not(:disabled) { transform: translateY(0) scale(.985); }
+.auth-card .input-wrap:focus-within { transform: translateY(-1px); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.auth-card .switch-auth button { transition: color .18s ease, text-decoration-color .18s ease; }
+.auth-card .switch-auth button:hover { color: #174a38; text-decoration: underline; text-underline-offset: 3px; }
+.course-card, .metric-card, .analytics-card, .feedback-row, .section-heading {
+  will-change: transform, opacity;
+}
+.course-card { transition: transform .28s cubic-bezier(.2,.75,.25,1), box-shadow .28s ease, border-color .2s ease; }
+.course-card:hover { transform: translateY(-5px) scale(1.008); border-color: #cbded0; box-shadow: 0 18px 42px rgba(31,58,47,.09); }
+.metric-card { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+.metric-card:hover { transform: translateY(-3px); border-color: #cbded0; box-shadow: 0 12px 28px rgba(31,58,47,.07); }
+.side-nav button { transition: background .2s ease, color .2s ease, transform .2s ease; }
+.side-nav button:hover { transform: translateX(3px); }
+.button:active:not(:disabled), .icon-button:active { transform: scale(.97); }
+.modal { animation: cp-login-enter .24s cubic-bezier(.2,.8,.2,1) both; }
+.modal-backdrop { animation: cp-backdrop-in .2s ease both; }
+@keyframes cp-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+@supports (animation-timeline: view()) {
+  .content-area .welcome-row,
+  .content-area .metric-card,
+  .content-area .section-heading,
+  .content-area .course-card,
+  .content-area .feedback-row,
+  .content-area .privacy-banner,
+  .content-area .analytics-card,
+  .content-area .empty-state {
+    animation-name: cp-scroll-reveal;
+    animation-duration: 1ms;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+    animation-timeline: view();
+    animation-range: entry 0% entry 38%;
+  }
+  .content-area .metric-card:nth-child(2),
+  .content-area .course-card:nth-child(3n + 2) { animation-range: entry 5% entry 43%; }
+  .content-area .metric-card:nth-child(3),
+  .content-area .course-card:nth-child(3n) { animation-range: entry 10% entry 48%; }
+  body::before {
+    animation: cp-scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { display: none; }
+  .auth-art .brand, .auth-art .art-copy, .auth-art .art-footer,
+  .auth-card, .auth-icon, .auth-card .stack-form > label,
+  .auth-card .stack-form > .button, .modal, .modal-backdrop {
+    animation: none !important;
+  }
+  .content-area .welcome-row, .content-area .metric-card,
+  .content-area .section-heading, .content-area .course-card,
+  .content-area .feedback-row, .content-area .privacy-banner,
+  .content-area .analytics-card, .content-area .empty-state {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .course-card, .metric-card, .side-nav button, .button, .icon-button { transition: none !important; }
+}
