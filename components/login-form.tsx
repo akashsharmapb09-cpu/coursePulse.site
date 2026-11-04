@@ -98,7 +98,7 @@ export function LoginForm() {
 
   async function requestPhoneCode() {
     clearMessages();
-    const digits = phoneNumber.replace(/\\D/g, '');
+    const digits = phoneNumber.replace(/[^0-9]/g, '');
     if (digits.length < 7 || digits.length > 15) {
       setError('Enter a valid mobile number, including the correct country code.');
       return;
@@ -128,11 +128,11 @@ export function LoginForm() {
   async function verifyPhoneCode(e: FormEvent) {
     e.preventDefault();
     clearMessages();
-    if (!/^\\d{6}$/.test(otp.trim())) {
+    if (!/^[0-9]{6}$/.test(otp.trim())) {
       setError('Enter the 6-digit code sent to your phone.');
       return;
     }
-    const phone = `${countryCode}${phoneNumber.replace(/\\D/g, '')}`;
+    const phone = `${countryCode}${phoneNumber.replace(/[^0-9]/g, '')}`;
     setBusy(true);
     try {
       const supabase = createClient();
@@ -240,7 +240,7 @@ export function LoginForm() {
                   <select aria-label="Country calling code" value={countryCode} onChange={e=>setCountryCode(e.target.value)}>
                     {COUNTRY_CODES.map((country,index)=><option key={`${country.value}-${country.label}-${index}`} value={country.value}>{country.label}</option>)}
                   </select>
-                  <input type="tel" autoComplete="tel-national" inputMode="numeric" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value.replace(/[^0-9\\s()-]/g,'').slice(0,18))} required placeholder="Mobile number"/>
+                  <input type="tel" autoComplete="tel-national" inputMode="numeric" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value.replace(/[^0-9 ()-]/g,'').slice(0,18))} required placeholder="Mobile number"/>
                 </div>
               </label>
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
@@ -254,10 +254,10 @@ export function LoginForm() {
             <form onSubmit={verifyPhoneCode} className="stack-form">
               <div className="otp-heading">
                 <span className="otp-icon"><Phone size={18}/></span>
-                <span><b>Verify your number</b><small>Enter the 6-digit code sent to {countryCode}{phoneNumber.replace(/\\D/g, '')}.</small></span>
+                <span><b>Verify your number</b><small>Enter the 6-digit code sent to {countryCode}{phoneNumber.replace(/[^0-9]/g, '')}.</small></span>
               </div>
               <label>Verification code
-                <input className="otp-input" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\\D/g,'').slice(0,6))} required placeholder="000000"/>
+                <input className="otp-input" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} required placeholder="000000"/>
               </label>
               {error && <p className="alert error" role="alert">{error}</p>}
               {notice && <p className="alert success" role="status">{notice}</p>}
