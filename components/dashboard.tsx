@@ -38,6 +38,10 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [avatarPath, setAvatarPath] = useState<string | null>(profile.avatar_path ?? null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteRequestBusy, setDeleteRequestBusy] = useState(false);
+  const [deletionRequest, setDeletionRequest] = useState<{ id: string; status: string; created_at: string; reviewed_at?: string | null; resolution_note?: string } | null>(null);
 
   async function load() {
     setLoading(true); setError('');
@@ -50,6 +54,19 @@ export function Dashboard({ profile }: { profile: Profile }) {
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    let mounted = true;
+    const supabase = createClient();
+    void supabase.rpc('get_my_data_deletion_requests').then(({ data, error }) => {
+      if (!mounted || error) return;
+      const rows = Array.isArray(data) ? data : [];
+      const activeRequest = rows.find((request: { status: string }) =>
+        ['PENDING', 'IN_REVIEW', 'APPROVED'].includes(request.status)
+      );
+      setDeletionRequest(activeRequest ?? rows[0] ?? null);
+    });
+    return () => { mounted = false; };
+  }, []);
   useEffect(() => {
     try {
       if (window.localStorage.getItem('coursepulse:reduce-motion') === 'true') setReducedMotion(true);
@@ -139,6 +156,25 @@ export function Dashboard({ profile }: { profile: Profile }) {
       setAvatarBusy(false);
     }
   }
+  async function submitDeletionRequest() {
+    if (deleteConfirmText.trim() !== 'DELETE') return;
+    setDeleteRequestBusy(true); setError(''); setNotice('');
+    try {
+      const supabase = createClient();
+      const { data, error: requestError } = await supabase.rpc('create_my_data_deletion_request');
+      if (requestError) throw new Error(requestError.message);
+      const request = Array.isArray(data) ? data[0] : data;
+      if (!request?.id || !request?.status) throw new Error('The deletion request could not be confirmed. Please try again.');
+      setDeletionRequest(request);
+      setDeleteConfirmOpen(false);
+      setDeleteConfirmText('');
+      setNotice('Your account deletion request has been submitted for administrator review. Your account remains active until the request is reviewed and completed.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not submit your account deletion request.');
+    } finally {
+      setDeleteRequestBusy(false);
+    }
+  }
   async function updatePassword(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
@@ -190,7 +226,10 @@ export function Dashboard({ profile }: { profile: Profile }) {
         <button className={tab==='settings'?'active':''} onClick={()=>void changeTab('settings')}><SettingsIcon size={17}/> Settings</button>
         <button className={tab==='faq'?'active':''} onClick={()=>void changeTab('faq')}><CircleHelp size={17}/> FAQ & help</button>
       </nav>
-      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Student responses stay private. Reporting shows aggregates only.</p></div><div className="user-profile"><div className="avatar">{avatarUrl ? <img src={avatarUrl} alt="" /> : (savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{savedAccountName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
+      <nav className="side-nav logout-nav" aria-label="Session">
+        <button className="logout-nav-button" onClick={()=>void signOut()}><LogOut size={17}/> Log out</button>
+      </nav>
+      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Student responses stay private. Reporting shows aggregates only.</p></div><div className="user-profile"><div className="avatar">{avatarUrl ? <img src={avatarUrl} alt="" /> : (savedAccountName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{savedAccountName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div></div></div>
     </aside>
     <main className="main-area">
       <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{pageTitle[tab]}</h1></div><div className="top-actions"><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
@@ -256,6 +295,17 @@ export function Dashboard({ profile }: { profile: Profile }) {
             <label className="preference-row"><span><b>Reduce interface motion</b><small>Minimise animations and transitions throughout CoursePulse.</small></span><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/></label>
             <p className="field-hint preference-footnote">This preference is saved on this device and does not change how other members see their workspace.</p>
           </section>
+          <section className="settings-panel danger-zone">
+            <div className="settings-panel-head"><span className="settings-icon danger-settings-icon"><Trash2 size={19}/></span><div><h3>Delete account</h3><p>Request the permanent deletion of your CoursePulse account and associated personal data.</p></div></div>
+            {deletionRequest && <div className="deletion-request-status">
+              <span className="deletion-status-dot"/>
+              <span><b>Latest request: {deletionRequest.status.toLowerCase().replaceAll('_',' ')}</b><small>Submitted {new Date(deletionRequest.created_at).toLocaleDateString()}</small></span>
+            </div>}
+            <p className="danger-explanation">Submitting this request does not delete your account immediately. A workspace administrator must review it and complete the deletion workflow. You can keep using CoursePulse while it is under review.</p>
+            <button className="button danger-button" type="button" disabled={!!deletionRequest && ['PENDING','IN_REVIEW','APPROVED'].includes(deletionRequest.status)} onClick={()=>{setDeleteConfirmText('');setDeleteConfirmOpen(true);}}>
+              <Trash2 size={15}/> {deletionRequest && ['PENDING','IN_REVIEW','APPROVED'].includes(deletionRequest.status) ? 'Request already submitted' : 'Delete account'}
+            </button>
+          </section>
         </div>}
         {tab==='faq' && <div className="faq-page">
           <div className="faq-hero"><div><span className="eyebrow">COURSEPULSE HELP CENTRE</span><h2>How can we help?</h2><p>Helpful answers to make your learning workspace easier to use.</p></div><div className="faq-hero-mark"><CircleHelp size={27}/><span>We're here to help</span></div></div>
@@ -279,6 +329,19 @@ export function Dashboard({ profile }: { profile: Profile }) {
     {courseModal&&<Modal title="Create a course" onClose={()=>setCourseModal(false)}><form className="stack-form" onSubmit={createCourse}><label>Course title<input value={courseTitle} onChange={e=>setCourseTitle(e.target.value)} minLength={2} maxLength={160} required placeholder="e.g. Introduction to Biology"/></label><label>Description<textarea value={courseDescription} onChange={e=>setCourseDescription(e.target.value)} maxLength={5000} rows={3} placeholder="What will students learn?"/></label><button className="button primary full" disabled={busy}>Create course</button></form></Modal>}
     {feedbackModal&&<Modal title="Create feedback form" onClose={()=>setFeedbackModal(false)}><form className="stack-form" onSubmit={createForm}><label>Course<select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>Form title<input value={formTitle} onChange={e=>setFormTitle(e.target.value)} required maxLength={160} placeholder="End-of-module feedback"/></label><label>Description<textarea value={formDescription} onChange={e=>setFormDescription(e.target.value)} maxLength={3000} rows={2}/></label><label>First question<input value={questionLabel} onChange={e=>setQuestionLabel(e.target.value)} required maxLength={180}/></label><label>Question type<select value={questionType} onChange={e=>setQuestionType(e.target.value as 'rating'|'text')}><option value="rating">Rating (1 to 5)</option><option value="text">Written response</option></select></label><p className="fine-print">This quick form creates one question. You can extend the form schema through the API with additional validated question types.</p><button className="button primary full" disabled={busy}>Publish feedback form</button></form></Modal>}
     {responseModal&&<Modal title={responseModal.title} onClose={()=>setResponseModal(null)}><ResponseForm item={responseModal} onDone={()=>{setResponseModal(null);setNotice('Your response was submitted. Thank you.')}}/></Modal>}
+    {deleteConfirmOpen&&<Modal title="Confirm account deletion request" onClose={()=>{if(!deleteRequestBusy){setDeleteConfirmOpen(false);setDeleteConfirmText('');}}}>
+      <div className="delete-confirm-content">
+        <div className="delete-confirm-icon"><Trash2 size={21}/></div>
+        <h3>Request to delete your account?</h3>
+        <p>This sends a formal deletion request to your workspace administrator. Your account and sign-in remain active until the request is reviewed and completed.</p>
+        <div className="delete-confirm-warning"><ShieldCheck size={17}/><span>After approval, account data may be permanently removed according to the workspace retention process.</span></div>
+        <label>Type <b>DELETE</b> to confirm<input value={deleteConfirmText} onChange={e=>setDeleteConfirmText(e.target.value)} autoComplete="off" placeholder="Type DELETE"/></label>
+        <div className="delete-confirm-actions">
+          <button className="button subtle" type="button" disabled={deleteRequestBusy} onClick={()=>{setDeleteConfirmOpen(false);setDeleteConfirmText('');}}>Cancel</button>
+          <button className="button danger-button" type="button" disabled={deleteRequestBusy || deleteConfirmText.trim()!=='DELETE'} onClick={()=>void submitDeletionRequest()}>{deleteRequestBusy?'Submitting…':'Submit deletion request'}</button>
+        </div>
+      </div>
+    </Modal>}
   </div>;
 }
 function Metric({icon,label,value,hint}:{icon:React.ReactNode;label:string;value:React.ReactNode;hint:string}){return <article className="metric-card"><div className="metric-icon">{icon}</div><span>{label}</span><strong>{value}</strong><small>{hint}</small></article>}
