@@ -66,10 +66,21 @@ as $$
 declare
   v_user_id uuid := auth.uid();
   v_expected_hash bytea;
+  v_identity_verified boolean;
 begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
+
+  select (u.confirmed_at is not null or u.email_confirmed_at is not null or u.phone_confirmed_at is not null)
+    into v_identity_verified
+  from auth.users u
+  where u.id = v_user_id;
+
+  if coalesce(v_identity_verified, false) is not true then
+    raise exception 'Verify your email or mobile number before activating Admin' using errcode = '42501';
+  end if;
+
   if p_code is null or length(p_code) < 1 or length(p_code) > 256 then
     raise exception 'Invalid administrator signup code' using errcode = '42501';
   end if;
