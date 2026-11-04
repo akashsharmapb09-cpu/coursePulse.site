@@ -410,3 +410,163 @@ body::before {
     width: 100%;
   }
 }
+
+
+/* Premium email, mobile OTP and Google authentication options */
+.google-auth-button {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  border: 1px solid #dfe7e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #30483c;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 3px 12px rgba(31,58,47,.035);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.google-auth-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #c8d9cd;
+  background: #fcfefc;
+  box-shadow: 0 9px 22px rgba(31,58,47,.075);
+}
+.google-auth-button:disabled { opacity: .65; cursor: wait; }
+.google-g {
+  font: 800 20px Arial,sans-serif;
+  letter-spacing: -1px;
+  background: conic-gradient(from -45deg,#4285f4 0 25%,#34a853 25% 48%,#fbbc05 48% 70%,#ea4335 70% 86%,#4285f4 86% 100%);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 19px 0 15px;
+  color: #9aa69f;
+  font-size: 10px;
+}
+.auth-divider::before,.auth-divider::after { content: ''; height: 1px; flex: 1; background: #e9eeea; }
+.auth-method-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 4px;
+  margin-bottom: 17px;
+  border: 1px solid #e7ece8;
+  border-radius: 11px;
+  background: #f5f8f5;
+}
+.auth-method-tabs button {
+  min-height: 37px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #819087;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background .18s,border-color .18s,color .18s,box-shadow .18s;
+}
+.auth-method-tabs button.active {
+  border-color: #e5ece6;
+  background: #fff;
+  color: #285d47;
+  box-shadow: 0 2px 7px rgba(31,58,47,.05);
+}
+.auth-method-tabs button:hover:not(.active) { color: #456b55; }
+.auth-method-form { min-height: 228px; }
+.phone-input-wrap {
+  display: grid;
+  grid-template-columns: 142px minmax(0,1fr);
+  gap: 7px;
+}
+.phone-input-wrap select,.phone-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid #dfe7e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #40574d;
+  outline: none;
+  font-size: 12px;
+}
+.phone-input-wrap select:focus,.phone-input-wrap input:focus,.otp-input:focus {
+  border-color: #6b9d80;
+  box-shadow: 0 0 0 3px rgba(87,145,108,.12);
+}
+.phone-helper {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: -3px 0 0;
+  color: #85948a;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.phone-helper svg { flex: 0 0 auto; color: #57906a; }
+.otp-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid #e1ece4;
+  border-radius: 10px;
+  background: #f7fbf7;
+}
+.otp-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #e7f2e9;
+  color: #347451;
+}
+.otp-heading>span:last-child { display: grid; gap: 4px; min-width: 0; }
+.otp-heading b { color: #385448; font-size: 11px; }
+.otp-heading small { color: #829087; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.otp-input {
+  min-height: 51px !important;
+  text-align: center;
+  font: 800 22px Manrope,sans-serif !important;
+  letter-spacing: .42em;
+  padding-left: .8em !important;
+}
+.otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.otp-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  padding: 4px 0;
+  background: transparent;
+  color: #47765b;
+  font-size: 10px;
+  font-weight: 800;
+}
+.otp-actions button:disabled { opacity: .5; cursor: wait; }
+@media (max-width: 520px) {
+  .auth-method-form { min-height: 0; }
+  .phone-input-wrap { grid-template-columns: 128px minmax(0,1fr); }
+  .auth-method-tabs button { font-size: 10px; gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .google-auth-button,.auth-method-tabs button { transition: none !important; }
+}
