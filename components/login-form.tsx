@@ -251,7 +251,7 @@ export function LoginForm() {
                     spellCheck={false}
                     maxLength={15}
                     value={phoneNumber}
-                    onChange={e=>setPhoneNumber(e.currentTarget.value.replace(/\\D/g,'').slice(0,15))}
+                    onChange={e=>setPhoneNumber(e.currentTarget.value.replace(/\D/g,'').slice(0,15))}
                     required
                     placeholder="9876543210"
                     aria-label="Mobile number"
