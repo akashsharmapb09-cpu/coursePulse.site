@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 
 type AuthMode = 'signin' | 'signup';
 type LoginMethod = 'email' | 'phone';
+type SignupRole = 'STUDENT' | 'ADMIN';
 type SignupRole = 'student' | 'admin';
 
 const COUNTRY_CODES = [
@@ -30,6 +31,8 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [signupRole, setSignupRole] = useState<SignupRole>('STUDENT');
+  const [adminCode, setAdminCode] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
@@ -89,7 +92,7 @@ export function LoginForm() {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: name.trim() }, emailRedirectTo }
+          options: { data: { full_name: name.trim(), requested_role: signupRole, ...(signupRole === 'ADMIN' ? { admin_signup_code: adminCode.trim() } : {}) }, emailRedirectTo }
         });
         if (error) throw error;
         if (data.session) {
@@ -125,7 +128,7 @@ export function LoginForm() {
         phone,
         options: {
           shouldCreateUser: mode === 'signup',
-          ...(mode === 'signup' ? { data: { full_name: name.trim() } } : {})
+          ...(mode === 'signup' ? { data: { full_name: name.trim(), requested_role: signupRole, ...(signupRole === 'ADMIN' ? { admin_signup_code: adminCode.trim() } : {}) } } : {})
         }
       });
       if (error) throw error;
@@ -260,7 +263,7 @@ export function LoginForm() {
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
               {error && <p className="alert error" role="alert">{error}</p>}
               {notice && <p className="alert success" role="status">{notice}</p>}
-              <button className="button primary full" disabled={busy || (mode === 'signup' && !name.trim())}>
+              <button className="button primary full" disabled={busy || (mode === 'signup' && (!name.trim() || (signupRole === 'ADMIN' && !adminCode.trim())))}>
                 {busy ? <LoaderCircle className="spin" size={17}/> : <>Send verification code <ArrowRight size={17}/></>}
               </button>
             </form>
