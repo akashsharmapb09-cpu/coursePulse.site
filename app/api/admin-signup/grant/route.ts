@@ -78,6 +78,6 @@ export async function POST(request: NextRequest) {
     }
     return clearProofCookie(NextResponse.json({ ok: true, role: 'ADMIN' }));
   } catch {
-    return NextResponse.json({ error: 'Admin activation server configuration is incomplete. Add SUPABASE_SERVICE_ROLE_KEY in Vercel.' }, { status: 503 });
+    return NextResponse.json({ error: 'Admin activation server configuration is incomplete. Add SUPABASE_SECRET_KEY in Vercel.' }, { status: 503 });
   }
 }

@@ -42,7 +42,12 @@ export function LoginForm() {
 
   function clearMessages() { setError(''); setNotice(''); }
 
+  function clearAdminProof() {
+    void fetch('/api/admin-signup/clear', { method: 'POST' });
+  }
+
   function changeMode(nextMode: AuthMode) {
+    clearAdminProof();
     setMode(nextMode);
     setSignupRole('student');
     setAdminCode('');
@@ -197,7 +202,7 @@ export function LoginForm() {
 
       {mode === 'signup' && (
         <div className="signup-role-picker" aria-label="Choose account type">
-          <button type="button" className={signupRole === 'student' ? 'active' : ''} onClick={() => { setSignupRole('student'); setAdminCode(''); clearMessages(); }}>
+          <button type="button" className={signupRole === 'student' ? 'active' : ''} onClick={() => { clearAdminProof(); setSignupRole('student'); setAdminCode(''); clearMessages(); }}>
             <span className="role-choice-title">Student</span>
             <span className="role-choice-copy">Regular learning access</span>
           </button>
@@ -215,7 +220,7 @@ export function LoginForm() {
         </label>
       )}
 
-      <button type="button" className="google-auth-button" disabled={busy} onClick={() => void signInWithGoogle()}>
+      <button type="button" className="google-auth-button" disabled={busy || (isAdminSignup && !adminCode.trim())} onClick={() => void signInWithGoogle()}>
         {busy ? <LoaderCircle className="spin" size={17}/> : <span className="google-g" aria-hidden="true">G</span>}
         {mode === 'signup' ? 'Create ' + (signupRole === 'admin' ? 'Admin' : 'Student') + ' account with Google' : 'Continue with Google'}
       </button>
@@ -241,7 +246,7 @@ export function LoginForm() {
           </label>
           {error && <p className="alert error" role="alert">{error}</p>}
           {notice && <p className="alert success" role="status">{notice}</p>}
-          <button className="button primary full" disabled={busy}>
+          <button className="button primary full" disabled={busy || (isAdminSignup && !adminCode.trim())}>
             {busy ? <LoaderCircle className="spin" size={17}/> : <>{mode === 'signin' ? 'Sign in with email' : 'Create ' + (signupRole === 'admin' ? 'Admin' : 'Student') + ' account'} <ArrowRight size={17}/></>}
           </button>
         </form>
@@ -260,7 +265,7 @@ export function LoginForm() {
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
               {error && <p className="alert error" role="alert">{error}</p>}
               {notice && <p className="alert success" role="status">{notice}</p>}
-              <button className="button primary full" disabled={busy || (mode === 'signup' && (!name.trim() || (signupRole === 'ADMIN' && !adminCode.trim())))}>
+              <button className="button primary full" disabled={busy || (mode === 'signup' && (!name.trim() || (signupRole === 'admin' && !adminCode.trim())))}>
                 {busy ? <LoaderCircle className="spin" size={17}/> : <>Send verification code <ArrowRight size={17}/></>}
               </button>
             </form>
