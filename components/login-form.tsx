@@ -235,12 +235,27 @@ export function LoginForm() {
                   <input autoComplete="name" value={name} onChange={e=>setName(e.target.value)} maxLength={120} required placeholder="Your name"/>
                 </label>
               )}
-              <label>Mobile number
+              <label htmlFor="coursepulse-phone-number">Mobile number
                 <div className="phone-input-wrap">
                   <select aria-label="Country calling code" value={countryCode} onChange={e=>setCountryCode(e.target.value)}>
                     {COUNTRY_CODES.map((country,index)=><option key={`${country.value}-${country.label}-${index}`} value={country.value}>{country.label}</option>)}
                   </select>
-                  <input type="tel" autoComplete="tel-national" inputMode="numeric" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value.replace(/[^0-9 ()-]/g,'').slice(0,18))} required placeholder="Mobile number"/>
+                  <input
+                    id="coursepulse-phone-number"
+                    className="phone-number-input"
+                    name="phone"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    maxLength={15}
+                    value={phoneNumber}
+                    onChange={e=>setPhoneNumber(e.currentTarget.value.replace(/\\D/g,'').slice(0,15))}
+                    required
+                    placeholder="9876543210"
+                    aria-label="Mobile number"
+                  />
                 </div>
               </label>
               <p className="phone-helper"><ShieldCheck size={14}/> We'll send a one-time SMS code. Standard carrier charges may apply.</p>
