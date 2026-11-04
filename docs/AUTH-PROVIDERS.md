@@ -52,3 +52,14 @@ Google's OAuth callback is the Supabase Auth callback above. The app callback at
 - [ ] SMS delivery tested with a real, consented test number.
 - [ ] OTP rate limits, expiry, and CAPTCHA/abuse controls reviewed.
 - [ ] Existing email/password login and sign-up still work.
+
+
+## 5. Protected administrator registration
+
+- The signup screen offers **Student** and **Admin** account types. Student is the default.
+- Admin registration requires the shared code. The server validates it; the browser never assigns the role directly.
+- The Vercel project must have the encrypted server-only environment variable `ADMIN_SIGNUP_CODE` set for Production, Preview, and Development. Never use a `NEXT_PUBLIC_` prefix for this secret.
+- The admin verification cookie is HTTP-only, signed, short-lived, and bound to the email address or phone number when applicable.
+- After email confirmation, SMS OTP verification, or Google sign-in, the account is created as Student first. The authenticated server flow then calls the database function `claim_admin_signup`, which verifies the code hash in a private table and upgrades only that account to Admin.
+- Existing Admin sign-in does not ask for the signup code.
+- Keep the database migration `20261104190000_admin_signup_code_guard.sql` in sync with the live Supabase project.
