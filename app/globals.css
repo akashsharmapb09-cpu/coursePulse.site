@@ -365,10 +365,10 @@ html, body { background: var(--paper); }
 }
 
 /* Auth and role-based workspace entrance */
-.auth-shell { animation: cp-workspace-enter 680ms var(--cp-motion-out) both; }
-.auth-art .brand { animation: cp-workspace-enter 620ms var(--cp-motion-out) 60ms both; }
-.auth-art .art-copy { animation: cp-workspace-enter 760ms var(--cp-motion-out) 150ms both; }
-.auth-art .art-footer { animation: cp-workspace-enter 620ms var(--cp-motion-out) 260ms both; }
+.auth-shell { animation: cp-rise 680ms var(--cp-motion-out) both; }
+.auth-art .brand { animation: cp-rise 620ms var(--cp-motion-out) 60ms both; }
+.auth-art .art-copy { animation: cp-rise 760ms var(--cp-motion-out) 150ms both; }
+.auth-art .art-footer { animation: cp-rise 620ms var(--cp-motion-out) 260ms both; }
 .app-shell { animation: cp-workspace-enter 640ms var(--cp-motion-out) both; }
 .sidebar { animation: cp-sidebar-enter 680ms var(--cp-motion-out) both; }
 .topbar { animation: cp-topbar-enter 620ms var(--cp-motion-out) 50ms both; }
