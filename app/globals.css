@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -662,3 +661,231 @@ body::before {
 @media(max-width:560px){.sentiment-metrics{grid-template-columns:1fr}.category-score-grid{grid-template-columns:1fr 1fr}}
 .student-progress-panel{display:grid;gap:9px;margin:0 0 28px;padding:17px 19px;border:1px solid #e6eee7;border-radius:12px;background:#fff}.student-progress-panel>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px}.student-progress-panel b{color:#3e5747;font-size:11px}.student-progress-panel span,.student-progress-panel>small{color:#88978d;font-size:9px}.student-progress-track{height:8px;overflow:hidden;border-radius:99px;background:#edf3ee}.student-progress-track i{display:block;height:100%;border-radius:99px;background:#6eaa7f;transition:width .25s}.course-code-label{display:inline-block;margin:4px 0 0;padding:3px 6px;border-radius:5px;background:#f0f5f1;color:#6b8172;font-size:8px;font-weight:800;letter-spacing:.4px}.course-instructor-line{margin-top:9px;color:#708174;font-size:9px}
 .admin-alert-panel{border-color:#eadfc6;background:#fffdf8}.admin-alert-panel .admin-panel-heading h2{color:#70562a}.admin-alert-panel .admin-panel-heading p{max-width:760px}.admin-alert-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.admin-alert-list article{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid #f0e6d2;border-radius:9px;background:#fff}.admin-alert-dot{width:7px;height:7px;flex:none;margin-top:4px;border-radius:50%;background:#be9447}.admin-alert-list article div{display:grid;gap:4px}.admin-alert-list b{color:#6d5831;font-size:10px}.admin-alert-list small{color:#95856a;font-size:9px;line-height:1.5}@media(max-width:600px){.admin-alert-list{grid-template-columns:1fr}}
+
+
+/* --------------------------------------------------------------------------
+   CoursePulse workspace motion polish
+   Keeps the existing forest/ivory brand and the landing-page motion system.
+   Motion is limited to opacity and transforms so dashboard layout stays stable.
+   -------------------------------------------------------------------------- */
+:root {
+  --cp-motion-out: cubic-bezier(.22, 1, .36, 1);
+  --cp-motion-soft: cubic-bezier(.2, .75, .25, 1);
+}
+@keyframes cp-workspace-enter {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.994); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cp-sidebar-enter {
+  from { opacity: 0; transform: translate3d(-12px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cp-topbar-enter {
+  from { opacity: 0; transform: translate3d(0, -9px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cp-dialog-enter {
+  from { opacity: 0; transform: translate3d(0, 15px, 0) scale(.97); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cp-orb-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Auth and role-based workspace entrance */
+.auth-shell { animation: cp-rise 680ms var(--cp-motion-out) both; }
+.auth-art .brand { animation: cp-rise 620ms var(--cp-motion-out) 60ms both; }
+.auth-art .art-copy { animation: cp-rise 760ms var(--cp-motion-out) 150ms both; }
+.auth-art .art-footer { animation: cp-rise 620ms var(--cp-motion-out) 260ms both; }
+.app-shell { animation: cp-workspace-enter 640ms var(--cp-motion-out) both; }
+.sidebar { animation: cp-sidebar-enter 680ms var(--cp-motion-out) both; }
+.topbar { animation: cp-topbar-enter 620ms var(--cp-motion-out) 50ms both; }
+.content-area > * { animation: cp-workspace-enter 640ms var(--cp-motion-out) both; }
+.content-area > :nth-child(2) { animation-delay: 55ms; }
+.content-area > :nth-child(3) { animation-delay: 110ms; }
+.content-area > :nth-child(4) { animation-delay: 165ms; }
+.content-area > :nth-child(5) { animation-delay: 220ms; }
+.content-area > :nth-child(6) { animation-delay: 275ms; }
+
+/* Stagger data groups without shifting their surrounding layout */
+.content-area .metric-grid > *,
+.content-area .course-grid > *,
+.content-area .analytics-grid > *,
+.content-area .search-result-grid > *,
+.content-area .feedback-list > *,
+.content-area .admin-grid > *,
+.content-area .comparison-grid > * {
+  animation: cp-workspace-enter 650ms var(--cp-motion-out) both;
+}
+.content-area .metric-grid > :nth-child(2),
+.content-area .course-grid > :nth-child(2),
+.content-area .analytics-grid > :nth-child(2),
+.content-area .search-result-grid > :nth-child(2),
+.content-area .feedback-list > :nth-child(2),
+.content-area .admin-grid > :nth-child(2),
+.content-area .comparison-grid > :nth-child(2) { animation-delay: 60ms; }
+.content-area .metric-grid > :nth-child(3),
+.content-area .course-grid > :nth-child(3),
+.content-area .analytics-grid > :nth-child(3),
+.content-area .search-result-grid > :nth-child(3),
+.content-area .feedback-list > :nth-child(3),
+.content-area .admin-grid > :nth-child(3),
+.content-area .comparison-grid > :nth-child(3) { animation-delay: 120ms; }
+.content-area .course-grid > :nth-child(4),
+.content-area .analytics-grid > :nth-child(4),
+.content-area .search-result-grid > :nth-child(4),
+.content-area .feedback-list > :nth-child(4),
+.content-area .admin-grid > :nth-child(4),
+.content-area .comparison-grid > :nth-child(4) { animation-delay: 180ms; }
+.content-area .course-grid > :nth-child(5),
+.content-area .analytics-grid > :nth-child(5),
+.content-area .search-result-grid > :nth-child(5),
+.content-area .feedback-list > :nth-child(5),
+.content-area .admin-grid > :nth-child(5) { animation-delay: 240ms; }
+.content-area .course-grid > :nth-child(6),
+.content-area .admin-grid > :nth-child(6) { animation-delay: 300ms; }
+
+/* Consistent spring-like response on controls and data surfaces */
+.button,
+.icon-button,
+.text-button,
+.mini-action,
+.side-nav button,
+.search-result {
+  transition: transform 360ms var(--cp-motion-out), color 240ms var(--cp-motion-soft),
+    background-color 260ms var(--cp-motion-soft), border-color 260ms var(--cp-motion-soft),
+    box-shadow 360ms var(--cp-motion-out);
+}
+.button:not(:disabled):active,
+.icon-button:active,
+.text-button:active,
+.mini-action:active,
+.search-result:active { transform: scale(.975); }
+.side-nav button { transition-duration: 360ms; transition-timing-function: var(--cp-motion-out); }
+.metric-card,
+.analytics-card,
+.comparison-card,
+.rating-chart-card,
+.trend-chart-card,
+.course-card {
+  transition: transform 440ms var(--cp-motion-out), border-color 300ms var(--cp-motion-soft),
+    box-shadow 440ms var(--cp-motion-out);
+}
+.feedback-row { transition: background-color 280ms var(--cp-motion-soft), transform 360ms var(--cp-motion-out); }
+.course-art-mark { transition: transform 440ms var(--cp-motion-out), box-shadow 440ms var(--cp-motion-out); }
+.pulse-orb { animation: cp-orb-breathe 5.8s ease-in-out 900ms infinite; }
+
+@media (hover: hover) and (pointer: fine) {
+  .metric-card:hover,
+  .analytics-card:hover,
+  .comparison-card:hover,
+  .rating-chart-card:hover,
+  .trend-chart-card:hover { transform: translateY(-5px); }
+  .course-card:hover { transform: translateY(-5px); }
+  .feedback-row:hover { transform: translateX(3px); background-color: rgba(238, 246, 239, .56); }
+  .button:not(:disabled):hover { transform: translateY(-2px); }
+  .icon-button:hover { transform: translateY(-1px); }
+  .brand:hover .brand-mark { transform: rotate(-7deg) scale(1.06); }
+}
+
+.modal-backdrop { animation: cp-workspace-enter 220ms var(--cp-motion-soft) both; }
+.modal { transform-origin: center; animation: cp-dialog-enter 440ms var(--cp-motion-out) both; }
+.alert { animation: cp-workspace-enter 420ms var(--cp-motion-out) both; }
+
+@media (max-width: 760px) {
+  .app-shell, .sidebar, .topbar { animation-duration: 480ms; }
+  .pulse-orb { animation: none; }
+  .feedback-row:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell, .auth-art .brand, .auth-art .art-copy, .auth-art .art-footer,
+  .app-shell, .sidebar, .topbar, .content-area > *,
+  .content-area .metric-grid > *, .content-area .course-grid > *,
+  .content-area .analytics-grid > *, .content-area .search-result-grid > *,
+  .content-area .feedback-list > *, .content-area .admin-grid > *,
+  .content-area .comparison-grid > *, .modal-backdrop, .modal, .alert, .pulse-orb {
+    animation: none !important;
+  }
+  .button, .icon-button, .text-button, .mini-action, .side-nav button, .search-result,
+  .metric-card, .analytics-card, .comparison-card, .rating-chart-card,
+  .trend-chart-card, .course-card, .feedback-row, .course-art-mark {
+    transition: none !important;
+  }
+  .button:active, .icon-button:active, .text-button:active, .mini-action:active,
+  .search-result:active, .feedback-row:hover { transform: none !important; }
+}
+
+
+/* Accessibility hardening after combining the current main and PR UI. */
+:root { --muted: #506257; }
+.eyebrow { color: #496d55; }
+.public-document-heading > p,
+.public-document-content p,
+.public-document-content li,
+.policy-updated,
+.cookie-banner-copy p { color: #516257; }
+.auth-card > .eyebrow { color: #3f654a; }
+.auth-card > .muted, .auth-card .muted { color: #4f6055; }
+.auth-card { opacity: 1; }
+@keyframes cp-login-enter {
+  from { transform: translate3d(0, 22px, 0) scale(.985); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
+}
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid #286b49 !important;
+  outline-offset: 3px !important;
+}
+.cookie-settings-trigger { min-height: 36px; }
+.public-footer-links a, .public-footer-links button { min-height: 28px; display: inline-flex; align-items: center; }
+.public-document-content .policy-updated { color: #506257 !important; }
+.public-footer-brand p,
+.public-footer-links a,
+.public-footer-bottom,
+.cookie-footer-link { color: #506257 !important; }
+.public-footer-links a,
+.public-footer-links button,
+.cookie-footer-link { min-height: 32px; display: inline-flex; align-items: center; }
+.auth-card .fine-print,
+.auth-card .switch-auth { color: #506257 !important; }
+.auth-card .switch-auth button { min-height: 28px; padding: 3px 6px; }
+.public-header .brand,
+.public-header .public-nav > a,
+.public-header .public-login { min-height: 44px; display: inline-flex; align-items: center; }
+.public-header .public-nav > a,
+.public-header .public-login { padding-inline: 8px; }
+.public-header .button,
+.public-section .button,
+.public-section a.font-semibold,
+.public-document a.font-semibold { min-height: 44px; display: inline-flex; align-items: center; }
+.public-document a.font-semibold { padding: 2px 4px; }
+
+/* Make public navigation and text CTAs reliably meet WCAG 2.2 target-size. */
+.button,
+a.font-semibold,
+a.public-login,
+a[aria-label="CoursePulse home"],
+button.font-semibold,
+button.public-login,
+nav a,
+nav > a,
+a[href="/"],
+a[href$="/about"],
+a[href$="#features"],
+a[href$="/privacy"] {
+  min-width: 24px !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center;
+  padding-block: 5px !important;
+  margin-block: 2px;
+}
+
+/* Keep authentication layouts inside tablet and phone viewports. */
+@media (max-width: 900px) {
+  .auth-shell { display: block; width: 100%; min-width: 0; }
+  .auth-art { display: none; }
+  .auth-panel { width: 100%; min-width: 0; min-height: 100vh; padding: 32px 22px; }
+  .auth-card { width: min(100%, 430px); margin-inline: auto; }
+}

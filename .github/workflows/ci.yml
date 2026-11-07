@@ -1,0 +1,119 @@
+name: CoursePulse CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Scan repository history for secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit
+        run: npm audit --audit-level=moderate
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://coursepulse:placeholder@localhost:5432/coursepulse
+          DIRECT_URL: postgresql://coursepulse:placeholder@localhost:5432/coursepulse
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
+          NEXT_PUBLIC_APP_URL: https://coursepulse.example
+      # Install pinned browser-test tooling; clearing npm's transient cache avoids Arborist state errors
+      # seen when adding temporary tools after npm ci. The application manifest and lockfile are unchanged.
+      - name: Install Playwright test runner
+        run: |
+          npm cache clean --force
+          npm install --no-save --package-lock=false --no-audit --no-fund --legacy-peer-deps @playwright/test@1.64.1 axe-core@4.14.0 lighthouse@13.6.0 vite@8.3.5
+      - name: Install Chromium, Firefox and WebKit
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Install stable Chrome for Lighthouse
+        run: npx playwright install chrome
+      # Smoke-test the exact code built by this workflow instead of a potentially stale hosted preview.
+      # These public-route checks do not authenticate or write to Supabase.
+      - name: Start local production server
+        run: |
+          nohup npm run start -- --hostname 127.0.0.1 > /tmp/coursepulse-next.log 2>&1 &
+          echo $! > /tmp/coursepulse-next.pid
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/coursepulse-next.log
+          exit 1
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
+          NEXT_PUBLIC_APP_URL: https://coursepulse.example
+      - name: Start local HTTPS proxy for browser tests
+        run: |
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout /tmp/coursepulse-test.key -out /tmp/coursepulse-test.crt -days 1 -subj '/CN=127.0.0.1' -addext 'subjectAltName=IP:127.0.0.1,DNS:localhost'
+          nohup node scripts/ci-https-proxy.mjs > /tmp/coursepulse-https-proxy.log 2>&1 &
+          echo $! > /tmp/coursepulse-https-proxy.pid
+          for attempt in $(seq 1 20); do
+            if curl --insecure --fail --silent https://127.0.0.1:3443/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/coursepulse-https-proxy.log
+          exit 1
+      - name: Public browser smoke tests
+        run: npx playwright test --config=playwright.config.mjs
+        env:
+          COURSEPULSE_BASE_URL: https://127.0.0.1:3443
+          COURSEPULSE_ALLOW_SELF_SIGNED: 'true'
+      - name: Run mobile Lighthouse performance audit
+        run: |
+          CHROME_PATH="$(command -v google-chrome)"
+          npx lighthouse "$COURSEPULSE_BASE_URL" --chrome-path="$CHROME_PATH" --chrome-flags="--headless --no-sandbox --disable-gpu --ignore-certificate-errors" --only-categories=performance --output=json --output-path=/tmp/coursepulse-lighthouse-mobile.json --quiet
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/coursepulse-lighthouse-mobile.json', 'utf8'));
+          const audits = report.audits;
+          const summary = {
+            performanceScore: Math.round((report.categories.performance.score ?? 0) * 100),
+            firstContentfulPaintMs: Math.round(audits['first-contentful-paint'].numericValue),
+            largestContentfulPaintMs: Math.round(audits['largest-contentful-paint'].numericValue),
+            cumulativeLayoutShift: Number(audits['cumulative-layout-shift'].numericValue.toFixed(3)),
+            totalBlockingTimeMs: Math.round(audits['total-blocking-time'].numericValue)
+          };
+          console.log('CoursePulse mobile Lighthouse lab results:', JSON.stringify(summary, null, 2));
+          NODE
+        env:
+          COURSEPULSE_BASE_URL: https://127.0.0.1:3443
+      - name: Stop local test servers
+        if: always()
+        run: |
+          if [ -f /tmp/coursepulse-https-proxy.pid ]; then
+            kill "$(cat /tmp/coursepulse-https-proxy.pid)" || true
+          fi
+          if [ -f /tmp/coursepulse-next.pid ]; then
+            kill "$(cat /tmp/coursepulse-next.pid)" || true
+          fi
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coursepulse-mobile-lighthouse-report
+          path: /tmp/coursepulse-lighthouse-mobile.json
+          if-no-files-found: ignore

@@ -1,38 +1,51 @@
-# Product Requirements — CoursePulse
+# CoursePulse Product Requirements Document
 
 ## Vision
-Provide an institution-managed workspace for structured course feedback and privacy-aware academic reporting.
+CoursePulse is a privacy-first course feedback and learning analytics portal for higher education. Students submit course feedback, instructors improve teaching through protected aggregates, and administrators manage the academic workspace.
 
-## Problem and objectives
-Feedback collection is often fragmented and difficult to compare across courses and semesters. CoursePulse centralizes eligible student forms, course administration, role-specific dashboards, aggregate reporting, exports, and request governance.
+## Roles
+- Student: view eligible courses/forms, submit once per eligible form, and view only personal participation status.
+- Instructor: manage assigned courses/forms and view privacy-protected aggregates only.
+- Administrator: manage users, academic structure, assignments, forms, retention and audit records. Admins must not see raw anonymous answers.
 
-## Personas and permissions
-- **Student:** sign in, see enrolled-course forms, submit one response per eligible form, view submission status/history, manage profile/password, request account deletion.
-- **Instructor:** manage own course/form workflows where permitted, view assigned-course aggregate analytics, export approved summaries. No access to student identity or raw anonymous submissions.
-- **Administrator:** manage users/roles, departments, semesters, enrollments, instructor assignments, review deletion requests, inspect audit activity, and view institution-level aggregates. Privileged APIs require AAL2.
+## Product principles
+1. Anonymous answers must not be stored with a student identifier or reversible identity mapping.
+2. Eligibility and duplicate prevention are separate from answer storage.
+3. Reports suppress cohorts below the configured minimum (default 5), including complementary groups that enable subtraction.
+4. Every endpoint enforces authentication, role, object ownership and input validation server-side.
+5. Never invent institution policies, contacts, retention periods or legal claims.
+6. Accessibility, responsive behavior, observability and automated testing are release requirements.
 
-## Functional requirements
-- Authenticated role-specific workspace using Supabase Auth and database RLS.
-- Dynamic feedback forms with rating, numeric, single-choice, multi-select, yes/no, short text, and long text questions.
-- Server-side validation and atomic anonymous submission via the database RPC.
-- Duplicate prevention, course enrollment checks, active-form checks, due-date checks, and configured retention.
-- Aggregate reporting APIs, course/semester/department/date filters, rating distributions, weekly response activity, compatible-question course comparison, minimum cohort-size suppression, export endpoints, debounced permission-aware search.
-- Public landing, features, about, privacy, terms, contact, support, and refund-policy pages.
-- Administrator role, course-enrollment, instructor-assignment, deletion-review, and audit-log workflows.
+## Functional scope
+### Identity
+Signup, email confirmation, sign-in/out, password recovery/reset/change, session lifecycle, account suspension, three roles and admin-managed role assignment. No self-service role escalation.
+
+### Academic structure
+Departments, academic semesters, courses/course codes, instructor assignments and student enrollments.
+
+### Feedback lifecycle
+Create/edit/preview/publish/close/archive/delete forms; multiple ordered questions; rating, text, number, single-choice and multiple-choice types; required flags; deadlines; course/cohort eligibility; version/change controls.
+
+### Anonymous submissions
+Eligibility records prove permission and enforce one-time use. Anonymous answer records contain no student/user identifier, IP, email, stable shared ID or direct join key. The submission flow must consume eligibility atomically without exposing a mapping from student to answer.
+
+### Student experience
+Eligible, pending and completed forms; due dates; participation progress; accessible form validation; confirmation; personal submission history.
+
+### Instructor experience
+Assigned-course overview, participation metrics, course/department/semester/date filters, rating distributions, averages, trends, comparisons and privacy-reviewed comment themes. Exports must use the same aggregate service.
+
+### Administrator experience
+User/role lifecycle, departments, semesters, courses, enrollments, instructor assignments, forms/questions, institution aggregates, retention controls and append-only audit logs.
+
+### Public website
+Landing, features/about/contact, privacy and terms pages, SEO metadata, canonical, Open Graph, robots and sitemap. No fabricated testimonials, logos, certifications or performance claims.
+
+### Security and privacy
+RLS and least-privilege grants on exposed tables; CSRF/Origin controls; distributed rate limits; CSP/security headers; secret scanning; dependency audits; role-matrix tests; retention/deletion workflows. Institution/legal approval is required for policy wording.
 
 ## Non-functional requirements
-Security first; data minimization; role-level and row-level authorization; responsive and keyboard-usable UI; stable builds; accurate metadata; observable, testable behavior. Performance targets (LCP <=2 s, INP <=200 ms, CLS <=0.1) require field/lab measurement and are not yet certified.
+WCAG 2.2 AA target; keyboard/screen-reader support; responsive mobile/tablet/desktop; measured Core Web Vitals; pagination and bounded queries; production monitoring; backup/restore evidence.
 
-## User journeys / acceptance criteria
-1. A student sees only forms allowed by enrollment and RLS; invalid or duplicate submissions are rejected by the database.
-2. A new response is stored in `anonymous_submissions`; the corresponding eligibility ledger is separate; aggregate reporting suppresses cohorts below five.
-3. An instructor sees aggregates only for authorized courses.
-4. An administrator completes authenticator MFA before protected management reads/writes; user/role changes use the database procedure and its audit trail.
-5. A user can request account deletion; an AAL2 administrator can move the request through valid review states with a recorded explanation.
-6. Public pages are crawlable with distinct canonical metadata; authenticated routes are noindex.
-
-## Priorities
-P0: anonymous submission boundary, RBAC/RLS, MFA admin, CSRF/origin protection, secrets and headers. P1: student feedback builder/response workflow, admin records and deletion governance, search and reporting. P2: complete chart suite, course comparison, form edit/reorder/delete, analytics provider, E2E/security/performance test coverage, institution-specific policies and operational readiness.
-
-## Success measures
-Eligible form completion rate, duplicate/invalid submission rejection, report availability by permitted cohort, median dashboard/API latency, accessibility results, security lint results, incident rate, and data-deletion request turnaround. Do not populate these measures with synthetic production data.
+## Acceptance gates
+A feature is complete only when implementation, database policy, automated tests and user-facing behavior are verified. Production sign-off requires reviewed/applied migrations, passing typecheck/unit/integration/E2E/security tests, student/instructor/admin RLS matrix, anonymity threat-model review, accessibility/viewport evidence, production smoke tests and approved institution policy configuration.
