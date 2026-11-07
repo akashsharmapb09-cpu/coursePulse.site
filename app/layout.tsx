@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Manrope } from 'next/font/google';
 import './globals.css';
+import { CookieConsent } from '@/components/cookie-consent';
 
 // A per-request CSP nonce must be available during server rendering; static
 // prerendering would emit Next.js scripts without the request nonce.
@@ -35,5 +36,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className={`${dmSans.variable} ${manrope.variable}`}>{children}</body></html>;
+  return <html lang="en"><body className={`${dmSans.variable} ${manrope.variable}`}>{children}<CookieConsent /></body></html>;
 }

@@ -21,7 +21,7 @@ export default defineConfig({
   use: {
     baseURL,
     headless: true,
-    ignoreHTTPSErrors: false,
+    ignoreHTTPSErrors: process.env.COURSEPULSE_ALLOW_SELF_SIGNED === 'true',
     actionTimeout: 8_000,
     navigationTimeout: 20_000,
     screenshot: 'only-on-failure',
