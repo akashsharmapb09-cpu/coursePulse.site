@@ -182,6 +182,10 @@ test.describe('public-page browser smoke', () => {
 
     for (const route of ['/', '/about', '/contact', '/login', '/signup', '/privacy', '/terms']) {
       await page.goto(route);
+      // Next.js prefetches visible links in the background. Let those RSC
+      // requests settle before navigating away, otherwise WebKit reports
+      // the expected cancellations as uncaught page errors.
+      await page.waitForLoadState('networkidle');
     }
 
     expect(errors).toEqual([]);
