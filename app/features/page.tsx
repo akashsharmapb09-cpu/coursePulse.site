@@ -1,0 +1,11 @@
+import type { Metadata } from 'next';
+import { PublicPage } from '@/components/public-site';
+export const metadata: Metadata = { alternates: { canonical: '/features' }, title: 'Features | CoursePulse', description: 'Explore CoursePulse feedback collection, role-based workspaces, aggregate analytics, and reporting capabilities.' };
+export default function FeaturesPage() { return <PublicPage eyebrow="Platform capabilities" title="The feedback workflow, in one place." description="CoursePulse connects course feedback collection with permission-aware reporting and academic administration.">
+  <section><h2>Student feedback</h2><p>Students can access feedback forms made available to their enrolled, published courses. Forms support rating, number, single-choice, multiple-selection, yes/no, short-text, and long-text questions. Submission status is tracked separately from the answer payload.</p></section>
+  <section><h2>Instructor insights</h2><p>Instructors can review aggregate response counts and numeric ratings for courses they own or are assigned to. Reporting groups with fewer than five submissions are suppressed; written answers are not included in the aggregate reporting API.</p></section>
+  <section><h2>Academic administration</h2><p>Administrators have workflows for users, roles, departments, semesters, course enrolments, instructor assignments, feedback configuration, and audit review. Privileged account-management operations require administrator multi-factor authentication.</p></section>
+  <section><h2>Exports and reporting</h2><p>Authorized users can export aggregate data in CSV, spreadsheet, or PDF formats. Exports use the same aggregate reporting boundary and do not provide individual answer records.</p></section>
+  <section><h2>Security and privacy controls</h2><p>Supabase authentication, backend role checks, database row-level policies, rate limits, separate eligibility records, and configurable response retention support a privacy-conscious approach. These controls do not constitute a claim of cryptographic anonymity or legal certification.</p></section>
+  <p className="public-note">Available features depend on the signed-in role, assigned courses, database configuration, and administrator MFA status.</p>
+</PublicPage>; }

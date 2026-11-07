@@ -1,8 +1,25 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ArrowRight, BarChart3, BookOpenCheck, LockKeyhole, MessageSquareText, ShieldCheck, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { PublicFooter, PublicHeader } from '@/components/public-site';
 
+export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'CoursePulse | Course feedback, made useful', alternates: { canonical: '/' } };
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  redirect(user ? '/dashboard' : '/login');
+  return <div className="public-shell">
+    <PublicHeader authenticated={Boolean(user)}/>
+    <main>
+      <section className="marketing-hero">
+        <div className="marketing-copy"><span className="eyebrow"><Sparkles size={13}/> A clearer view of the learning experience</span><h1>Turn student feedback into <em>better learning experiences.</em></h1><p>A thoughtful workspace to collect course feedback, understand teaching performance, and make decisions grounded in student experience.</p><div className="marketing-actions"><Link className="button primary" href={user?'/dashboard':'/login'}>{user?'Open your workspace':'Get started'} <ArrowRight size={16}/></Link><Link className="button subtle" href="/features">Explore features</Link></div><div className="hero-proof"><span><ShieldCheck size={15}/> Privacy-conscious feedback</span><span><BarChart3 size={15}/> Aggregate reporting</span></div></div>
+        <div className="marketing-visual" aria-label="Course feedback analytics preview"><div className="visual-window"><div className="visual-window-top"><span/><span/><span/><b>Learning insights</b></div><div className="visual-window-body"><div className="visual-window-title"><div><small>COURSE OVERVIEW</small><strong>Feedback at a glance</strong></div><span className="visual-period">This semester</span></div><div className="visual-stats"><div><small>COURSES</small><b>—</b><span>Across your workspace</span></div><div><small>RESPONSES</small><b>—</b><span>Eligible submissions</span></div></div><div className="visual-chart-heading"><b>Teaching experience</b><small>Illustrative layout · live values appear in workspace</small></div><div className="visual-bars"><i style={{height:'40%'}}/><i style={{height:'68%'}}/><i style={{height:'53%'}}/><i style={{height:'82%'}}/><i style={{height:'62%'}}/><i style={{height:'92%'}}/><i style={{height:'74%'}}/></div><div className="visual-legend"><span>Course content</span><span>Communication</span><span>Organization</span></div><div className="visual-privacy"><LockKeyhole size={15}/><span><b>Privacy-first reporting</b><small>Small groups are suppressed in instructor analytics.</small></span></div></div></div><div className="visual-float"><span><ShieldCheck size={18}/></span><div><b>Built around privacy</b><small>Aggregate insights, not individual answers</small></div></div></div>
+      </section>
+      <section className="public-section public-section-muted"><div className="public-section-heading"><span className="eyebrow">A shared academic workspace</span><h2>One feedback loop. Three clear roles.</h2><p>Give each member of the learning community the tools and access they need—without exposing information they should not see.</p></div><div className="role-grid"><article><span><BookOpenCheck size={20}/></span><h3>Students</h3><p>Find available course forms, share structured feedback, and see what is pending or complete.</p></article><article><span><BarChart3 size={20}/></span><h3>Instructors</h3><p>Review course-level trends and reporting groups without access to individual response identities.</p></article><article><span><ShieldCheck size={20}/></span><h3>Administrators</h3><p>Manage academic setup, user access, reporting, and account-governance workflows.</p></article></div></section>
+      <section className="public-section"><div className="public-section-heading"><span className="eyebrow">Designed for useful action</span><h2>From a question to a clearer next step.</h2><p>CoursePulse brings structured collection and privacy-aware analysis into the same workflow.</p></div><div className="feature-grid"><article><MessageSquareText size={21}/><h3>Structured feedback</h3><p>Create forms with ratings, choices, yes/no prompts, and written questions.</p></article><article><BarChart3 size={21}/><h3>Aggregate analytics</h3><p>Explore course ratings and response patterns. Groups below five submissions are hidden.</p></article><article><LockKeyhole size={21}/><h3>Role-based access</h3><p>Access to records and actions is enforced in the backend and database policies.</p></article></div><div className="public-section-cta"><div><b>Make feedback easier to act on.</b><p>Sign in to continue to your CoursePulse workspace.</p></div><Link className="button primary" href={user?'/dashboard':'/login'}>{user?'Go to dashboard':'Continue'} <ArrowRight size={16}/></Link></div></section>
+    </main>
+    <PublicFooter/>
+  </div>;
 }

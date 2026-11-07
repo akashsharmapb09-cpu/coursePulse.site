@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Dashboard } from '@/components/dashboard';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = { title: 'Workspace | CoursePulse', robots: { index: false, follow: false } };
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
