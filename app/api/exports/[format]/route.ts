@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { createClient } from '@/lib/supabase/server';
 import { aggregateExportRows, toCsv, type AggregateRow } from '@/lib/exports';
-import { getCurrentUser, jsonError } from '@/lib/http';
+import { getCurrentUser, jsonError, consumeRateLimit } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest, context: Context) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Exports are available to instructors and admins only.', 403);
+  if (!await consumeRateLimit(supabase, 'exports:download', 10, 60)) return jsonError('Report downloads are temporarily rate limited.', 429);
   const { format } = await context.params;
   if (!['csv', 'xls', 'xlsx', 'pdf'].includes(format)) return jsonError('Unsupported export format.', 404);
   const courseId = request.nextUrl.searchParams.get('course_id');
