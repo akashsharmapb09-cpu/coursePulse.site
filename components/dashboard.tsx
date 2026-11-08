@@ -57,7 +57,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formDueAt,setFormDueAt]=useState('');
-  const [questions, setQuestions] = useState<Question[]>([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]);
+  const [questions, setQuestions] = useState<Question[]>([{ id: 'question-1', label: "How would you rate your teacher's teaching in this course?", type: 'rating', category: 'Teaching Effectiveness', required: true }]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [ratingDistributions,setRatingDistributions]=useState<RatingDistribution[]>([]);
   const [responseTrends,setResponseTrends]=useState<ResponseTrend[]>([]);
@@ -208,7 +208,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
       const schema = questions.map(question => ({ ...question, id: question.id, ...(question.options ? { options: normalizeQuestionOptions(question.options) ?? [] } : {}) }));
       if (schema.some(question => question.label.trim().length < 2)) throw new Error('Every question needs a clear label.');
       if (schema.some(question => ['single_choice', 'multiple_choice', 'multiple_select'].includes(question.type) && (question.options?.length ?? 0) < 2)) throw new Error('Choice questions need at least two options.');
-      const deadline=formDueAt?new Date(formDueAt).toISOString():null; const payload=editingFeedback?{id:editingFeedback.id,title:formTitle,description:formDescription,form_schema:schema,due_at:deadline}:{course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365,due_at:deadline}; const res=await fetch('/api/feedback',{method:editingFeedback?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice(editingFeedback?'Feedback form updated.':'Feedback form published.'); setEditingFeedback(null); setFormTitle(''); setFormDueAt(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]); await load();
+      const deadline=formDueAt?new Date(formDueAt).toISOString():null; const payload=editingFeedback?{id:editingFeedback.id,title:formTitle,description:formDescription,form_schema:schema,due_at:deadline}:{course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365,due_at:deadline}; const res=await fetch('/api/feedback',{method:editingFeedback?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice(editingFeedback?'Feedback form updated.':'Feedback form published.'); setEditingFeedback(null); setFormTitle(''); setFormDueAt(''); setQuestions([{ id: 'question-1', label: "How would you rate your teacher's teaching in this course?", type: 'rating', category: 'Teaching Effectiveness', required: true }]); await load();
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
   async function uploadAvatar(event:ChangeEvent<HTMLInputElement>) {
