@@ -73,6 +73,23 @@ export function HeadIntelligence({courses,users,departments}:Props) {
 
   useEffect(()=>{void loadArchive();},[archiveMonth]);
 
+  useEffect(()=>{
+    let active=true;
+    void fetch('/api/admin/teacher-notifications',{cache:'no-store'})
+      .then(async response=>{
+        const payload=await response.json();
+        if(!response.ok) throw new Error(payload.error??'Saved review settings could not be loaded.');
+        if(active){
+          setThreshold(String(payload.settings?.rating_threshold??3));
+          setMinimumResponses(String(payload.settings?.minimum_responses??10));
+        }
+      })
+      .catch(caught=>{
+        if(active) setError(caught instanceof Error?caught.message:'Saved review settings could not be loaded.');
+      });
+    return ()=>{active=false;};
+  },[]);
+
   const courseMetrics=useMemo<CourseMetric[]>(()=>{
     const forms=new Map<string,{course_id:string;feedback_id:string;scoreTotal:number;questionCount:number;responses:number}>();
     for(const row of rows){
@@ -156,7 +173,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
             ? ' Eligible teachers were already notified for this month.'
             : ' No teacher met the review threshold and response minimum.';
       }
-      setNotice('Monthly report generated from privacy-suppressed aggregate data.' + notificationMessage);
+      setNotice('Monthly report generated. Review settings saved for the scheduled monthly run.' + notificationMessage);
     }catch(caught){
       setError(caught instanceof Error?caught.message:'Monthly report could not be generated.');
     }finally{setLoading(false);}

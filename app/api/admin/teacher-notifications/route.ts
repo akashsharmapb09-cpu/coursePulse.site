@@ -20,6 +20,22 @@ type AggregateRow = {
   response_count: number | string;
 };
 
+export async function GET() {
+  const supabase = await createClient();
+  const auth = await getCurrentUser(supabase);
+  if (!auth) return jsonError('College Head administrator MFA is required.', 401);
+  if (auth.profile.role !== 'ADMIN') return jsonError('College Head access is required.', 403);
+
+  const { data, error } = await supabase.from('monthly_report_settings')
+    .select('rating_threshold,minimum_responses,updated_at')
+    .eq('id', 1)
+    .maybeSingle();
+  if (error) return jsonError('Monthly report settings could not be loaded.', 500);
+  return NextResponse.json({
+    settings: data ?? { rating_threshold: 3, minimum_responses: 10 }
+  }, { headers: { 'Cache-Control': 'no-store' } });
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
@@ -32,6 +48,15 @@ export async function POST(request: NextRequest) {
   try { body = await request.json(); } catch { return jsonError('Invalid JSON body.'); }
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success || parsed.data.from_date > parsed.data.to_date) return jsonError('Choose a valid reporting period and review threshold.');
+
+  const { error: settingsError } = await supabase.from('monthly_report_settings').upsert({
+    id: 1,
+    rating_threshold: parsed.data.threshold,
+    minimum_responses: parsed.data.minimum_responses,
+    updated_by: auth.user.id,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'id' });
+  if (settingsError) return jsonError('Monthly review thresholds could not be saved.', 500);
 
   const { data: aggregates, error: aggregateError } = await supabase.rpc('get_instructor_aggregates_filtered', {
     p_course_id: null,
