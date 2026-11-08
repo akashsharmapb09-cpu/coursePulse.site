@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please sign in before activating an admin account.' }, { status: 401 });
   }
 
-  // The database limiter also protects direct calls to claim_admin_signup().
-  const protection = await protectMutation(request, supabase, 'admin-signup:claim', 5, 900);
+  // A separate DB-side counter protects direct calls to claim_admin_signup().
+  const protection = await protectMutation(request, supabase, 'admin-signup:route', 5, 900);
   if (protection) return protection;
 
   const body = await request.json().catch(() => ({})) as { code?: unknown };
