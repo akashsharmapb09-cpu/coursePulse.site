@@ -29,6 +29,20 @@ describe('administrator signup security controls', () => {
     expect(http).toContain('status: 429');
   });
 
+  it('keeps HTTP and direct-RPC rate limits in independent buckets', () => {
+    expect(grant).toContain("protectMutation(request, supabase, 'admin-signup:route', 5, 900)");
+    expect(readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108103822_security_harden_admin_signup_and_rate_limit.sql'), 'utf8'))
+      .toContain("private.consume_api_rate_limit('admin-signup:claim', 5, 900)");
+  });
+
+  it('creates all new Auth users as STUDENT and never promotes from user metadata', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108103822_security_harden_admin_signup_and_rate_limit.sql'), 'utf8');
+    expect(migration).toContain("'STUDENT'::public.app_role");
+    expect(migration).not.toContain("v_requested_role := upper");
+    expect(migration).not.toContain("new.raw_user_meta_data ->> 'requested_role'");
+    expect(migration).toContain("- 'requested_role'");
+  });
+
   it('requires identity confirmation before admin claim', () => {
     expect(grant).toContain('user.email_confirmed_at || user.confirmed_at');
     expect(grant).toContain('user.phone_confirmed_at || user.confirmed_at');
