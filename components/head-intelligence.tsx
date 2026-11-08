@@ -36,6 +36,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
   const [departmentId,setDepartmentId]=useState('');
   const [courseId,setCourseId]=useState('');
   const [threshold,setThreshold]=useState('3');
+  const [minimumResponses,setMinimumResponses]=useState('10');
   const [rows,setRows]=useState<AnalyticsRow[]>([]);
   const [reportReady,setReportReady]=useState(false);
   const [loading,setLoading]=useState(false);
@@ -87,7 +88,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
     }).filter(teacher=>teacher.courses>0).sort((a,b)=>a.average-b.average);
   },[users,courseMetrics]);
 
-  const flaggedTeachers=useMemo(()=>teacherMetrics.filter(teacher=>teacher.responses>=10&&teacher.average<Number(threshold)),[teacherMetrics,threshold]);
+  const flaggedTeachers=useMemo(()=>teacherMetrics.filter(teacher=>teacher.responses>=Number(minimumResponses)&&teacher.average<Number(threshold)),[teacherMetrics,threshold,minimumResponses]);
   const overall=useMemo(()=>{
     const total=courseMetrics.reduce((sum,course)=>sum+course.responses,0);
     const weighted=courseMetrics.reduce((sum,course)=>sum+course.average*course.responses,0);
@@ -109,7 +110,27 @@ export function HeadIntelligence({courses,users,departments}:Props) {
       if(payload.raw_answers_included!==false) throw new Error('The reporting response did not confirm aggregate-only output.');
       setRows(payload.rows??[]);
       setReportReady(true);
-      setNotice('Monthly report generated from privacy-suppressed aggregate data.');
+      let notificationMessage = '';
+      if (!departmentId && !courseId) {
+        const notifyResponse = await fetch('/api/admin/teacher-notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from_date: range.fromDate,
+            to_date: range.toDate,
+            threshold: Number(threshold),
+            minimum_responses: Number(minimumResponses)
+          })
+        });
+        const notifyPayload = await notifyResponse.json();
+        if (!notifyResponse.ok) throw new Error(notifyPayload.error ?? 'Report generated, but private teacher notifications could not be processed.');
+        notificationMessage = notifyPayload.created > 0
+          ? ` ${notifyPayload.created} private teacher meeting request(s) sent.`
+          : notifyPayload.eligible_teachers > 0
+            ? ' Eligible teachers were already notified for this month.'
+            : ' No teacher met the review threshold and response minimum.';
+      }
+      setNotice('Monthly report generated from privacy-suppressed aggregate data.' + notificationMessage);
     }catch(caught){
       setError(caught instanceof Error?caught.message:'Monthly report could not be generated.');
     }finally{setLoading(false);}
@@ -147,6 +168,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
       <label className="text-xs font-semibold text-[#43584d]">Department<select className="mt-2 w-full rounded-lg border border-[#dce6df] bg-white p-2.5" value={departmentId} onChange={event=>{setDepartmentId(event.target.value);setCourseId('');setReportReady(false);}}><option value="">All departments</option>{departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label>
       <label className="text-xs font-semibold text-[#43584d]">Course<select className="mt-2 w-full rounded-lg border border-[#dce6df] bg-white p-2.5" value={courseId} onChange={event=>{setCourseId(event.target.value);setReportReady(false);}}><option value="">All courses</option>{visibleCourses.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
       <label className="text-xs font-semibold text-[#43584d]">Flag teachers below<select className="mt-2 w-full rounded-lg border border-[#dce6df] bg-white p-2.5" value={threshold} onChange={event=>setThreshold(event.target.value)}><option value="2.5">2.5 / 5</option><option value="3">3.0 / 5</option><option value="3.5">3.5 / 5</option><option value="4">4.0 / 5</option></select></label>
+      <label className="text-xs font-semibold text-[#43584d]">Minimum review responses<select className="mt-2 w-full rounded-lg border border-[#dce6df] bg-white p-2.5" value={minimumResponses} onChange={event=>setMinimumResponses(event.target.value)}><option value="5">5 responses</option><option value="10">10 responses</option><option value="15">15 responses</option><option value="20">20 responses</option><option value="30">30 responses</option></select></label>
       <div className="flex flex-wrap items-center gap-2 md:col-span-2 xl:col-span-4">
         <button type="button" className="button primary" disabled={loading} onClick={()=>void generateReport()}><RefreshCw size={15}/>{loading?'Generating…':'Generate monthly report'}</button>
         {reportReady&&<a className="button subtle" href={'/api/exports/pdf?'+exportQuery()}><Download size={15}/> Download PDF</a>}
@@ -163,7 +185,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
         <article className="rounded-2xl border border-[#e5ece6] bg-white p-5">
           <div className="mb-3 flex items-center gap-2"><Lightbulb size={18} className="text-[#4d7b62]"/><h3 className="font-semibold">Smart improvement insights</h3></div>
           {courseMetrics.length===0?<p className="fine-print">No rating groups meet the minimum privacy threshold for this period.</p>:<ul className="space-y-3 text-sm text-[#53645b]">
-            {flaggedTeachers.length>0&&<li><b>{flaggedTeachers.length} teacher(s)</b> are below the selected review threshold with at least 10 reportable course responses. This is a prompt for human review, not an automatic finding of poor performance.</li>}
+            {flaggedTeachers.length>0&&<li><b>{flaggedTeachers.length} teacher(s)</b> are below the selected review threshold with at least {minimumResponses} reportable course responses. This is a prompt for human review, not an automatic finding of poor performance.</li>}
             {flaggedTeachers.length===0&&<li>No teacher crossed the selected review threshold with the minimum response volume in this reporting period.</li>}
             {courseMetrics.slice().sort((a,b)=>a.average-b.average).slice(0,2).map(course=><li key={course.id}><b>{course.title}:</b> {course.average.toFixed(2)}/5 across reportable rating questions. Review course feedback and compare the next period.</li>)}
             <li>Free-text comments and student identity are excluded from this report. Use the institution's separately approved feedback-review process for qualitative follow-up.</li>
@@ -173,7 +195,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
         <article className="rounded-2xl border border-[#e5ece6] bg-white p-5">
           <div className="mb-3 flex items-center gap-2"><Users size={18} className="text-[#4d7b62]"/><h3 className="font-semibold">Teacher performance review</h3></div>
           {teacherMetrics.length===0?<p className="fine-print">No assigned teacher has reportable rating data for this period.</p>:<div className="space-y-3">{teacherMetrics.map(teacher=><div key={teacher.id} className="border-b border-[#edf1ee] pb-3 last:border-0">
-            <div className="flex flex-wrap items-center justify-between gap-2"><div><b className="text-sm">{teacher.name}</b><p className="fine-print">{teacher.courses} course(s) · {teacher.responses} reportable rating responses</p></div><div className="text-right"><b className="text-lg">{teacher.average.toFixed(2)}/5</b>{teacher.responses>=10&&teacher.average<Number(threshold)&&<span className="ml-2 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">Review suggested</span>}</div></div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><b className="text-sm">{teacher.name}</b><p className="fine-print">{teacher.courses} course(s) · {teacher.responses} reportable rating responses</p></div><div className="text-right"><b className="text-lg">{teacher.average.toFixed(2)}/5</b>{teacher.responses>=Number(minimumResponses)&&teacher.average<Number(threshold)&&<span className="ml-2 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">Review suggested</span>}</div></div>
             {teacher.email&&<a className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#35674f]" href={`mailto:${encodeURIComponent(teacher.email)}?subject=${encodeURIComponent('CoursePulse teaching feedback review')}&body=${encodeURIComponent(`Dear ${teacher.name},\n\nPlease meet the College Head to discuss recent course feedback and possible improvement support. The office will confirm a meeting time separately.\n\nRegards,\nCollege Administration`)}`}><Mail size={13}/> Draft a private meeting email</a>}
           </div>)}</div>}
           <p className="mt-3 text-xs text-[#748179]">Teacher averages are derived from reportable ratings on courses assigned to them. Low scores trigger a review suggestion only; they do not automatically send a message or disciplinary action.</p>

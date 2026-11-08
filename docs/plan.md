@@ -77,3 +77,12 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## Owner decisions required
 Institution name/branding; verified support contact; department and semester catalogue; student age/minor policy; legal basis and retention schedule; cookie/analytics policy; paid/free status; official accessibility/support contact. Do not publish guessed legal statements or contacts.
+
+
+## College workflow additions — preview-only implementation
+- [x] DONE: Student Voice suggestions are stored in a separate identified table, with student-owned reads, course-enrollment checks, immutable submission content, Head-only status changes, and audited workflow updates.
+- [x] DONE: private instructor inbox notifications use recipient-scoped RLS, immutable notification content, and read-only acknowledgement by the addressed instructor.
+- [x] DONE: full-college monthly report generation can create one private meeting request per teacher/month when server-calculated aggregate ratings fall below the Head-selected threshold and response minimum. Notifications are in-app; no email provider is configured.
+- [ ] IN PROGRESS: automated monthly cron persistence and month-over-month trend snapshots remain unimplemented; report generation still requires the Head to generate the monthly report.
+- [ ] NOT STARTED: bulk roster import with secure Auth provisioning, college/tenant isolation, Super Admin, institution QR verification, and external AI model integration remain release blockers.
+- [ ] REQUIRED: authenticated role-matrix tests against QA fixtures, browser tests for Student Voice/instructor inbox/Head review, and security-advisor review after applying this migration.
