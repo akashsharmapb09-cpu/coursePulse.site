@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'About CoursePulse',
+  title: 'About',
   description: 'Learn about the CoursePulse college project and its course-feedback workspace.',
   alternates: { canonical: '/about' }
 };
