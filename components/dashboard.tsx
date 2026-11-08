@@ -1,7 +1,7 @@
 'use client';
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
+import { Activity, ArrowUp, ArrowDown, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, IdCard, ImagePlus, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { QUESTION_CATEGORIES } from '@/lib/question-categories';
 import { buildRatingDonutSegments, radarPolygonPoints, summarizeCategoryPerformance, summarizeRatingSentiment } from '@/lib/analytics-visuals';
@@ -37,7 +37,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'history'|'analytics'|'admin'|'security'>('overview');
+  const [tab, setTab] = useState<'overview'|'courses'|'feedback'|'history'|'id'|'analytics'|'admin'|'security'>('overview');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -85,6 +85,9 @@ export function Dashboard({ profile }: { profile: Profile }) {
   const [confirmNewPassword,setConfirmNewPassword]=useState('');
   const [profileName,setProfileName]=useState(profile.full_name);
   const [profileSaving,setProfileSaving]=useState(false);
+  const [avatarUrl,setAvatarUrl]=useState<string|null>(null);
+  const [avatarBusy,setAvatarBusy]=useState(false);
+  const avatarObjectPath=profile.id+'/avatar';
 
   async function load() {
     setLoading(true); setError('');
@@ -99,6 +102,12 @@ export function Dashboard({ profile }: { profile: Profile }) {
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    let active=true;
+    const bucket=createClient().storage.from('avatars');
+    void bucket.createSignedUrl(avatarObjectPath,3600).then(({data})=>{if(active)setAvatarUrl(data?.signedUrl??null);});
+    return ()=>{active=false;};
+  },[avatarObjectPath]);
   useEffect(() => {
     const term=searchQuery.trim();
     if(term.length<2){setSearchResults(null);setSearchLoading(false);return;}
@@ -201,6 +210,26 @@ export function Dashboard({ profile }: { profile: Profile }) {
       const deadline=formDueAt?new Date(formDueAt).toISOString():null; const payload=editingFeedback?{id:editingFeedback.id,title:formTitle,description:formDescription,form_schema:schema,due_at:deadline}:{course_id:selectedCourse,title:formTitle,description:formDescription,form_schema:schema,retention_days:365,due_at:deadline}; const res=await fetch('/api/feedback',{method:editingFeedback?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await res.json(); if(!res.ok) throw new Error(data.error); setFeedbackModal(false); setNotice(editingFeedback?'Feedback form updated.':'Feedback form published.'); setEditingFeedback(null); setFormTitle(''); setFormDueAt(''); setQuestions([{ id: 'question-1', label: 'How would you rate this course?', type: 'rating', category: 'Course Content', required: true }]); await load();
     } catch(e){setError(e instanceof Error?e.message:'Could not create form.');} finally{setBusy(false);}
   }
+  async function uploadAvatar(event:ChangeEvent<HTMLInputElement>) {
+    const file=event.target.files?.[0];
+    event.target.value='';
+    if(!file)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){setError('Use a JPEG, PNG or WebP image.');return;}
+    if(file.size>2*1024*1024){setError('Profile images must be 2 MB or smaller.');return;}
+    setAvatarBusy(true);setError('');setNotice('');
+    try{
+      const bucket=createClient().storage.from('avatars');
+      const {error:removeError}=await bucket.remove([avatarObjectPath]);
+      if(removeError&&!/not found|does not exist/i.test(removeError.message))throw removeError;
+      const {error:uploadError}=await bucket.upload(avatarObjectPath,file,{cacheControl:'3600',contentType:file.type,upsert:false});
+      if(uploadError)throw uploadError;
+      const {data,error:signedError}=await bucket.createSignedUrl(avatarObjectPath,3600);
+      if(signedError||!data?.signedUrl)throw new Error('Photo uploaded, but its private preview URL could not be created.');
+      setAvatarUrl(data.signedUrl);setNotice('Profile picture updated.');
+    }catch(caught){setError(caught instanceof Error?caught.message:'Profile picture could not be updated.');}
+    finally{setAvatarBusy(false);}
+  }
+
   async function saveProfile(event:FormEvent) {
     event.preventDefault();
     setError('');setNotice('');
@@ -340,7 +369,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
         {canTeach && <button type="button" title="Analytics" aria-label="Analytics" aria-pressed={tab==='analytics'} className={tab==='analytics'?'active':''} onClick={()=>void changeTab('analytics')}><FileBarChart size={17}/> Analytics</button>}{profile.role==='ADMIN' && <button type="button" title="Administration" aria-label="Administration" aria-pressed={tab==='admin'} className={tab==='admin'?'active':''} onClick={()=>void changeTab('admin')}><Users size={17}/> Administration</button>}
         <button type="button" title="Account security" aria-label="Account security" aria-pressed={tab==='security'} className={tab==='security'?'active':''} onClick={()=>void changeTab('security')}><ShieldCheck size={17}/> Account security</button>
       </nav>
-      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Submission eligibility is stored separately from answers. Reports show aggregates only.</p></div><div className="user-profile"><div className="avatar">{(profileName||profile.email||'U').slice(0,1).toUpperCase()}</div><div className="user-copy"><b>{profileName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
+      <div className="sidebar-bottom"><div className="security-note"><ShieldCheck size={18}/><b>Privacy protected</b><p>Submission eligibility is stored separately from answers. Reports show aggregates only.</p></div><div className="user-profile">{avatarUrl?<img src={avatarUrl} alt="Profile" className="h-9 w-9 rounded-full object-cover"/>:<div className="avatar">{(profileName||profile.email||'U').slice(0,1).toUpperCase()}</div>}<div className="user-copy"><b>{profileName||'CoursePulse user'}</b><small>{profile.role.toLowerCase()}</small></div><button className="icon-button" aria-label="Sign out" onClick={signOut}><LogOut size={17}/></button></div></div>
     </aside>
     <main className="main-area">
       <header className="topbar"><div><div className="breadcrumbs">Workspace <span>/</span> <b>{tab[0].toUpperCase()+tab.slice(1)}</b></div><h1>{tab==='overview'?'Your learning pulse':tab==='courses'?'Courses':tab==='feedback'?'Feedback forms':tab==='history'?'Submission history':tab==='admin'?'Administration':tab==='security'?'Account security':'Learning analytics'}</h1></div><div className="top-actions"><form className="global-search" role="search" onSubmit={runSearch}><Search size={16}/><input aria-label="Search courses, feedback and users" placeholder="Search workspace…" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/><button type="submit" aria-label="Search"><Search size={15}/></button></form><span className="role-chip"><span className="role-dot"/>{profile.role.toLowerCase()}</span>{canTeach && <button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> New course</button>}</div></header>
@@ -367,7 +396,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
         {tab==='courses' && <><div className="section-heading"><div><h3>Course library</h3><p>{searchTarget?.kind==='course'?'Showing the selected course.':searchTarget?.kind==='department'?'Showing courses in the selected department.':searchTarget?.kind==='instructor-course'?'Showing the selected instructor course.':canTeach?'Create and manage courses you own.':'Browse published courses.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}{canTeach&&<button className="button primary" onClick={()=>setCourseModal(true)}><Plus size={16}/> Create course</button>}</div></div><CourseList courses={visibleCourses} role={profile.role} loading={loading} onFeedback={id=>{setSelectedCourse(id);setFeedbackModal(true)}} onEdit={editCourse} onStatus={updateCourseStatus}/></>}
         {tab==='feedback' && <><div className="section-heading"><div><h3>Feedback library</h3><p>{searchTarget?.kind==='feedback'?'Showing the selected feedback form.':'Respond to an open form or manage forms you own.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget?.kind==='feedback'&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}{canTeach&&<button className="button primary" onClick={()=>{if(courses.length){setSelectedCourse(courses[0].id);setFeedbackModal(true)}else setError('Create a course before adding a feedback form.')}}><Plus size={16}/> New form</button>}</div></div><FeedbackList feedback={visibleFeedback} role={profile.role} onRespond={setResponseModal} onToggle={toggleFeedback} onEdit={editFeedback} onVersions={viewFeedbackVersions}/></>}
         {tab==='history' && <><div className="section-heading"><div><h3>Completed feedback</h3><p>{searchTarget?.kind==='feedback'?'Showing the selected completed feedback form.':'Your previous submissions are listed here. Individual answers are not shown again.'}</p></div><div className="flex flex-wrap items-center gap-2">{searchTarget?.kind==='feedback'&&<button className="text-button" onClick={()=>setSearchTarget(null)}>Clear search filter <X size={14}/></button>}<span className="role-chip">{stats.completed} completed</span></div></div><FeedbackList feedback={visibleFeedback.filter(form=>form.submitted)} role="STUDENT" onRespond={setResponseModal} onToggle={()=>{}} onEdit={()=>{}} onVersions={()=>{}}/></>}
-        {tab==='security' && <section className="mx-auto w-full max-w-2xl space-y-5"><div className="section-heading"><div><h3>Protect your account</h3><p>Confirm your current password before setting a new one. Other active sessions are revoked after a successful change.</p></div><ShieldCheck size={24}/></div><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={saveProfile}><div><h3 className="font-semibold">Profile information</h3><p className="fine-print">Update the name displayed across your workspace.</p></div><label>Full name<input value={profileName} onChange={e=>setProfileName(e.target.value)} minLength={2} maxLength={100} autoComplete="name" required/></label><button className="button primary self-start" disabled={profileSaving||profileName.trim()===profile.full_name}>{profileSaving?'Saving…':'Save profile'}</button></form><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" minLength={1} maxLength={72} required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} /></label><label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={newPassword} onChange={e=>setNewPassword(e.target.value)} /></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={confirmNewPassword} onChange={e=>setConfirmNewPassword(e.target.value)} /></label><p className="fine-print">Use a unique password you do not reuse on other websites. You will need to sign in again on this device after changing it.</p><button className="button primary self-start" disabled={busy||!currentPassword||!newPassword||!confirmNewPassword}>{busy?'Updating password…':'Change password'}</button></form><section className="stack-form rounded-2xl border border-amber-200 bg-white p-6">
+        {tab==='security' && <section className="mx-auto w-full max-w-2xl space-y-5"><div className="section-heading"><div><h3>Protect your account</h3><p>Confirm your current password before setting a new one. Other active sessions are revoked after a successful change.</p></div><ShieldCheck size={24}/></div><section className="flex flex-wrap items-center gap-4 rounded-2xl border border-[#e5ece6] bg-white p-6"><div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-[#e5efe8] text-xl font-bold text-[#315947]">{avatarUrl?<img src={avatarUrl} alt="Current profile" className="h-full w-full object-cover"/>:(profileName||'U').slice(0,1).toUpperCase()}</div><div className="min-w-0 flex-1"><h3 className="font-semibold">Profile picture</h3><p className="fine-print">Upload a private JPEG, PNG or WebP image (maximum 2 MB). Only your account can read this file.</p></div><label className="button subtle cursor-pointer"><ImagePlus size={15}/>{avatarBusy?'Uploading…':'Upload photo'}<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={avatarBusy} onChange={event=>void uploadAvatar(event)}/></label></section><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={saveProfile}><div><h3 className="font-semibold">Profile information</h3><p className="fine-print">Update the name displayed across your workspace.</p></div><label>Full name<input value={profileName} onChange={e=>setProfileName(e.target.value)} minLength={2} maxLength={100} autoComplete="name" required/></label><button className="button primary self-start" disabled={profileSaving||profileName.trim()===profile.full_name}>{profileSaving?'Saving…':'Save profile'}</button></form><form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-6" onSubmit={changePassword}><label>Current password<input type="password" autoComplete="current-password" minLength={1} maxLength={72} required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} /></label><label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={newPassword} onChange={e=>setNewPassword(e.target.value)} /></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} required value={confirmNewPassword} onChange={e=>setConfirmNewPassword(e.target.value)} /></label><p className="fine-print">Use a unique password you do not reuse on other websites. You will need to sign in again on this device after changing it.</p><button className="button primary self-start" disabled={busy||!currentPassword||!newPassword||!confirmNewPassword}>{busy?'Updating password…':'Change password'}</button></form><section className="stack-form rounded-2xl border border-amber-200 bg-white p-6">
   <div><h3 className="font-semibold">Personal data deletion request</h3><p className="fine-print">You can request deletion of eligible account data. The institution must review legal retention requirements and any records that must be kept. Anonymous feedback answers are stored separately from your account eligibility.</p></div>
   <form onSubmit={submitDeletionRequest}><button className="button subtle" disabled={deletionBusy||deletionLoading||deletionRequests.some(request=>request.status==='PENDING'||request.status==='IN_REVIEW'||request.status==='APPROVED')}>{deletionBusy?'Submitting…':'Request account data deletion'}</button></form>
   <div className="space-y-2"><h4 className="text-sm font-semibold">Your requests</h4>{deletionLoading?<p className="fine-print">Loading requests…</p>:deletionRequests.length?deletionRequests.map(request=><article key={request.id} className="rounded-xl border border-[#e5ece6] p-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{request.status.replace('_',' ')}</b><small className="muted">{new Date(request.created_at).toLocaleString()}</small></div>{request.resolution_note&&<p className="fine-print mt-2">{request.resolution_note}</p>}</article>):<p className="fine-print">No requests submitted.</p>}</div>
