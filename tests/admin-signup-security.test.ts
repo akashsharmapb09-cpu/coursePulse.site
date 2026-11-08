@@ -49,6 +49,14 @@ describe('administrator signup security controls', () => {
     expect(grant).toContain("provider !== 'google' && !providers.includes('google')");
   });
 
+  it('keeps the privileged claim implementation in private schema with an invoker public wrapper', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108104616_isolate_admin_claim_rpc_in_private_schema.sql'), 'utf8');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION private.claim_admin_signup');
+    expect(migration).toContain('CREATE OR REPLACE FUNCTION public.claim_admin_signup');
+    expect(migration).toContain('SECURITY INVOKER');
+    expect(migration).toContain('REVOKE ALL ON FUNCTION public.claim_admin_signup(text) FROM PUBLIC, anon');
+  });
+
   it('does not accept admin role metadata in the public student signup form', () => {
     const signup = readFileSync(resolve(process.cwd(), 'components/login-form.tsx'), 'utf8');
     expect(signup).toContain("data: { full_name: name.trim() }");
