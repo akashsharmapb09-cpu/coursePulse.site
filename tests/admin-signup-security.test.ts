@@ -43,6 +43,12 @@ describe('administrator signup security controls', () => {
     expect(migration).toContain("- 'requested_role'");
   });
 
+  it('enables RLS on the private admin code settings table', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108104941_enable_rls_for_admin_signup_settings.sql'), 'utf8');
+    expect(migration).toContain('ALTER TABLE private.admin_signup_settings ENABLE ROW LEVEL SECURITY');
+    expect(migration).toContain('TO service_role');
+  });
+
   it('requires identity confirmation before admin claim', () => {
     expect(grant).toContain('user.email_confirmed_at || user.confirmed_at');
     expect(grant).toContain('user.phone_confirmed_at || user.confirmed_at');
