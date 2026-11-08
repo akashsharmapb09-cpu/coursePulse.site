@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, BookOpen, CalendarDays, Download, FileBarChart, Lightbulb, Mail, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 
-type Course = { id:string; title:string; department_id:string|null; instructor_id:string; status:string };
+type Course = { id:string; title:string; department_id?:string|null; instructor_id:string; status:string };
 type User = { id:string; full_name:string; email:string|null; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean };
 type Department = { id:string; name:string; code:string };
 type AnalyticsRow = {
@@ -47,32 +47,33 @@ export function HeadIntelligence({courses,users,departments}:Props) {
   ),[courses,departmentId,courseId]);
 
   const courseMetrics=useMemo<CourseMetric[]>(()=>{
-    const questions=new Map<string,{course_id:string;course_title:string;feedback_id:string;question_id:string;scoreTotal:number;responses:number}>();
+    const forms=new Map<string,{course_id:string;feedback_id:string;scoreTotal:number;questionCount:number;responses:number}>();
     for(const row of rows){
       if(row.question_type!=='rating'||row.avg_numeric_value===null||row.avg_numeric_value===undefined) continue;
       const score=Number(row.avg_numeric_value);
-      if(!Number.isFinite(score)) continue;
-      const key=[row.course_id,row.feedback_id,row.question_id].join(':');
-      const current=questions.get(key)??{course_id:row.course_id,course_title:row.course_title,feedback_id:row.feedback_id,question_id:row.question_id,scoreTotal:0,responses:0};
-      current.scoreTotal+=score*Number(row.response_count||0);
-      current.responses+=Number(row.response_count||0);
-      questions.set(key,current);
-    }
-    const byCourse=new Map<string,{scoreTotal:number;questionCount:number;responses:number;forms:Set<string>}>();
-    for(const question of questions.values()){
-      if(!question.responses) continue;
-      const current=byCourse.get(question.course_id)??{scoreTotal:0,questionCount:0,responses:0,forms:new Set<string>()};
-      current.scoreTotal+=question.scoreTotal/question.responses;
+      const responseCount=Number(row.response_count||0);
+      if(!Number.isFinite(score)||!Number.isFinite(responseCount)||responseCount<5) continue;
+      const key=[row.course_id,row.feedback_id].join(':');
+      const current=forms.get(key)??{course_id:row.course_id,feedback_id:row.feedback_id,scoreTotal:0,questionCount:0,responses:0};
+      current.scoreTotal+=score;
       current.questionCount+=1;
-      current.responses=Math.max(current.responses,question.responses);
-      current.forms.add(question.feedback_id);
-      byCourse.set(question.course_id,current);
+      current.responses=Math.max(current.responses,responseCount);
+      forms.set(key,current);
     }
-    return courses.filter(course=>!departmentId||course.department_id===departmentId)
-      .filter(course=>!courseId||course.id===courseId)
+    const byCourse=new Map<string,{weightedRating:number;responses:number;forms:number}>();
+    for(const form of forms.values()){
+      if(!form.responses||!form.questionCount) continue;
+      const formAverage=form.scoreTotal/form.questionCount;
+      const current=byCourse.get(form.course_id)??{weightedRating:0,responses:0,forms:0};
+      current.weightedRating+=formAverage*form.responses;
+      current.responses+=form.responses;
+      current.forms+=1;
+      byCourse.set(form.course_id,current);
+    }
+    return courses.filter(course=>(!departmentId||course.department_id===departmentId)&&(!courseId||course.id===courseId))
       .map(course=>{
         const metric=byCourse.get(course.id);
-        return metric?{id:course.id,title:course.title,departmentId:course.department_id,instructorId:course.instructor_id,average:metric.scoreTotal/metric.questionCount,responses:metric.responses,forms:metric.forms.size}:null;
+        return metric?{id:course.id,title:course.title,departmentId:course.department_id??null,instructorId:course.instructor_id,average:metric.weightedRating/metric.responses,responses:metric.responses,forms:metric.forms}:null;
       }).filter((metric):metric is CourseMetric=>metric!==null);
   },[rows,courses,departmentId,courseId]);
 
@@ -137,7 +138,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article className="admin-metric"><span><FileBarChart size={18}/></span><small>Reportable average</small><b>{reportReady&&overall.average!==null?`${overall.average.toFixed(2)} / 5`:'—'}</b></article>
       <article className="admin-metric"><span><BookOpen size={18}/></span><small>Courses covered</small><b>{reportReady?overall.courses:'—'}</b></article>
-      <article className="admin-metric"><span><Users size={18}/></span><small>Reportable rating groups</small><b>{reportReady?overall.responses:'—'}</b></article>
+      <article className="admin-metric"><span><Users size={18}/></span><small>Reportable responses</small><b>{reportReady?overall.responses:'—'}</b></article>
       <article className="admin-metric"><span><AlertTriangle size={18}/></span><small>Teachers to review</small><b>{reportReady?flaggedTeachers.length:'—'}</b></article>
     </div>
 
