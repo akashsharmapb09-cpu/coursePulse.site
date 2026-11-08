@@ -53,7 +53,7 @@ describe('administrator signup security controls', () => {
     const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108105305_support_overlap_admin_signup_code_rotation.sql'), 'utf8');
     expect(migration).toContain('previous_code_sha256');
     expect(migration).toContain('extensions.digest(p_code, \'sha256\') = s.previous_code_sha256');
-    expect(migration).toContain('OR extensions.digest(p_code, \'sha256\') = s.code_sha256');
+    expect(migration).toContain('extensions.digest(p_code, \'sha256\') = s.code_sha256');
   });
 
   it('requires identity confirmation before admin claim', () => {
