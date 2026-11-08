@@ -49,6 +49,13 @@ describe('administrator signup security controls', () => {
     expect(migration).toContain('TO service_role');
   });
 
+  it('supports a controlled previous-code grace period for secret rotation', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108105305_support_overlap_admin_signup_code_rotation.sql'), 'utf8');
+    expect(migration).toContain('previous_code_sha256');
+    expect(migration).toContain('extensions.digest(p_code, \'sha256\') = s.previous_code_sha256');
+    expect(migration).toContain('OR extensions.digest(p_code, \'sha256\') = s.code_sha256');
+  });
+
   it('requires identity confirmation before admin claim', () => {
     expect(grant).toContain('user.email_confirmed_at || user.confirmed_at');
     expect(grant).toContain('user.phone_confirmed_at || user.confirmed_at');
