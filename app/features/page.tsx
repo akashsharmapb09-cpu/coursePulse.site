@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { PublicPage } from '@/components/public-site';
-export const metadata: Metadata = { alternates: { canonical: '/features' }, title: 'Features | CoursePulse', description: 'Explore CoursePulse feedback collection, role-based workspaces, aggregate analytics, and reporting capabilities.' };
+export const metadata: Metadata = { alternates: { canonical: '/features' }, title: 'Features', description: 'Explore CoursePulse feedback collection, role-based workspaces, aggregate analytics, and reporting capabilities.' };
 export default function FeaturesPage() { return <PublicPage eyebrow="Platform capabilities" title="The feedback workflow, in one place." description="CoursePulse connects course feedback collection with permission-aware reporting and academic administration.">
   <section><h2>Student feedback</h2><p>Students can access feedback forms made available to their enrolled, published courses. Forms support rating, number, single-choice, multiple-selection, yes/no, short-text, and long-text questions. Submission status is tracked separately from the answer payload.</p></section>
   <section><h2>Instructor insights</h2><p>Instructors can review aggregate response counts and numeric ratings for courses they own or are assigned to. Reporting groups with fewer than five submissions are suppressed; written answers are not included in the aggregate reporting API.</p></section>

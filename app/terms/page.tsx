@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { PublicPage } from '@/components/public-site';
-export const metadata: Metadata = { alternates: { canonical: '/terms' }, title: 'Terms and Conditions | CoursePulse', description: 'Terms for using the CoursePulse feedback and analytics portal.' };
+export const metadata: Metadata = { alternates: { canonical: '/terms' }, title: 'Terms and Conditions', description: 'Terms for using the CoursePulse feedback and analytics portal.' };
 export default function TermsPage() { return <PublicPage eyebrow="Terms" title="Terms and conditions" description="These draft terms explain the expected use of the CoursePulse workspace and should be reviewed by the institution operating it.">
   <section><h2>1. Use of the service</h2><p>CoursePulse provides account-based course feedback, academic administration, aggregate analytics, and reporting tools. Access may depend on your assigned role, enrollment, course assignment, and workspace configuration.</p></section>
   <section><h2>2. Accounts and security</h2><p>Keep your sign-in credentials private, provide accurate account information, and notify the workspace administrator if you suspect unauthorized access. Administrators may suspend accounts or change roles in accordance with institutional policy.</p></section>

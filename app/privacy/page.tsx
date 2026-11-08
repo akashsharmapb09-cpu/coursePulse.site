@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { PublicPage } from '@/components/public-site';
-export const metadata: Metadata = { alternates: { canonical: '/privacy' }, title: 'Privacy Policy | CoursePulse', description: 'How CoursePulse handles account data, feedback, retention, access, and privacy safeguards.' };
+export const metadata: Metadata = { alternates: { canonical: '/privacy' }, title: 'Privacy Policy', description: 'How CoursePulse handles account data, feedback, retention, access, and privacy safeguards.' };
 export default function PrivacyPage() { return <PublicPage eyebrow="Privacy" title="Privacy policy" description="A product-level overview of the data handled by this CoursePulse deployment. The institution operating the workspace should review and complete this notice before launch.">
   <p className="policy-updated">Last reviewed: 7 November 2026</p>
   <section><h2>1. Who operates the workspace</h2><p>CoursePulse is software for an institution or workspace operator. The institution that invites users, configures courses, and administers accounts determines the local purposes, notices, and contact route for this deployment. Institutional operator details have not been supplied in this project configuration.</p></section>
