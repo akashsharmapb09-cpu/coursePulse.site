@@ -56,6 +56,21 @@ describe('administrator signup security controls', () => {
     expect(migration).toContain('extensions.digest(p_code, \'sha256\') = s.code_sha256');
   });
 
+  it('commits direct-RPC limiter increments on bad codes and exhausted quotas', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108110236_persist_admin_claim_rate_limits_on_denial.sql'), 'utf8');
+    expect(migration).toContain("IF NOT private.consume_api_rate_limit('admin-signup:claim', 5, 900) THEN");
+    expect(migration).toContain("IF NOT coalesce(v_code_valid, false) THEN");
+    expect(migration).not.toContain("RAISE EXCEPTION 'Too many administrator signup attempts");
+    expect(migration).not.toContain("RAISE EXCEPTION 'Invalid administrator signup code");
+    expect(migration).toContain('RETURN;');
+  });
+
+  it('checks the persisted database role before reporting a successful admin claim', () => {
+    expect(grant).toContain(".select('role')");
+    expect(grant).toContain("profile?.role !== 'ADMIN'");
+    expect(grant).toContain("supabase.rpc('claim_admin_signup'");
+  });
+
   it('requires identity confirmation before admin claim', () => {
     expect(grant).toContain('user.email_confirmed_at || user.confirmed_at');
     expect(grant).toContain('user.phone_confirmed_at || user.confirmed_at');
