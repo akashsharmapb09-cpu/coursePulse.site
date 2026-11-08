@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, BookOpen, CalendarDays, Download, FileBarChart, Lightbulb, Mail, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 
 type Course = { id:string; title:string; department_id?:string|null; instructor_id:string; status:string };
@@ -21,6 +21,7 @@ type AnalyticsRow = {
 type Props = { courses:Course[]; users:User[]; departments:Department[] };
 type CourseMetric = { id:string; title:string; departmentId:string|null; instructorId:string; average:number; responses:number; forms:number };
 type TeacherMetric = { id:string; name:string; email:string|null; average:number; responses:number; courses:number };
+type MonthlyReport = { report_month:string; scope_type:'COLLEGE'|'DEPARTMENT'|'COURSE'; scope_id:string; scope_label:string; response_count:number; average_rating:number; previous_average:number|null; rating_change:number|null; recommendation:string; generated_at:string };
 
 function dateRange(month:string) {
   const [year,monthNumber]=month.split('-').map(Number);
@@ -42,10 +43,35 @@ export function HeadIntelligence({courses,users,departments}:Props) {
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState('');
   const [notice,setNotice]=useState('');
+  const [archiveMonth,setArchiveMonth]=useState(()=>{
+    const date=new Date();
+    date.setUTCMonth(date.getUTCMonth()-1);
+    return date.toISOString().slice(0,7);
+  });
+  const [archiveReports,setArchiveReports]=useState<MonthlyReport[]>([]);
+  const [archiveLoading,setArchiveLoading]=useState(false);
+  const [archiveError,setArchiveError]=useState('');
 
   const visibleCourses=useMemo(()=>courses.filter(course=>
     (!departmentId||course.department_id===departmentId)&&(!courseId||course.id===courseId)
   ),[courses,departmentId,courseId]);
+
+  async function loadArchive() {
+    setArchiveLoading(true);
+    setArchiveError('');
+    try {
+      const response=await fetch('/api/admin/monthly-reports?month='+encodeURIComponent(archiveMonth),{cache:'no-store'});
+      const payload=await response.json();
+      if(!response.ok) throw new Error(payload.error??'Scheduled monthly reports could not be loaded.');
+      setArchiveReports(payload.reports??[]);
+    } catch(caught) {
+      setArchiveError(caught instanceof Error?caught.message:'Scheduled monthly reports could not be loaded.');
+    } finally {
+      setArchiveLoading(false);
+    }
+  }
+
+  useEffect(()=>{void loadArchive();},[archiveMonth]);
 
   const courseMetrics=useMemo<CourseMetric[]>(()=>{
     const forms=new Map<string,{course_id:string;feedback_id:string;scoreTotal:number;questionCount:number;responses:number}>();
@@ -156,6 +182,21 @@ export function HeadIntelligence({courses,users,departments}:Props) {
       <span className="role-chip"><ShieldCheck size={14}/> Confidential</span>
     </div>
 
+    <article className="rounded-2xl border border-[#e5ece6] bg-white p-5 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><h3 className="font-semibold">Scheduled monthly archive</h3><p className="fine-print mt-1">Generated automatically on day 1 for the previous month at 00:15 UTC. Only course, department and college rating aggregates with at least five responses are stored.</p></div>
+        <span className="role-chip"><ShieldCheck size={13}/> Head only</span>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs font-semibold text-[#43584d]">Archived month<input type="month" className="mt-2 block rounded-lg border border-[#dce6df] bg-white p-2.5" value={archiveMonth} onChange={event=>setArchiveMonth(event.target.value)}/></label>
+        <button className="button subtle compact" onClick={()=>void loadArchive()} disabled={archiveLoading}><RefreshCw size={14}/> Refresh archive</button>
+        <span className="fine-print">{archiveReports.length} report group(s)</span>
+      </div>
+      {archiveError&&<p className="alert error" role="alert">{archiveError}</p>}
+      {archiveLoading?<p className="fine-print">Loading scheduled archive…</p>:archiveReports.length===0?<p className="rounded-xl border border-dashed border-[#dce7df] p-4 text-sm text-[#748279]">No scheduled snapshot exists for this month yet. The archive is populated on the first day of the following month.</p>:<div className="overflow-x-auto"><table className="admin-table"><thead><tr><th>Scope</th><th>Average</th><th>Rating answers</th><th>Change vs previous month</th><th>Recommendation</th></tr></thead><tbody>{archiveReports.map(item=><tr key={item.scope_type+'-'+item.scope_id}><td><b>{item.scope_type}</b><small>{item.scope_label}</small></td><td>{Number(item.average_rating).toFixed(2)} / 5</td><td>{item.response_count}</td><td>{item.rating_change===null?'—':(Number(item.rating_change)>0?'+':'')+Number(item.rating_change).toFixed(2)}</td><td>{item.recommendation}</td></tr>)}</tbody></table></div>}
+      <p className="fine-print">Stored snapshots contain no student identifiers, raw answers or comments. They are aggregate rating answers, not unique-student counts. Insights are rules-based, not generative AI.</p>
+    </article>
+    
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article className="admin-metric"><span><FileBarChart size={18}/></span><small>Reportable average</small><b>{reportReady&&overall.average!==null?`${overall.average.toFixed(2)} / 5`:'—'}</b></article>
       <article className="admin-metric"><span><BookOpen size={18}/></span><small>Courses covered</small><b>{reportReady?overall.courses:'—'}</b></article>
