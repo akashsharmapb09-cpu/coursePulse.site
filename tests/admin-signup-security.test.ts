@@ -13,12 +13,13 @@ describe('administrator signup security controls', () => {
   });
 
   it('enforces a per-user database rate limit before checking the admin code', () => {
-    const limiter = grant.indexOf("protectMutation(request, supabase, 'admin-signup:claim', 5, 900)");
+    const limiter = grant.indexOf("protectMutation(request, supabase, 'admin-signup:route', 5, 900)");
     const verifyCode = grant.indexOf('isValidAdminSignupCode(body.code)');
     const rpc = grant.indexOf("supabase.rpc('claim_admin_signup'");
     expect(limiter).toBeGreaterThan(-1);
     expect(verifyCode).toBeGreaterThan(limiter);
     expect(rpc).toBeGreaterThan(limiter);
+    expect(http).toContain("'admin-signup:route'");
     expect(http).toContain("'admin-signup:claim'");
   });
 
