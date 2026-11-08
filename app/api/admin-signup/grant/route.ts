@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { protectMutation } from '@/lib/http';
 import {
   ADMIN_SIGNUP_COOKIE, isValidAdminSignupCode, verifyAdminSignupProof
 } from '@/lib/admin-signup';
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest) {
   if (userError || !user || user.is_anonymous) {
     return NextResponse.json({ error: 'Please sign in before activating an admin account.' }, { status: 401 });
   }
+
+  // The database limiter also protects direct calls to claim_admin_signup().
+  const protection = await protectMutation(request, supabase, 'admin-signup:claim', 5, 900);
+  if (protection) return protection;
 
   const body = await request.json().catch(() => ({})) as { code?: unknown };
   const rawProof = request.cookies.get(ADMIN_SIGNUP_COOKIE)?.value;
@@ -65,7 +70,9 @@ export async function POST(request: NextRequest) {
       ? 'Incorrect admin special code.'
       : error.message.toLowerCase().includes('cannot be promoted')
         ? 'Only a student account can be upgraded to Admin.'
-        : 'Admin role could not be activated. Please try again.';
+        : error.message.toLowerCase().includes('too many administrator signup')
+          ? 'Too many attempts. Please wait before trying again.'
+          : 'Admin role could not be activated. Please try again.';
     return NextResponse.json({ error: message }, { status: 403 });
   }
 
