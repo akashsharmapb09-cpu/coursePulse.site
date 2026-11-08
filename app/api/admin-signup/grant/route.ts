@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please sign in before activating an admin account.' }, { status: 401 });
   }
 
-  // A separate DB-side counter protects direct calls to claim_admin_signup().
+  // HTTP attempts and direct RPC attempts have separate database-backed buckets.
   const protection = await protectMutation(request, supabase, 'admin-signup:route', 5, 900);
   if (protection) return protection;
 
@@ -64,16 +64,23 @@ export async function POST(request: NextRequest) {
 
   if (!hasDirectCode) return NextResponse.json({ needsCode: true });
 
-  const { error } = await supabase.rpc('claim_admin_signup', { p_code: body.code });
-  if (error) {
-    const message = error.message.toLowerCase().includes('invalid administrator')
-      ? 'Incorrect admin special code.'
-      : error.message.toLowerCase().includes('cannot be promoted')
-        ? 'Only a student account can be upgraded to Admin.'
-        : error.message.toLowerCase().includes('too many administrator signup')
-          ? 'Too many attempts. Please wait before trying again.'
-          : 'Admin role could not be activated. Please try again.';
-    return NextResponse.json({ error: message }, { status: 403 });
+  const { error: claimError } = await supabase.rpc('claim_admin_signup', { p_code: body.code });
+  if (claimError) {
+    return NextResponse.json({ error: 'Admin role could not be activated. Please try again.' }, { status: 403 });
+  }
+
+  // The RPC returns normally for denied attempts so PostgreSQL can commit the
+  // rate-limit increment. Confirm the resulting database role before reporting success.
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profileError || profile?.role !== 'ADMIN') {
+    return NextResponse.json({
+      error: 'Admin role could not be activated. Check the code and account eligibility, then try again.'
+    }, { status: 403, headers: { 'Cache-Control': 'no-store' } });
   }
 
   return clearProofCookie(NextResponse.json({ ok: true, role: 'ADMIN' }));
