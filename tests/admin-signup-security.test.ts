@@ -71,6 +71,13 @@ describe('administrator signup security controls', () => {
     expect(grant).toContain("supabase.rpc('claim_admin_signup'");
   });
 
+  it('pins the rotated admin code hash and clears the old-code overlap hash', () => {
+    const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108110714_pin_rotated_admin_signup_code_hash.sql'), 'utf8');
+    expect(migration).toContain("code_sha256 = decode(");
+    expect(migration).toContain("previous_code_sha256 = NULL");
+    expect(migration).not.toContain('yX89L5Gvx8H_INcF1ymE3xjZP1wwHyoFmNySKAh-uek');
+  });
+
   it('requires identity confirmation before admin claim', () => {
     expect(grant).toContain('user.email_confirmed_at || user.confirmed_at');
     expect(grant).toContain('user.phone_confirmed_at || user.confirmed_at');
