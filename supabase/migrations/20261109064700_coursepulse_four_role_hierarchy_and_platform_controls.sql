@@ -85,11 +85,17 @@ returns table(
   active_teachers bigint,
   active_hods bigint
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $function$
+begin
+  if not private.is_platform_admin() then
+    raise exception 'Platform Super Admin access with MFA is required' using errcode='42501';
+  end if;
+
+  return query
   select
     (select count(*) from public.organizations),
     (select count(*) from public.organizations where status = 'ACTIVE'),
@@ -120,6 +126,7 @@ as $function$
         and o.owner_user_id = u.id
         and o.status = 'ACTIVE'
     );
+end;
 $function$;
 
 revoke all on function private.platform_get_summary() from public, anon, authenticated;
