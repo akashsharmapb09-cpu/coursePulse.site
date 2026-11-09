@@ -57,7 +57,21 @@ export async function POST(request: NextRequest) {
       'x-app-base-url': request.nextUrl.origin
     }
   });
-  if (error || !data) return jsonError('The first Head invitation service is unavailable.', 503);
+  if (error) {
+    const functionResponse = (error as { context?: unknown }).context;
+    if (functionResponse instanceof Response) {
+      const failure = await functionResponse.clone().json().catch(() => null) as { error?: unknown } | null;
+      const message = typeof failure?.error === 'string'
+        ? failure.error
+        : 'The first Head invitation request failed.';
+      const status = functionResponse.status >= 400 && functionResponse.status <= 599
+        ? functionResponse.status
+        : 503;
+      return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
+    }
+    return jsonError('The first Head invitation service could not be reached. Please retry.', 503);
+  }
+  if (!data) return jsonError('The first Head invitation service returned no response. Please retry.', 502);
   if (data.error) return NextResponse.json({ error: data.error }, { status: 409, headers: { 'Cache-Control': 'no-store' } });
   return NextResponse.json(data, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
