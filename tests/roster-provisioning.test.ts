@@ -54,7 +54,8 @@ describe('secure student/teacher roster provisioning', () => {
     expect(teacherInvite).toContain("auth.profile.role !== 'INSTRUCTOR'");
     expect(teacherInvite).toContain("role: 'STUDENT'");
     expect(teacherUi).toContain("fetch('/api/teacher/roster/invitations'");
-    expect(teacherUi).toContain('student_number:studentNumber');
-    expect(teacherUi).toContain('section:studentSection');
+    expect(teacherUi).toContain("fetch('/api/teacher/roster/import'");
+    expect(teacherUi).not.toContain('Add one student manually');
+    expect(teacherUi).not.toContain('Add student & send invite');
   });
 });
