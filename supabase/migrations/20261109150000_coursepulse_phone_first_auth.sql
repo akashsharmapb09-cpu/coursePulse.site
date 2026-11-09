@@ -243,7 +243,7 @@ begin
 
   return new;
 end;
-$;
+$$;
 revoke all on function public.capture_verified_student_mobile() from public,anon,authenticated,service_role;
 drop trigger if exists auth_capture_verified_student_mobile on auth.users;
 create trigger auth_capture_verified_student_mobile
