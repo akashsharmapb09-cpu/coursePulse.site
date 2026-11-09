@@ -1,0 +1,11 @@
+[functions.invite-college-users]
+verify_jwt = true
+
+[functions.issue-student-card]
+verify_jwt = true
+
+[functions.generate-monthly-ai-insights]
+verify_jwt = true
+
+[functions.create-college-workspace]
+verify_jwt = true

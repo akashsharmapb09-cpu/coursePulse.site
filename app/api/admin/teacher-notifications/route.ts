@@ -49,13 +49,18 @@ export async function POST(request: NextRequest) {
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success || parsed.data.from_date > parsed.data.to_date) return jsonError('Choose a valid reporting period and review threshold.');
 
+  const { data: organization, error: organizationError } = await supabase.from('organizations')
+    .select('id').maybeSingle();
+  if (organizationError || !organization) return jsonError('The active college workspace could not be resolved.', 403);
+
   const { error: settingsError } = await supabase.from('monthly_report_settings').upsert({
+    organization_id: organization.id,
     id: 1,
     rating_threshold: parsed.data.threshold,
     minimum_responses: parsed.data.minimum_responses,
     updated_by: auth.user.id,
     updated_at: new Date().toISOString()
-  }, { onConflict: 'id' });
+  }, { onConflict: 'organization_id,id' });
   if (settingsError) return jsonError('Monthly review thresholds could not be saved.', 500);
 
   const { data: aggregates, error: aggregateError } = await supabase.rpc('get_instructor_aggregates_filtered', {
@@ -72,7 +77,23 @@ export async function POST(request: NextRequest) {
     .limit(2000);
   if (courseError) return jsonError('Unable to resolve course assignments for teacher review.', 500);
 
-  const courseTeacher = new Map((courses ?? []).map(course => [course.id, course.instructor_id]));
+  const { data: assignments, error: assignmentError } = await supabase.from('instructor_course_assignments')
+    .select('course_id,instructor_id')
+    .limit(5000);
+  if (assignmentError) return jsonError('Unable to resolve secondary course assignments.', 500);
+
+  const courseTeachers = new Map<string, Set<string>>();
+  for (const course of courses ?? []) {
+    const set = courseTeachers.get(course.id) ?? new Set<string>();
+    if (course.instructor_id) set.add(course.instructor_id);
+    courseTeachers.set(course.id, set);
+  }
+  for (const assignment of assignments ?? []) {
+    const set = courseTeachers.get(assignment.course_id) ?? new Set<string>();
+    set.add(assignment.instructor_id);
+    courseTeachers.set(assignment.course_id, set);
+  }
+
   const forms = new Map<string, { course_id: string; scoreTotal: number; questionCount: number; responses: number }>();
   for (const row of (aggregates ?? []) as AggregateRow[]) {
     if (row.question_type !== 'rating' || row.avg_numeric_value === null) continue;
@@ -90,12 +111,15 @@ export async function POST(request: NextRequest) {
   const teachers = new Map<string, { scoreTotal: number; responses: number }>();
   for (const form of forms.values()) {
     if (!form.questionCount || !form.responses) continue;
-    const instructorId = courseTeacher.get(form.course_id);
-    if (!instructorId) continue;
-    const metric = teachers.get(instructorId) ?? { scoreTotal: 0, responses: 0 };
-    metric.scoreTotal += (form.scoreTotal / form.questionCount) * form.responses;
-    metric.responses += form.responses;
-    teachers.set(instructorId, metric);
+    const instructorIds = courseTeachers.get(form.course_id);
+    if (!instructorIds?.size) continue;
+    const formAverage = form.scoreTotal / form.questionCount;
+    for (const instructorId of instructorIds) {
+      const metric = teachers.get(instructorId) ?? { scoreTotal: 0, responses: 0 };
+      metric.scoreTotal += formAverage * form.responses;
+      metric.responses += form.responses;
+      teachers.set(instructorId, metric);
+    }
   }
 
   const periodStart = parsed.data.from_date.slice(0, 7) + '-01';
@@ -104,6 +128,7 @@ export async function POST(request: NextRequest) {
     .map(([recipientId]) => ({
       recipient_id: recipientId,
       created_by: auth.user.id,
+      organization_id: organization.id,
       category: 'PERFORMANCE_REVIEW',
       period_start: periodStart,
       title: 'Private teaching feedback review',

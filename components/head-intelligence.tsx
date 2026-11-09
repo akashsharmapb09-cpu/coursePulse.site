@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, BookOpen, CalendarDays, Download, FileBarChart, Lightbulb, Mail, RefreshCw, ShieldCheck, Users } from 'lucide-react';
+import { HeadAiInsights } from '@/components/head-ai-insights';
 
 type Course = { id:string; title:string; department_id?:string|null; instructor_id:string; status:string };
 type User = { id:string; full_name:string; email:string|null; role:'ADMIN'|'INSTRUCTOR'|'STUDENT'; is_active:boolean };
@@ -213,6 +214,7 @@ export function HeadIntelligence({courses,users,departments}:Props) {
       {archiveLoading?<p className="fine-print">Loading scheduled archive…</p>:archiveReports.length===0?<p className="rounded-xl border border-dashed border-[#dce7df] p-4 text-sm text-[#748279]">No scheduled snapshot exists for this month yet. The archive is populated on the first day of the following month.</p>:<div className="overflow-x-auto"><table className="admin-table"><thead><tr><th>Scope</th><th>Average</th><th>Rating answers</th><th>Change vs previous month</th><th>Recommendation</th></tr></thead><tbody>{archiveReports.map(item=><tr key={item.scope_type+'-'+item.scope_id}><td><b>{item.scope_type}</b><small>{item.scope_label}</small></td><td>{Number(item.average_rating).toFixed(2)} / 5</td><td>{item.response_count}</td><td>{item.rating_change===null?'—':(Number(item.rating_change)>0?'+':'')+Number(item.rating_change).toFixed(2)}</td><td>{item.recommendation}</td></tr>)}</tbody></table></div>}
       <p className="fine-print">Stored snapshots contain no student identifiers, raw answers or comments. They are aggregate rating answers, not unique-student counts. Insights are rules-based, not generative AI.</p>
     </article>
+    <HeadAiInsights month={archiveMonth}/>
     
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article className="admin-metric"><span><FileBarChart size={18}/></span><small>Reportable average</small><b>{reportReady&&overall.average!==null?`${overall.average.toFixed(2)} / 5`:'—'}</b></article>
