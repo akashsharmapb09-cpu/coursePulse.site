@@ -10,7 +10,7 @@ const inputSchema = z.object({
   full_name: z.string().trim().min(2).max(120),
   student_number: z.string().trim().min(1).max(40),
   section: z.string().trim().min(1).max(30),
-  mobile: z.string().trim().regex(/^\\+[1-9]\\d{7,14}$/)
+  mobile: z.string().trim().regex(/^\+[1-9]\d{7,14}$/)
 }).strict().superRefine((value, ctx) => {
   if (value.mobile && !/^\+?[0-9 ()-]{8,24}$/.test(value.mobile)) {
     ctx.addIssue({ code: 'custom', path: ['mobile'], message: 'Enter a valid mobile number.' });
@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase.functions.invoke('invite-college-users', {
     body: {
       invitations: [{
-        email: undefined,
         full_name: parsed.data.full_name,
         role: 'STUDENT',
         course_ids: [parsed.data.course_id],
