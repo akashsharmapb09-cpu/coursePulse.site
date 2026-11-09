@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   }
 
   const invitations = rows.map((student) => ({
-    email: student.email,
+    mobile: student.mobile,
     full_name: student.fullName,
     role: 'STUDENT' as const,
     course_ids: [courseId],
@@ -85,18 +85,18 @@ export async function POST(request: NextRequest) {
   if (data.error) return jsonError(String(data.error), 403);
 
   const rawResults = Array.isArray(data.results) ? data.results as Array<{
-    email?: unknown; status?: unknown; error?: unknown;
+    mobile?: unknown; status?: unknown; error?: unknown;
   }> : [];
-  const resultByEmail = new Map(rawResults.map((result) => [
-    typeof result.email === 'string' ? result.email.toLowerCase() : '',
+  const resultByMobile = new Map(rawResults.map((result) => [
+    typeof result.mobile === 'string' ? result.mobile : '',
     result,
   ]));
   const results = rows.map((student) => {
-    const result = resultByEmail.get(student.email);
+    const result = resultByMobile.get(student.mobile);
     const status = typeof result?.status === 'string' ? result.status : 'FAILED';
     return {
       full_name: student.fullName,
-      email: student.email,
+      mobile: student.mobile,
       student_number: student.studentNumber,
       section: student.section,
       status,
