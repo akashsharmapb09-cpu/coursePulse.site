@@ -138,8 +138,8 @@ export async function parseAcademicWorkbook(buffer: Buffer): Promise<AcademicWor
   for (let index = 0; index < teacherRows.length; index += 1) {
     const row = teacherRows[index];
     const fullName = row.teacher_name.trim();
-    const rawMobile = row.mobile.trim().replace(/[\\s()-]/g, '');
-    const mobile = /^\\d{10}$/.test(rawMobile) ? '+91' + rawMobile : /^91\\d{10}$/.test(rawMobile) ? '+' + rawMobile : rawMobile;
+    const rawMobile = row.mobile.trim().replace(/[\s()-]/g, '');
+    const mobile = /^\d{10}$/.test(rawMobile) ? '+91' + rawMobile : /^91\d{10}$/.test(rawMobile) ? '+' + rawMobile : rawMobile;
     const departmentCode = code(row.department_code, 'Teachers row ' + (index + 2) + ' department_code', DEPARTMENT_CODE);
     const courseCodesForTeacher = row.course_codes.split(';').map((item) => item.trim()).filter(Boolean)
       .map((item) => code(item, 'Teachers row ' + (index + 2) + ' course_codes', COURSE_CODE));
