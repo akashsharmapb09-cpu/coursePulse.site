@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
   }
 
   const invitations = workbook.teachers.map((teacher) => ({
-    email: teacher.mobile,
+    mobile: teacher.mobile,
     full_name: teacher.fullName,
     role: 'INSTRUCTOR' as const,
     department_id: departmentIds.get(teacher.departmentCode) ?? existingDepartmentByCode.get(teacher.departmentCode)!.id,
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
     rawResults = Array.isArray(inviteData.results) ? inviteData.results as Array<Record<string, unknown>> : [];
     if (!rawResults.length) {
       rawResults = workbook.teachers.map((teacher) => ({
-        email: teacher.mobile, role: 'INSTRUCTOR', status: 'FAILED',
+        mobile: teacher.mobile, role: 'INSTRUCTOR', status: 'FAILED',
         error: 'The invitation service returned no result for this teacher.',
       }));
     }
