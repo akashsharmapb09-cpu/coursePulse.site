@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261109064700_coursepulse_four_role_hierarchy_and_platform_controls.sql'), 'utf8');
 const foundation = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163318_coursepulse_multi_college_tenant_foundation.sql'), 'utf8');
+const accessControls = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108165428_coursepulse_organization_and_platform_admin_controls.sql'), 'utf8');
 const adminApi = readFileSync(resolve(process.cwd(), 'app/api/admin/route.ts'), 'utf8');
 const adminUsersApi = readFileSync(resolve(process.cwd(), 'app/api/admin/users/route.ts'), 'utf8');
 const headInvite = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/invitations/route.ts'), 'utf8');
@@ -50,7 +51,7 @@ describe('CoursePulse four-role authorization model', () => {
     expect(foundation).toContain('users_tenant_boundary');
     expect(migration).toContain("set status = 'SUSPENDED'");
     expect(migration).toContain("where status = 'ACTIVE'");
-    expect(migration).toContain('Historical');
+    expect(migration).toContain('organization.removed_from_active_platform');
   });
 
   it('removes account access without hard-deleting academic or feedback history', () => {
@@ -58,10 +59,12 @@ describe('CoursePulse four-role authorization model', () => {
     expect(migration).toContain('suspended_at = case');
     expect(migration).toContain('user.access.updated');
     expect(migration).toContain('HOD access is now exclusively');
-    expect(foundation).toContain('REVOKE INSERT,DELETE ON public.users FROM authenticated');
+    expect(accessControls).toContain('revoke insert,delete on public.users from authenticated');
     expect(foundation).toContain('ON DELETE RESTRICT');
     expect(hodConsole).toContain('Accounts are not hard-deleted');
     expect(hodConsole).toContain('preserved');
+    expect(migration).not.toContain('delete from public.users');
+    expect(migration).not.toContain('delete from public.organizations');
   });
 
   it('revokes the old self-claim HOD RPCs so only the Platform Super Admin invitation flow can appoint HODs', () => {
