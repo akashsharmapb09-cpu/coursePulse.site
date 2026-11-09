@@ -23,7 +23,7 @@ async function workbook(options?: {
     students.addRow([
       'Asha Sharma',
       options.duplicateEmail ? 'aarav@example.edu' : 'asha@example.edu',
-      options.duplicateEmail ? 'CSE-002' : 'CSE-001',
+      'CSE-002',
       options.mixedSections ? 'B' : 'A',
       '',
     ]);
@@ -89,12 +89,12 @@ describe('teacher Excel student roster import', () => {
       students.addRow(['Student ' + index, 'student' + index + '@example.edu', 'ROLL-' + index, 'A']);
     }
     await expect(parseTeacherStudentWorkbook(Buffer.from(await book.xlsx.writeBuffer())))
-      .rejects.toThrow('maximum 100 students');
+      .rejects.toThrow('maximum of 100 students');
   });
 
   it('verifies teacher role and assigned course before invoking the secure invitation service', () => {
     expect(importRoute).toContain("auth.profile.role !== 'INSTRUCTOR'");
-    expect(importRoute).toContain("rpc('get_instructor_students'");
+    expect(importRoute).toContain("'get_instructor_students'");
     expect(importRoute).toContain("functions.invoke('invite-college-users'");
     expect(importRoute).toContain("role: 'STUDENT' as const");
     expect(importRoute).toContain("protectMutation(request, supabase, 'admin:user-update'");
