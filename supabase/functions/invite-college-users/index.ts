@@ -150,6 +150,66 @@ Deno.serve(async (request: Request) => {
     duplicateEmails.add(invite.email);
   }
 
+  // Student numbers are unique across a college, not only within one course.
+  // Check existing directory entries and pending invitations before sending any
+  // activation emails so a batch cannot partially create duplicate roll numbers.
+  const studentInvites = invites.filter((invite) => invite.role === "STUDENT");
+  const studentNumbers = studentInvites.map((invite) => invite.student_number ?? "");
+  const normalizedNumbers = new Set<string>();
+  for (const invite of studentInvites) {
+    const number = (invite.student_number ?? "").trim().toLowerCase();
+    if (!number || normalizedNumbers.has(number)) {
+      return json({ error: "Duplicate student roll numbers are not allowed in one roster import." }, 400, cors);
+    }
+    normalizedNumbers.add(number);
+  }
+  if (studentNumbers.length) {
+    const [directoryCheck, pendingCheck] = await Promise.all([
+      admin.from("student_directory").select("student_id,student_number")
+        .eq("organization_id", profile.organization_id).in("student_number", studentNumbers),
+      admin.from("organization_invitations").select("email,student_number")
+        .eq("organization_id", profile.organization_id).eq("invited_role", "STUDENT")
+        .in("status", ["PENDING", "INVITED"]).in("student_number", studentNumbers),
+    ]);
+    if (directoryCheck.error || pendingCheck.error) {
+      return json({ error: "Student roll numbers could not be checked safely. No invitations were sent." }, 503, cors);
+    }
+
+    const directoryRows = directoryCheck.data ?? [];
+    const directoryIds = [...new Set(directoryRows.map((row) => row.student_id))];
+    const userCheck = directoryIds.length
+      ? await admin.from("users").select("id,email").in("id", directoryIds)
+      : { data: [], error: null };
+    if (userCheck.error) {
+      return json({ error: "Existing student identities could not be checked safely. No invitations were sent." }, 503, cors);
+    }
+
+    const emailByStudentId = new Map((userCheck.data ?? [])
+      .map((user) => [user.id, (user.email ?? "").toLowerCase()]));
+    const emailByNumber = new Map(directoryRows.map((row) => [
+      row.student_number,
+      emailByStudentId.get(row.student_id) ?? "",
+    ]));
+    const pendingEmailByNumber = new Map((pendingCheck.data ?? []).map((row) => [
+      row.student_number ?? "",
+      (row.email ?? "").toLowerCase(),
+    ]));
+
+    const rollNumberConflict = studentInvites.find((invite) => {
+      const number = invite.student_number ?? "";
+      const existingEmail = emailByNumber.get(number);
+      const pendingEmail = pendingEmailByNumber.get(number);
+      return (existingEmail !== undefined && existingEmail !== invite.email) ||
+        (pendingEmail !== undefined && pendingEmail !== invite.email);
+    });
+    if (rollNumberConflict) {
+      return json({
+        error: "Roll number " + (rollNumberConflict.student_number ?? "") +
+          " is already registered or pending for another email in this college. Correct the roll number or use the existing student email.",
+      }, 409, cors);
+    }
+  }
+
   const allCourses = [...new Set(invites.flatMap((invite) => invite.course_ids))];
   const allDepartments = [...new Set(invites.map((invite) => invite.department_id).filter((id): id is string => Boolean(id)))];
   const [courseCheck, departmentCheck, assignmentCheck] = await Promise.all([
