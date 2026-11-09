@@ -63,7 +63,7 @@ export function AdminRosterPanel({ onWorkbookImported }: Props) {
         (data.departments_created + data.departments_updated + data.departments_reused) +
         ' department(s), ' + (data.courses_created + data.courses_updated) +
         ' course(s), ' + data.teachers_invited +
-        ' teacher account invitation(s) successful; ' + data.teachers_failed + ' failed.'
+        ' teacher phone signup(s) prepared; ' + data.teachers_failed + ' failed.'
       );
       await loadRoster();
       await onWorkbookImported?.();
