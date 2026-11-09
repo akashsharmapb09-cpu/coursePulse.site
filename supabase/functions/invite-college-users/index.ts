@@ -190,7 +190,7 @@ Deno.serve(async (request: Request) => {
     }
   }
 
-  const results: Array<{ email: string; role: string; status: string; error?: string }> = [];
+  const results: Array<{ email: string; role: string; status: string; error?: string; user_id?: string }> = [];
   for (const invite of invites) {
     const { data: invitation, error: insertError } = await admin.from("organization_invitations")
       .insert({
@@ -238,7 +238,7 @@ Deno.serve(async (request: Request) => {
           "The existing account could not be safely linked.";
         results.push({ email: invite.email, role: invite.role, status: "FAILED", error: message });
       } else {
-        results.push({ email: invite.email, role: invite.role, status: "LINKED_EXISTING" });
+        results.push({ email: invite.email, role: invite.role, status: "LINKED_EXISTING", user_id: Array.isArray(linked) ? linked[0]?.auth_user_id : undefined });
       }
       continue;
     }
@@ -261,7 +261,7 @@ Deno.serve(async (request: Request) => {
     await admin.from("organization_invitations")
       .update({ status: "INVITED", auth_user_id: invited.user.id, updated_at: new Date().toISOString() })
       .eq("id", invitation.id).eq("status", "PENDING");
-    results.push({ email: invite.email, role: invite.role, status: "INVITED" });
+    results.push({ email: invite.email, role: invite.role, status: "INVITED", user_id: invited.user.id });
   }
 
   const invitedCount = results.filter((row) => row.status === "INVITED" || row.status === "LINKED_EXISTING").length;
