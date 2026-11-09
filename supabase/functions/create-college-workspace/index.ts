@@ -140,9 +140,13 @@ Deno.serve(async (request: Request) => {
     if (linkError) {
       await admin.from("organization_invitations").delete().eq("id", invitation.id);
       await admin.from("organizations").delete().eq("id", organization.id);
-      const message = linkError.message.includes("different college") || linkError.message.includes("role")
-        ? "This verified account is already assigned to a different workspace or role."
-        : "The existing verified account could not be linked as this college’s first Head.";
+      const isAssignedElsewhere = linkError.message.toLowerCase().includes("different college");
+      const hasRoleConflict = linkError.message.toLowerCase().includes("role");
+      const message = isAssignedElsewhere
+        ? "This verified email already belongs to another college workspace. Use a different email for the first College Head; existing memberships will not be moved."
+        : hasRoleConflict
+          ? "This verified account has a role that cannot be used for the first College Head invitation. Use a different email address."
+          : "The existing verified account could not be linked as this college’s first Head.";
       return reply({ error: message }, 409, headers);
     }
     return reply({
