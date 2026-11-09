@@ -78,29 +78,51 @@ Deno.serve(async (request: Request) => {
   }
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  if (!body || Object.keys(body).some((key) => !["name","slug","head_name","head_email"].includes(key))) {
-    return reply({ error: "Invalid college setup request." }, 400, headers);
+  if (!body || Object.keys(body).some((key) => !["name","slug","organization_id","head_name","head_email"].includes(key))) {
+    return reply({ error: "Invalid college or HOD setup request." }, 400, headers);
   }
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const slug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
+  const organizationId = typeof body.organization_id === "string" ? body.organization_id.trim() : "";
   const headName = typeof body.head_name === "string" ? body.head_name.trim() : "";
   const headEmail = typeof body.head_email === "string" ? body.head_email.trim().toLowerCase() : "";
-  if (name.length < 2 || name.length > 160 || !slugPattern.test(slug) ||
+  const existingOrganizationRequested = organizationId.length > 0;
+  if ((existingOrganizationRequested && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(organizationId)) ||
+    (!existingOrganizationRequested && (name.length < 2 || name.length > 160 || !slugPattern.test(slug))) ||
     headName.length < 2 || headName.length > 120 ||
     headEmail.length > 254 || !emailPattern.test(headEmail)) {
-    return reply({ error: "Enter a valid college name, workspace slug and first Head email." }, 400, headers);
+    return reply({ error: "Enter a valid college name, workspace slug and HOD email." }, 400, headers);
   }
 
   const baseUrl = safeBaseUrl(Deno.env.get("APP_BASE_URL")) ??
     safeBaseUrl(request.headers.get("x-app-base-url")) ??
     "https://coursepulse-site.vercel.app";
 
-  const { data: organization, error: organizationError } = await admin.from("organizations")
-    .insert({ name, slug, status: "SETUP_REQUIRED", subscription_status: "UNCONFIGURED" })
-    .select("id,name,slug,status")
-    .single();
-  if (organizationError || !organization) {
-    return reply({ error: organizationError?.code === "23505" ? "That college workspace slug is already in use." : "The college workspace could not be created." }, 409, headers);
+  let organization: { id: string; name: string; slug: string; status: string } | null = null;
+  let createdOrganization = false;
+
+  if (existingOrganizationRequested) {
+    const { data: existingOrganization, error: existingOrganizationError } = await admin.from("organizations")
+      .select("id,name,slug,status,owner_user_id")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (existingOrganizationError || !existingOrganization) {
+      return reply({ error: "College workspace not found." }, 404, headers);
+    }
+    if (existingOrganization.status !== "SETUP_REQUIRED" || existingOrganization.owner_user_id !== null) {
+      return reply({ error: "Remove the current HOD first and put the college into setup before assigning a replacement HOD." }, 409, headers);
+    }
+    organization = existingOrganization;
+  } else {
+    const { data: created, error: organizationError } = await admin.from("organizations")
+      .insert({ name, slug, status: "SETUP_REQUIRED", subscription_status: "UNCONFIGURED" })
+      .select("id,name,slug,status")
+      .single();
+    if (organizationError || !created) {
+      return reply({ error: organizationError?.code === "23505" ? "That college workspace slug is already in use." : "The college workspace could not be created." }, 409, headers);
+    }
+    organization = created;
+    createdOrganization = true;
   }
 
   const { data: invitation, error: invitationError } = await admin.from("organization_invitations")
@@ -116,37 +138,39 @@ Deno.serve(async (request: Request) => {
     .single();
 
   if (invitationError || !invitation) {
-    await admin.from("organizations").delete().eq("id", organization.id).eq("status", "SETUP_REQUIRED");
-    return reply({ error: "The first College Head invitation could not be prepared." }, 500, headers);
+    if (createdOrganization) {
+      await admin.from("organizations").delete().eq("id", organization.id).eq("status", "SETUP_REQUIRED");
+    }
+    return reply({ error: "The HOD invitation could not be prepared." }, 500, headers);
   }
 
   const { data: existing, error: lookupError } = await admin.rpc("resolve_roster_email", { p_email: headEmail });
   if (lookupError) {
     await admin.from("organization_invitations").delete().eq("id", invitation.id);
-    await admin.from("organizations").delete().eq("id", organization.id);
-    return reply({ error: "The Head account could not be checked safely." }, 500, headers);
+    if (createdOrganization) await admin.from("organizations").delete().eq("id", organization.id);
+    return reply({ error: "The HOD account could not be checked safely." }, 500, headers);
   }
 
   const existingAccount = Array.isArray(existing) ? existing[0] : null;
   if (existingAccount) {
     if (!existingAccount.email_confirmed) {
       await admin.from("organization_invitations").delete().eq("id", invitation.id);
-      await admin.from("organizations").delete().eq("id", organization.id);
-      return reply({ error: "This email already has an account. Its owner must verify the email or mobile before it can become the first Head." }, 409, headers);
+      if (createdOrganization) await admin.from("organizations").delete().eq("id", organization.id);
+      return reply({ error: "This email already has an account. Its owner must verify the email or mobile before it can become the HOD." }, 409, headers);
     }
     const { error: linkError } = await admin.rpc("accept_existing_college_head_invitation", {
       p_invitation_id: invitation.id,
     });
     if (linkError) {
       await admin.from("organization_invitations").delete().eq("id", invitation.id);
-      await admin.from("organizations").delete().eq("id", organization.id);
+      if (createdOrganization) await admin.from("organizations").delete().eq("id", organization.id);
       const isAssignedElsewhere = linkError.message.toLowerCase().includes("different college");
       const hasRoleConflict = linkError.message.toLowerCase().includes("role");
       const message = isAssignedElsewhere
-        ? "This verified email already belongs to another college workspace. Use a different email for the first College Head; existing memberships will not be moved."
+        ? "This verified email already belongs to another college workspace. Use a different email for the HOD; existing memberships are never moved."
         : hasRoleConflict
-          ? "This verified account has a role that cannot be used for the first College Head invitation. Use a different email address."
-          : "The existing verified account could not be linked as this college’s first Head.";
+          ? "This verified account does not meet the HOD role requirements. Use a dedicated HOD email address."
+          : "The existing verified account could not be linked as this college’s HOD.";
       return reply({ error: message }, 409, headers);
     }
     return reply({
@@ -162,8 +186,8 @@ Deno.serve(async (request: Request) => {
   });
   if (inviteError || !invited.user) {
     await admin.from("organization_invitations").delete().eq("id", invitation.id);
-    await admin.from("organizations").delete().eq("id", organization.id);
-    return reply({ error: "The first Head email could not be sent. Check the Supabase Auth email provider and invitation delivery limits." }, 502, headers);
+    if (createdOrganization) await admin.from("organizations").delete().eq("id", organization.id);
+    return reply({ error: "The HOD invitation email could not be sent. Check the Supabase Auth email provider and invitation delivery limits." }, 502, headers);
   }
 
   await admin.from("organization_invitations")
@@ -174,15 +198,15 @@ Deno.serve(async (request: Request) => {
   await admin.from("platform_admin_audit").insert({
     actor_id: identity.user.id,
     organization_id: organization.id,
-    action: "organization.created_and_head_invited",
+    action: createdOrganization ? "organization.created_and_head_invited" : "organization.hod_invited",
     new_status: "SETUP_REQUIRED",
-    new_subscription_status: "UNCONFIGURED",
+    ...(createdOrganization ? { new_subscription_status: "UNCONFIGURED" } : {}),
   });
 
   return reply({
     organization,
     head_email: headEmail,
     head_status: "INVITED",
-    activation: "The college workspace becomes active after the first Head verifies the email invitation.",
+    activation: "The college workspace becomes active after the HOD verifies the email invitation.",
   }, 201, headers);
 });
