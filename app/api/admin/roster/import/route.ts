@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
     warnings.push(reason);
     rawResults = workbook.teachers.map((teacher) => ({
       mobile: teacher.mobile, role: 'INSTRUCTOR', status: 'FAILED',
-      error: 'Academic data was saved, but the activation invitation was not sent. ' + reason,
+      error: 'Academic data was saved, but the phone signup invitation could not be prepared. ' + reason,
     }));
   } else {
     rawResults = Array.isArray(inviteData.results) ? inviteData.results as Array<Record<string, unknown>> : [];
