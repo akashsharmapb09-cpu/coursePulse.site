@@ -30,8 +30,8 @@ const bodySchema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
-  if (!auth) return jsonError('College Head authentication with MFA is required.', 401);
-  if (auth.profile.role !== 'ADMIN') return jsonError('College Head access is required.', 403);
+  if (!auth) return jsonError('HOD authentication with MFA is required.', 401);
+  if (auth.profile.role !== 'ADMIN') return jsonError('HOD access is required.', 403);
 
   const protection = await protectMutation(request, supabase, 'admin:user-update', 10, 3600);
   if (protection) return protection;
