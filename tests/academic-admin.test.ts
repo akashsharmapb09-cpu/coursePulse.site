@@ -7,9 +7,20 @@ const departmentMigration=readFileSync(resolve(process.cwd(),'supabase/migration
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'app/dashboard/page.tsx'),'utf8');
 const dashboardUi=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
+const rosterUi=readFileSync(resolve(process.cwd(),'components/admin-roster-panel.tsx'),'utf8');
 const academicApi=readFileSync(resolve(process.cwd(),'app/api/admin/academic/route.ts'),'utf8');
 
 describe('academic administration and account lifecycle contract',()=>{
+  it('keeps HOD academic setup workbook-only and removes individual invitation controls',()=>{
+    expect(dashboardUi).not.toMatch(/Create department/);
+    expect(dashboardUi).not.toMatch(/Create academic semester/);
+    expect(dashboardUi).not.toMatch(/Enroll student in course/);
+    expect(dashboardUi).not.toMatch(/Assign teacher/);
+    expect(rosterUi).toMatch(/Import departments, courses & teachers/);
+    expect(rosterUi).not.toMatch(/Create invitation/);
+    expect(rosterUi).not.toMatch(/Quick roster invitation/);
+    expect(rosterUi).not.toMatch(/Invitation queue/);
+  });
   it('requires explicit enrollment for student course and feedback visibility',()=>{
     expect(migration).toMatch(/course_enrollments e where e\.course_id=courses\.id and e\.student_id=\(select auth\.uid\(\)\)/);
     expect(migration).toMatch(/join public\.course_enrollments e on e\.course_id=c\.id and e\.student_id=v_student_id/);
@@ -34,16 +45,16 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(academicApi).toMatch(/supabase\.from\('semesters'\)\.update/);
     expect(academicApi).toMatch(/department\.updated/);
     expect(academicApi).toMatch(/semester\.updated/);
-    expect(dashboardUi).toMatch(/Update department/);
-    expect(dashboardUi).toMatch(/Update semester/);
-    expect(dashboardUi).toMatch(/Active semester/);
+    expect(dashboardUi).not.toMatch(/Update department/);
+    expect(dashboardUi).not.toMatch(/Update semester/);
+    expect(dashboardUi).not.toMatch(/Active semester/);
   });
   it('assigns and clears user departments through a MFA-protected audited RPC',()=>{
     expect(departmentMigration).toMatch(/create or replace function private\.admin_assign_user_department/);
     expect(departmentMigration).toMatch(/private\.is_admin\(\)/);
     expect(departmentMigration).toMatch(/private\.admin_record_audit/);
     expect(academicApi).toMatch(/admin_assign_user_department/);
-    expect(dashboardUi).toMatch(/Assign user department/);
+    expect(dashboardUi).not.toMatch(/Assign user department/);
   });
   it('supports enrollment, instructor assignments and academic metadata',()=>{
     expect(migration).toMatch(/create table public\.course_enrollments/);

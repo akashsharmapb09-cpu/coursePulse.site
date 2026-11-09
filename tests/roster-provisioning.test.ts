@@ -47,14 +47,16 @@ describe('secure student/teacher roster provisioning', () => {
     expect(route).toContain('admin:user-update');
   });
 
-  it('lets instructors add students only to assigned classes, never create teacher accounts', () => {
+  it('lets instructors bulk-import students only to assigned classes, never create teacher accounts', () => {
     expect(edge).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
     expect(edge).toContain('Teachers can invite students only.');
     expect(edge).toContain('assignedCourseIds.has(courseId)');
     expect(teacherInvite).toContain("auth.profile.role !== 'INSTRUCTOR'");
     expect(teacherInvite).toContain("role: 'STUDENT'");
-    expect(teacherUi).toContain("fetch('/api/teacher/roster/invitations'");
-    expect(teacherUi).toContain('student_number:studentNumber');
-    expect(teacherUi).toContain('section:studentSection');
+    expect(teacherUi).not.toContain("fetch('/api/teacher/roster/invitations'");
+
+    expect(teacherUi).toContain("fetch('/api/teacher/roster/import'");
+    expect(teacherUi).not.toContain('Add one student manually');
+    expect(teacherUi).not.toContain('Add student & send invite');
   });
 });
