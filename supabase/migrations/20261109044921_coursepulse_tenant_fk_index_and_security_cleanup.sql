@@ -4,7 +4,13 @@ create policy platform_admins_deny_client_access
   on private.platform_admins for all to authenticated
   using (false) with check (false);
 
-revoke all on function public.rls_auto_enable() from public, anon, authenticated, service_role;
+do $migration$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    execute 'revoke all on function public.rls_auto_enable() from public, anon, authenticated, service_role';
+  end if;
+end
+$migration$;
 
 create or replace function private.is_instructor()
 returns boolean
