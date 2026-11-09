@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
     course_ids: [courseId],
     student_number: student.studentNumber,
     section: student.section,
-    mobile: student.mobile,
   }));
 
   const { data, error } = await supabase.functions.invoke('invite-college-users', {
@@ -103,7 +102,7 @@ export async function POST(request: NextRequest) {
       ...(typeof result?.error === 'string' ? { error: result.error } : {}),
     };
   });
-  const invited = results.filter((result) => result.status === 'INVITED' || result.status === 'LINKED_EXISTING').length;
+  const invited = results.filter((result) => ['INVITED', 'LINKED_EXISTING', 'PENDING_SIGNUP', 'WAITING_FOR_VERIFICATION'].includes(result.status)).length;
   const failed = results.length - invited;
 
   return NextResponse.json({
