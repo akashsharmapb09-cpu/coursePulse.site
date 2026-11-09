@@ -27,7 +27,9 @@ describe('public college-project website experience',()=>{
     expect(home).toContain('href="/login"');
     expect(home).toContain('href="/signup"');
     expect(signup).toContain('<LoginForm initialMode="signup" />');
-    expect(loginForm).toContain("useState<'signin' | 'signup' | 'forgot'>(initialMode)");
+    expect(loginForm).toContain("type Mode = 'signin' | 'signup' | 'verify-signup' | 'forgot' | 'verify-reset' | 'legacy-signin' | 'legacy-forgot'");
+    expect(loginForm).toContain('mobile number');
+    expect(loginForm).toContain("type: 'sms'");
     expect(robots).toContain("'/signup'");
     expect(signup).toContain("robots: { index: false, follow: false }");
   });
