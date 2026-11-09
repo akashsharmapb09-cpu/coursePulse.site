@@ -228,7 +228,7 @@ export function AdminRosterPanel({ courses, departments, onWorkbookImported }: P
         <div>
           <h4 className="font-semibold text-[#214b37]">Complete college setup from one Excel workbook</h4>
           <p className="mt-1 max-w-3xl text-sm text-[#566a5e]">Fill the Departments, Courses and Teachers tabs, then upload once. CoursePulse creates or updates the academic structure, links teachers to their courses and sends account activation emails.</p>
-          <p className="mt-2 text-xs text-[#6b7d72]">Up to 200 departments · 500 courses · 100 teachers · 5 MB .xlsx file</p>
+          <p className="mt-2 text-xs text-[#6b7d72]">Up to 200 departments · 500 courses · 100 teachers · 4 MB .xlsx file</p>
         </div>
         <FileSpreadsheet size={25} className="text-[#3b7657]"/>
       </div>
