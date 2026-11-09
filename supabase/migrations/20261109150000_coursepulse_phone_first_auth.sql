@@ -307,10 +307,13 @@ begin
     if v_profile.organization_id is not null and v_profile.organization_id<>v_invitation.organization_id then
       raise exception 'This account already belongs to another college' using errcode='42501';
     end if;
-    if v_profile.role<>v_role then
+    if v_profile.role<>v_role
+       and not (v_profile.role='STUDENT'::public.app_role
+         and v_profile.organization_id is null
+         and v_role='INSTRUCTOR'::public.app_role) then
       raise exception 'The existing account role does not match this invitation' using errcode='42501';
     end if;
-    update public.users set organization_id=v_invitation.organization_id,
+    update public.users set role=v_role,organization_id=v_invitation.organization_id,
       department_id=v_invitation.department_id,
       full_name=case when btrim(full_name)='' then v_invitation.full_name else full_name end,
       is_active=true,suspended_at=null
