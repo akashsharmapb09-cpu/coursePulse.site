@@ -13,8 +13,9 @@ const functionSql = readFileSync(resolve(process.cwd(), 'supabase/migrations/202
 describe('secure student/teacher roster provisioning', () => {
   it('requires a verified signed-in Head with AAL2 and active organization scope', () => {
     expect(edge).toContain('admin.auth.getUser(accessToken)');
-    expect(edge).toContain('claims.aal !== "aal2"');
-    expect(edge).toContain('profile.role !== "ADMIN"');
+    expect(edge).toContain('const isHead = profile.role === "ADMIN" && claims.aal === "aal2"');
+    expect(edge).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
+    expect(edge).toContain('if (!isHead && !isTeacher)');
     expect(edge).toContain('organization.status !== "ACTIVE"');
     expect(edge).toContain('.eq("organization_id", profile.organization_id)');
   });
