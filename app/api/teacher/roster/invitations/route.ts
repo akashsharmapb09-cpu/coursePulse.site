@@ -11,11 +11,7 @@ const inputSchema = z.object({
   student_number: z.string().trim().min(1).max(40),
   section: z.string().trim().min(1).max(30),
   mobile: z.string().trim().regex(/^\+[1-9]\d{7,14}$/)
-}).strict().superRefine((value, ctx) => {
-  if (value.mobile && !/^\+?[0-9 ()-]{8,24}$/.test(value.mobile)) {
-    ctx.addIssue({ code: 'custom', path: ['mobile'], message: 'Enter a valid mobile number.' });
-  }
-});
+}).strict();
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
