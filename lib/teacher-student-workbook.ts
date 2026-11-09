@@ -7,13 +7,13 @@ export type TeacherStudentRow = {
   section: string;
 };
 
-const MOBILE = /^\\+[1-9]\\d{7,14}$/;
+const MOBILE = /^\+[1-9]\d{7,14}$/;
 
 function normalizePhone(raw: string): string | null {
-  const compact = raw.trim().replace(/[\\s()-]/g, '');
-  if (/^\\d{10}$/.test(compact)) return '+91' + compact;
-  if (/^91\\d{10}$/.test(compact)) return '+' + compact;
-  if (/^\\+[1-9]\\d{7,14}$/.test(compact)) return compact;
+  const compact = raw.trim().replace(/[\s()-]/g, '');
+  if (/^\d{10}$/.test(compact)) return '+91' + compact;
+  if (/^91\d{10}$/.test(compact)) return '+' + compact;
+  if (/^\+[1-9]\d{7,14}$/.test(compact)) return compact;
   return null;
 }
 
@@ -53,7 +53,7 @@ export async function parseTeacherStudentWorkbook(buffer: Buffer): Promise<Teach
 
   const headers = new Map<string, number>();
   sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, column) => {
-    const header = cellText(cell, 1, 'column ' + column).toLowerCase().replace(/[\\s-]+/g, '_');
+    const header = cellText(cell, 1, 'column ' + column).toLowerCase().replace(/[\s-]+/g, '_');
     if (!header) return;
     if (headers.has(header)) throw new Error('Students: duplicate column heading "' + header + '".');
     headers.set(header, column);
