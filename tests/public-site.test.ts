@@ -15,7 +15,7 @@ const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'
 describe('public college-project website experience',()=>{
   it('labels workspace navigation for screen readers and exposes selected state',()=>{
     expect(dashboard).toContain('aria-label="Workspace navigation"');
-    for (const name of ['Overview','Courses','Feedback forms','Submission history','Analytics','Administration','Account security']) {
+    for (const name of ['Overview','Courses','Feedback forms','Submission history','Analytics','HOD console','Account security']) {
       expect(dashboard).toContain(`aria-label="${name}" aria-pressed`);
     }
   });

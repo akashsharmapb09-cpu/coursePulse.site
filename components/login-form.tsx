@@ -49,7 +49,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     <div className="auth-icon"><BookOpen size={21}/></div>
     <span className="eyebrow">WELCOME TO COURSEPULSE</span>
     <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}</h2>
-    <p className="muted">{mode === 'signin' ? 'Sign in to view your courses and feedback.' : mode === 'signup' ? 'Your account starts with the student role. An administrator can assign teaching or admin access.' : 'Enter your account email and we will send a secure reset link if it exists.'}</p>
+    <p className="muted">{mode === 'signin' ? 'Sign in to view your courses and feedback.' : mode === 'signup' ? 'Your account starts as a Student. A college HOD can invite Teachers and Students; only CoursePulse Platform Super Admin can assign HOD access.' : 'Enter your account email and we will send a secure reset link if it exists.'}</p>
     <form onSubmit={submit} className="stack-form">
       {mode === 'signup' && <label>Full name<input autoComplete="name" value={name} onChange={e=>setName(e.target.value)} maxLength={120} required placeholder="Your name"/></label>}
       <label>Email address<span className="input-wrap"><Mail size={17}/><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} maxLength={254} required placeholder="you@school.edu"/></span></label>

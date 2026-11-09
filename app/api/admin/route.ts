@@ -6,13 +6,13 @@ import { courseAdminInput } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 const uuid = z.string().uuid();
-const userRole = z.enum(['ADMIN', 'INSTRUCTOR', 'STUDENT']);
+const userRole = z.enum(['INSTRUCTOR', 'STUDENT']);
 async function requireAdminMfa(supabase: Awaited<ReturnType<typeof createClient>>) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return { error: jsonError('Unauthorized', 401) };
-  if (auth.profile.role !== 'ADMIN') return { error: jsonError('Administrator access is required.', 403) };
+  if (auth.profile.role !== 'ADMIN') return { error: jsonError('HOD access is required.', 403) };
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (error || data?.currentLevel !== 'aal2') return { error: jsonError('Complete administrator multi-factor authentication before using this action.', 403) };
+  if (error || data?.currentLevel !== 'aal2') return { error: jsonError('Complete HOD multi-factor authentication before using this action.', 403) };
   return { auth };
 }
 
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
   const parsed = z.object({ user_id: uuid, role: userRole, is_active: z.boolean() }).strict().safeParse(body);
   if (!parsed.success) return jsonError('Provide a valid user, role, and active status.');
   const { error } = await supabase.rpc('admin_update_user', { p_user_id: parsed.data.user_id, p_role: parsed.data.role, p_is_active: parsed.data.is_active });
-  if (error) return jsonError(error.message.includes('MFA') ? 'Administrator MFA is required.' : 'The user access change was not accepted.', 403);
+  if (error) return jsonError(error.message.includes('MFA') ? 'HOD MFA is required.' : 'HODs can only activate or remove Student and Teacher accounts. HOD accounts are managed by Platform Super Admin.', 403);
   return NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
