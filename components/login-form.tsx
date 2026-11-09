@@ -8,10 +8,10 @@ import { createClient } from '@/lib/supabase/client';
 type Mode = 'signin' | 'signup' | 'verify-signup' | 'forgot' | 'verify-reset' | 'legacy-signin';
 
 function normalizeIndianPhone(raw: string): string | null {
-  const compact = raw.trim().replace(/[\\s()-]/g, '');
-  if (/^\\d{10}$/.test(compact)) return '+91' + compact;
-  if (/^91\\d{10}$/.test(compact)) return '+' + compact;
-  if (/^\\+[1-9]\\d{7,14}$/.test(compact)) return compact;
+  const compact = raw.trim().replace(/[\s()-]/g, '');
+  if (/^\d{10}$/.test(compact)) return '+91' + compact;
+  if (/^91\d{10}$/.test(compact)) return '+' + compact;
+  if (/^\+[1-9]\d{7,14}$/.test(compact)) return compact;
   return null;
 }
 
@@ -139,7 +139,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
       setError('Enter the mobile number used for this request.');
       return;
     }
-    if (!/^\\d{6}$/.test(otp.trim())) {
+    if (!/^\d{6}$/.test(otp.trim())) {
       setError('Enter the six-digit verification code.');
       return;
     }
@@ -189,8 +189,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     setBusy(true);
     try {
       const supabase = createClient();
-      const type = mode === 'verify-reset' ? 'sms' : 'sms';
-      const { error: resendError } = await supabase.auth.resend({ type, phone: phoneNumber });
+      const { error: resendError } = await supabase.auth.resend({ type: 'sms', phone: phoneNumber });
       if (resendError) throw resendError;
       setNotice('A new verification code has been requested. Check your SMS messages.');
     } catch (cause) {
@@ -226,9 +225,9 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
         ? <label>Email address<span className="input-wrap"><Mail size={17}/><input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} maxLength={254} required placeholder="you@school.edu"/></span></label>
         : <label>Mobile number<span className="input-wrap"><Smartphone size={17}/><input type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)} maxLength={20} required placeholder="+91 98765 43210"/></span><small className="fine-print">Indian 10-digit numbers default to +91. Use +country code for other countries.</small></label>}
       {(mode === 'signin' || mode === 'signup' || legacyMode) && <label>Password<span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete={mode === 'signin' || legacyMode ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={mode === 'signup' ? 10 : undefined} maxLength={72} required placeholder={mode === 'signup' ? 'At least 10 characters' : 'Your password'}/></span></label>}
-      {mode === 'verify-signup' && <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>}
+      {mode === 'verify-signup' && <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>}
       {mode === 'verify-reset' && <>
-        <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>
+        <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>
         <label>New password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} value={password} onChange={event => setPassword(event.target.value)} required placeholder="At least 10 characters"/></label>
         <label>Confirm new password<input type="password" autoComplete="new-password" minLength={10} maxLength={72} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} required placeholder="Repeat new password"/></label>
       </>}
