@@ -115,7 +115,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_org uuid;
   v_role public.app_role;
