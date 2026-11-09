@@ -58,9 +58,9 @@ describe('CoursePulse four-role authorization model', () => {
     expect(migration).toContain('set is_active = p_is_active');
     expect(migration).toContain('suspended_at = case');
     expect(migration).toContain('user.access.updated');
-    expect(migration).toContain('HOD access is now exclusively');
+    expect(migration).toContain('HOD assignment is now exclusively');
     expect(accessControls).toContain('revoke insert,delete on public.users from authenticated');
-    expect(foundation).toContain('ON DELETE RESTRICT');
+    expect(foundation).toContain('on delete restrict');
     expect(hodConsole).toContain('Accounts are not hard-deleted');
     expect(hodConsole).toContain('preserved');
     expect(migration).not.toContain('delete from public.users');
