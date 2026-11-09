@@ -173,7 +173,7 @@ export async function POST(request:NextRequest) {
   const buffer=Buffer.from(await file.arrayBuffer());
   const workbook=new ExcelJS.Workbook();
   try {
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.load(buffer as unknown as Buffer);
   } catch {
     return jsonError('The uploaded file is not a valid .xlsx workbook.');
   }
@@ -195,7 +195,12 @@ export async function POST(request:NextRequest) {
   }
   const semesters: {rowNumber:number;name:string;start_date:string;end_date:string;is_active:boolean}[]=[];
   for(const row of semesterRows) {
-    const values={...row.values,is_active:parseBoolean(row.values.is_active??'')};
+    const activeValue=(row.values.is_active??'').trim().toLowerCase();
+    if(!['','true','false','yes','no','1','0','active','inactive','y','n'].includes(activeValue)) {
+      issues.push({sheet:'Semesters',row:row.rowNumber,message:'is_active must be TRUE or FALSE.'});
+      continue;
+    }
+    const values={...row.values,is_active:parseBoolean(activeValue)};
     const parsed=semesterSchema.safeParse(values);
     if(!parsed.success) issues.push({sheet:'Semesters',row:row.rowNumber,message:parsed.error.issues[0]?.message??'Invalid semester row.'});
     else if(dateError(parsed.data.start_date,parsed.data.end_date)) issues.push({sheet:'Semesters',row:row.rowNumber,message:'Use real YYYY-MM-DD dates and an end date on or after the start date.'});
