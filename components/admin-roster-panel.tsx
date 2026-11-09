@@ -8,7 +8,7 @@ type RosterStudent = {
   mobile: string | null; department_id: string | null; department_name: string | null;
   course_id: string | null; course_code: string | null; course_title: string | null; section: string | null;
 };
-type TeacherInviteResult = { email: string; role: string; status: string; error?: string };
+type TeacherInviteResult = { mobile: string; role: string; status: string; error?: string };
 type WorkbookImportResult = {
   departments_created: number; departments_updated: number; departments_reused: number;
   courses_created: number; courses_updated: number; teachers_invited: number; teachers_failed: number;
@@ -86,7 +86,7 @@ export function AdminRosterPanel({ onWorkbookImported }: Props) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h4 className="font-semibold text-[#214b37]">Complete college setup from one Excel workbook</h4>
-          <p className="mt-1 max-w-3xl text-sm text-[#566a5e]">Fill the Departments, Courses and Teachers tabs, then upload once. CoursePulse creates or updates the academic structure, links teachers to their courses and sends account activation emails.</p>
+          <p className="mt-1 max-w-3xl text-sm text-[#566a5e]">Fill the Departments, Courses and Teachers tabs, then upload once. CoursePulse creates or updates the academic structure, links teachers to their courses and prepares mobile-based account activation.</p>
           <p className="mt-2 text-xs text-[#6b7d72]">Up to 200 departments · 500 courses · 100 teachers · 4 MB .xlsx file</p>
         </div>
         <FileSpreadsheet size={25} className="text-[#3b7657}"/>
@@ -103,7 +103,7 @@ export function AdminRosterPanel({ onWorkbookImported }: Props) {
         </button>
         {workbookFile && <button className="button subtle compact" type="button" onClick={() => setWorkbookFile(null)} disabled={workbookBusy}>Remove file</button>}
       </div>
-      <p className="mt-3 text-xs text-[#6b7d72]">Teacher passwords are never generated or shown to the HOD. Each teacher receives an email invitation and sets their own password.</p>
+      <p className="mt-3 text-xs text-[#6b7d72]">Teacher passwords are never generated or shown to the HOD. Each teacher signs up with their mobile number, verifies by SMS OTP and sets their own password.</p>
       {workbookResult && <div className="mt-4 rounded-xl border border-[#dbe9df] bg-white p-4" role="status">
         <h5 className="text-sm font-semibold text-[#285b40]">Import summary</h5>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -113,7 +113,7 @@ export function AdminRosterPanel({ onWorkbookImported }: Props) {
         </div>
         {!!workbookResult.teacher_results.filter(result => result.status === 'FAILED').length && <div className="mt-3 border-t border-[#edf1ed] pt-3">
           <p className="mb-2 text-xs font-semibold text-[#8a3d30]">Teacher rows needing attention</p>
-          {workbookResult.teacher_results.filter(result => result.status === 'FAILED').map(result => <p key={result.email} className="text-xs text-[#8a3d30}">{result.email}: {result.error ?? 'Invitation failed.'}</p>)}
+          {workbookResult.teacher_results.filter(result => result.status === 'FAILED').map(result => <p key={result.mobile} className="text-xs text-[#8a3d30}">{result.mobile}: {result.error ?? 'Invitation failed.'}</p>)}
         </div>}
         {!!workbookResult.warnings.length && <div className="mt-3 border-t border-[#edf1ed] pt-3">{workbookResult.warnings.map((warning,index) => <p key={index} className="text-xs text-[#8a5a20]">{warning}</p>)}</div>}
       </div>}
@@ -132,7 +132,7 @@ export function AdminRosterPanel({ onWorkbookImported }: Props) {
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead><tr className="border-b border-[#e6ede7] text-xs uppercase text-[#728176]"><th className="px-3 py-3">Student</th><th className="px-3 py-3">Roll number</th><th className="px-3 py-3">Department</th><th className="px-3 py-3">Course / section</th><th className="px-3 py-3">Mobile</th><th className="px-3 py-3">Account</th></tr></thead>
           <tbody>{students.map((student,index) => <tr key={student.student_id + '-' + (student.course_id ?? index)} className="border-b border-[#edf1ed] last:border-0">
-            <td className="px-3 py-3"><b>{student.full_name}</b><small className="block text-[#728176]">{student.email ?? 'No email'}</small></td>
+            <td className="px-3 py-3"><b>{student.full_name}</b></td>
             <td className="px-3 py-3 font-mono">{student.student_number}</td>
             <td className="px-3 py-3">{student.department_name ?? '—'}</td>
             <td className="px-3 py-3">{student.course_title ?? '—'}{student.section ? ' / ' + student.section : ''}</td>
