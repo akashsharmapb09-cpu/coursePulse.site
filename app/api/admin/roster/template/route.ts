@@ -48,7 +48,7 @@ export async function GET() {
     ['Teachers', 'One row per teacher. Use the same department_code and list 1–25 course codes separated by semicolons.', 'Asha Sharma | +919876543210 | CSE | CS101;CS102'],
     [],
     ['Important', 'Keep the worksheet names and column headings unchanged. Do not add formulas or hyperlinks in data cells.', ''],
-    ['Account activation', 'CoursePulse sends an activation email to each teacher. Teachers set their own password; the HOD never receives or chooses it.', ''],
+    ['Account activation', 'Teachers create accounts with their mobile numbers, verify by SMS OTP and set their own password. The HOD never receives or chooses it.', ''],
     ['Existing records', 'Matching department codes and course codes are updated/reused in your college. Other colleges are not affected.', ''],
     ['Limits', 'Maximum 200 departments, 500 courses and 100 teachers per workbook. A teacher can be assigned up to 25 courses.', ''],
     ['Course status', 'Allowed values: DRAFT or PUBLISHED. Blank status defaults to DRAFT so the HOD can review before students see it.', ''],
