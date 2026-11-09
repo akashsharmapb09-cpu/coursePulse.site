@@ -13,7 +13,7 @@ const invitationSchema = z.object({
   course_ids: z.array(z.string().uuid()).min(1).max(25),
   student_number: z.string().trim().min(1).max(40).optional(),
   section: z.string().trim().max(30).optional(),
-  mobile: z.string().trim().regex(/^\\+[1-9]\\d{7,14}$/),
+  mobile: z.string().trim().regex(/^\+[1-9]\d{7,14}$/),
 }).strict().superRefine((value, ctx) => {
   if (value.role === 'STUDENT' && !value.student_number) {
     ctx.addIssue({ code: 'custom', path: ['student_number'], message: 'Student number is required.' });
