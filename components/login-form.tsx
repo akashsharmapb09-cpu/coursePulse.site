@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Activity, ArrowRight, BookOpen, LoaderCircle, Smartphone, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-type Mode = 'signin' | 'signup' | 'verify-signup' | 'forgot' | 'verify-reset' | 'legacy-signin';
+type Mode = 'signin' | 'signup' | 'verify-signup' | 'forgot' | 'verify-reset' | 'legacy-signin' | 'legacy-forgot';
 
 function normalizeIndianPhone(raw: string): string | null {
   const compact = raw.trim().replace(/[\s()-]/g, '');
@@ -53,7 +53,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     setError('');
     setNotice('');
 
-    if (mode !== 'legacy-signin' && !phoneNumber) {
+    if (mode !== 'legacy-signin' && mode !== 'legacy-forgot' && !phoneNumber) {
       setError('Enter a valid mobile number. Indian 10-digit numbers are accepted; international numbers must include +country code.');
       return;
     }
@@ -74,6 +74,14 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
         if (signInError) throw signInError;
         router.replace('/dashboard');
         router.refresh();
+        return;
+      }
+
+      if (mode === 'legacy-forgot') {
+        const redirectTo = new URL('/auth/confirm?next=/auth/reset', process.env.NEXT_PUBLIC_APP_URL || window.location.origin).toString();
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+        if (resetError) throw resetError;
+        setNotice('If an existing account matches this email, password reset instructions can be sent. Check your inbox and spam folder.');
         return;
       }
 
@@ -117,7 +125,9 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
       }
     } catch (cause) {
       const details = authErrorCode(cause);
-      if (mode === 'legacy-signin' || mode === 'signin') {
+      if (mode === 'legacy-forgot') {
+        setNotice('If an existing account matches this email, password reset instructions can be sent. Try again later if nothing arrives.');
+      } else if (mode === 'legacy-signin' || mode === 'signin') {
         setError('Sign-in failed. Check your credentials and try again.');
       } else if (details.code === 'over_sms_send_rate_limit' || details.status === 429) {
         setError('The SMS verification limit has been reached. Wait before requesting another code.');
@@ -203,17 +213,18 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
   }
 
   const verificationMode = mode === 'verify-signup' || mode === 'verify-reset';
-  const legacyMode = mode === 'legacy-signin';
+  const legacyMode = mode === 'legacy-signin' || mode === 'legacy-forgot';
 
   return <div className="auth-card">
     <div className="mobile-brand"><span className="brand-mark"><Activity size={19}/></span> CoursePulse</div>
     <div className="auth-icon">{verificationMode ? <ShieldCheck size={21}/> : <Smartphone size={21}/>}</div>
     <span className="eyebrow">WELCOME TO COURSEPULSE</span>
-    <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : verificationMode ? 'Verify your mobile number' : 'Existing account sign-in'}</h2>
+    <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : mode === 'legacy-forgot' ? 'Reset existing account password' : verificationMode ? 'Verify your mobile number' : 'Existing account sign-in'}</h2>
     <p className="muted">
       {mode === 'signin' ? 'Sign in securely with your mobile number and password.' :
        mode === 'signup' ? 'Create your Student account with your mobile number. We will ask you to verify it by SMS.' :
        mode === 'forgot' ? 'We will request a one-time SMS code so you can set a new password.' :
+       mode === 'legacy-forgot' ? 'Use email recovery only for an older account that has not linked a mobile number yet.' :
        mode === 'verify-signup' ? 'Enter the six-digit code sent to ' + (phoneNumber ?? phone) + ' to finish creating your account.' :
        mode === 'verify-reset' ? 'Verify your mobile number, then choose a new password.' :
        'Use email sign-in temporarily to migrate an existing account to mobile authentication.'}
@@ -224,7 +235,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
       {legacyMode
         ? <label>Email address<span className="input-wrap"><Mail size={17}/><input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} maxLength={254} required placeholder="you@school.edu"/></span></label>
         : <label>Mobile number<span className="input-wrap"><Smartphone size={17}/><input type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)} maxLength={20} required placeholder="+91 98765 43210"/></span><small className="fine-print">Indian 10-digit numbers default to +91. Use +country code for other countries.</small></label>}
-      {(mode === 'signin' || mode === 'signup' || legacyMode) && <label>Password<span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete={mode === 'signin' || legacyMode ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={mode === 'signup' ? 10 : undefined} maxLength={72} required placeholder={mode === 'signup' ? 'At least 10 characters' : 'Your password'}/></span></label>}
+      {(mode === 'signin' || mode === 'signup' || mode === 'legacy-signin') && <label>Password<span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete={mode === 'signin' || legacyMode ? 'current-password' : 'new-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={mode === 'signup' ? 10 : undefined} maxLength={72} required placeholder={mode === 'signup' ? 'At least 10 characters' : 'Your password'}/></span></label>}
       {mode === 'verify-signup' && <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>}
       {mode === 'verify-reset' && <>
         <label>SMS verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="6-digit code"/></label>
@@ -234,17 +245,20 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
       {error && <p className="alert error" role="alert">{error}</p>}
       {notice && <p className="alert success" role="status">{notice}</p>}
       <button type="submit" className="button primary full" disabled={busy}>
-        {busy ? <LoaderCircle className="spin" size={17}/> : <>{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Send reset code' : verificationMode ? (mode === 'verify-reset' ? 'Verify & reset password' : 'Verify mobile number') : 'Sign in with email'} <ArrowRight size={17}/></>}
+        {busy ? <LoaderCircle className="spin" size={17}/> : <>{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Send reset code' : mode === 'legacy-forgot' ? 'Send legacy email reset link' : verificationMode ? (mode === 'verify-reset' ? 'Verify & reset password' : 'Verify mobile number') : 'Sign in with email'} <ArrowRight size={17}/></>}
       </button>
     </form>
 
     {verificationMode && <button type="button" className="button subtle full" onClick={() => void resendOtp()} disabled={busy}>Resend SMS code</button>}
     {mode === 'signin' && <div className="switch-auth"><button onClick={() => switchMode('forgot')}>Forgot password?</button></div>}
+    {mode === 'legacy-signin' && <div className="switch-auth"><button onClick={() => switchMode('legacy-forgot')}>Forgot password for this older account?</button></div>}
     {mode === 'signin' && <p className="switch-auth">New to CoursePulse? <button onClick={() => switchMode('signup')}>Create account</button></p>}
     {mode === 'signup' && <p className="switch-auth">Already registered? <button onClick={() => switchMode('signin')}>Sign in</button></p>}
     {mode === 'signin' && <p className="switch-auth">Existing account without a linked phone? <button onClick={() => switchMode('legacy-signin')}>Use email sign-in temporarily</button></p>}
     {mode === 'legacy-signin' && <p className="switch-auth">Already linked your phone? <button onClick={() => switchMode('signin')}>Use mobile sign-in</button></p>}
-    {(verificationMode || mode === 'forgot') && <p className="switch-auth"><button onClick={() => switchMode('signin')}>Back to sign in</button></p>}
+    {mode === 'forgot' && <p className="switch-auth">Older account without a phone? <button onClick={() => switchMode('legacy-forgot')}>Use email recovery temporarily</button></p>}
+    {mode === 'legacy-forgot' && <p className="switch-auth"><button onClick={() => switchMode('forgot')}>Back to mobile recovery</button></p>}
+    {(verificationMode || mode === 'forgot' || mode === 'legacy-forgot') && <p className="switch-auth"><button onClick={() => switchMode('signin')}>Back to sign in</button></p>}
     <p className="fine-print">Phone-based registration uses SMS verification. Email sign-in remains temporarily available only for existing accounts during the migration; no new email accounts can be created.</p>
   </div>;
 }
