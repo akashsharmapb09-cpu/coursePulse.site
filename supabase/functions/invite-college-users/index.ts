@@ -21,7 +21,7 @@ const json = (body: unknown, status: number, cors: Record<string, string>) =>
   });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const EMAIL = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\\.[^\s@]+$/;
 
 type Invite = {
   email?: string;
@@ -35,10 +35,10 @@ type Invite = {
 };
 
 function normalizePhone(raw: string): string | null {
-  const compact = raw.trim().replace(/[\\s()-]/g, "");
-  if (/^\\d{10}$/.test(compact)) return "+91" + compact;
-  if (/^91\\d{10}$/.test(compact)) return "+" + compact;
-  if (/^\\+[1-9]\\d{7,14}$/.test(compact)) return compact;
+  const compact = raw.trim().replace(/[\s()-]/g, "");
+  if (/^\d{10}$/.test(compact)) return "+91" + compact;
+  if (/^91\d{10}$/.test(compact)) return "+" + compact;
+  if (/^\+[1-9]\d{7,14}$/.test(compact)) return compact;
   return null;
 }
 
