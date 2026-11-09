@@ -20,7 +20,7 @@ export type AcademicWorkbook = {
   teachers: WorkbookTeacher[];
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MOBILE = /^\+[1-9]\d{7,14}$/;
 const DEPARTMENT_CODE = /^[A-Z0-9][A-Z0-9_-]{1,19}$/;
 const COURSE_CODE = /^[A-Z0-9][A-Z0-9._-]{1,29}$/;
 
