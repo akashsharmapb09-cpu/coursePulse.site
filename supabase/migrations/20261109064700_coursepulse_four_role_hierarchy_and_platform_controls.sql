@@ -285,11 +285,8 @@ begin
     raise exception 'This college has no assigned HOD account' using errcode='P0002';
   end if;
 
-  if v_owner = (select auth.uid())
-    or exists(select 1 from private.platform_admins p where p.user_id = v_owner) then
-    raise exception 'A Platform Super Admin account cannot be removed as a HOD' using errcode='42501';
-  end if;
-
+  -- The platform membership is separate from the college HOD profile. Disabling
+  -- the college profile does not revoke the person's Platform Super Admin membership.
   update public.users
   set is_active = false,
       suspended_at = coalesce(suspended_at, now()),
@@ -332,3 +329,38 @@ $function$;
 
 revoke all on function public.platform_remove_organization_head(uuid) from public, anon;
 grant execute on function public.platform_remove_organization_head(uuid) to authenticated;
+
+
+-- Retire legacy self-claim onboarding. HOD assignment is now exclusively
+-- controlled by Platform Super Admin through the audited HOD invitation flow.
+create or replace function private.claim_setup_workspace(p_code text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  raise exception 'HOD accounts can be assigned only by a Platform Super Admin' using errcode='42501';
+end;
+$function$;
+
+create or replace function private.claim_admin_signup(p_code text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  raise exception 'HOD accounts can be assigned only by a Platform Super Admin' using errcode='42501';
+end;
+$function$;
+
+revoke all on function private.claim_setup_workspace(text) from public, anon, authenticated;
+revoke all on function private.claim_admin_signup(text) from public, anon, authenticated;
+revoke all on function public.admin_claim_setup_workspace(text) from public, anon, authenticated;
+revoke all on function public.claim_admin_signup(text) from public, anon, authenticated;
+
+comment on function private.claim_setup_workspace(text) is
+  'Disabled: all HOD accounts must be assigned by an authenticated Platform Super Admin.';
+comment on function private.claim_admin_signup(text) is
+  'Disabled: all HOD accounts must be assigned by an authenticated Platform Super Admin.';
