@@ -5,10 +5,10 @@ import { LoaderCircle, Smartphone, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 function normalizePhone(raw: string): string | null {
-  const compact = raw.trim().replace(/[\\s()-]/g, '');
-  if (/^\\d{10}$/.test(compact)) return '+91' + compact;
-  if (/^91\\d{10}$/.test(compact)) return '+' + compact;
-  if (/^\\+[1-9]\\d{7,14}$/.test(compact)) return compact;
+  const compact = raw.trim().replace(/[\s()-]/g, '');
+  if (/^\d{10}$/.test(compact)) return '+91' + compact;
+  if (/^91\d{10}$/.test(compact)) return '+' + compact;
+  if (/^\+[1-9]\d{7,14}$/.test(compact)) return compact;
   return null;
 }
 
@@ -67,7 +67,7 @@ export function PhoneAccountLink() {
     setError('');
     setNotice('');
     const normalized = normalizePhone(phone);
-    if (!normalized || !/^\\d{6}$/.test(otp.trim())) {
+    if (!normalized || !/^\d{6}$/.test(otp.trim())) {
       setError('Enter the valid mobile number and six-digit code.');
       return;
     }
@@ -124,7 +124,7 @@ export function PhoneAccountLink() {
       {currentPhone && <span className="text-[#65776d]">{currentPhone}</span>}
     </div>
     {pending ? <form className="stack-form" onSubmit={verifyPhone}>
-      <label>Six-digit SMS code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\\D/g, '').slice(0, 6))} required placeholder="123456"/></label>
+      <label>Six-digit SMS code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} required placeholder="123456"/></label>
       <div className="flex flex-wrap gap-2">
         <button className="button primary" disabled={busy || otp.length !== 6}>{busy ? <LoaderCircle className="spin" size={16}/> : <ShieldCheck size={16}/>} Verify mobile</button>
         <button className="button subtle" type="button" disabled={busy} onClick={() => void resend()}>Resend code</button>
