@@ -16,7 +16,12 @@ type InviteDraft = {
   section?: string; mobile?: string;
 };
 type InviteResult = { email: string; role: string; status: string; error?: string };
-type Props = { courses: Course[]; departments: Department[] };
+type WorkbookImportResult = {
+  departments_created: number; departments_updated: number; departments_reused: number;
+  courses_created: number; courses_updated: number; teachers_invited: number; teachers_failed: number;
+  teacher_results: InviteResult[]; warnings: string[];
+};
+type Props = { courses: Course[]; departments: Department[]; onWorkbookImported?: () => Promise<void> };
 
 function parseCsv(source: string): string[][] {
   const rows: string[][] = [];
@@ -40,7 +45,7 @@ function parseCsv(source: string): string[][] {
   return rows;
 }
 
-export function AdminRosterPanel({ courses, departments }: Props) {
+export function AdminRosterPanel({ courses, departments, onWorkbookImported }: Props) {
   const [students, setStudents] = useState<RosterStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,6 +61,9 @@ export function AdminRosterPanel({ courses, departments }: Props) {
   const [results, setResults] = useState<InviteResult[]>([]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [workbookFile, setWorkbookFile] = useState<File | null>(null);
+  const [workbookBusy, setWorkbookBusy] = useState(false);
+  const [workbookResult, setWorkbookResult] = useState<WorkbookImportResult | null>(null);
   const activeCourses = useMemo(() => courses.filter(course => course.status !== 'ARCHIVED'), [courses]);
 
   async function loadRoster() {
@@ -159,6 +167,34 @@ export function AdminRosterPanel({ courses, departments }: Props) {
     }
   }
 
+  async function uploadWorkbook() {
+    if (!workbookFile) return;
+    setWorkbookBusy(true); setError(''); setNotice(''); setWorkbookResult(null);
+    const body = new FormData();
+    body.set('file', workbookFile);
+    try {
+      const response = await fetch('/api/admin/roster/import', { method: 'POST', body });
+      const data = await response.json();
+      if (!response.ok) {
+        const partial = data.partial ? ' Some earlier department/course rows may already have been saved.' : '';
+        throw new Error((data.error ?? 'The workbook could not be imported.') + partial);
+      }
+      setWorkbookResult(data as WorkbookImportResult);
+      setWorkbookFile(null);
+      setNotice(
+        'Excel import complete: ' + (data.departments_created + data.departments_updated + data.departments_reused) +
+        ' department(s), ' + (data.courses_created + data.courses_updated) + ' course(s), ' +
+        data.teachers_invited + ' teacher account invitation(s) successful; ' + data.teachers_failed + ' failed.'
+      );
+      await loadRoster();
+      await onWorkbookImported?.();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'The workbook could not be imported.');
+    } finally {
+      setWorkbookBusy(false);
+    }
+  }
+
   async function sendInvitations() {
     if (!queue.length) return;
     setSaving(true); setError(''); setNotice(''); setResults([]);
@@ -187,6 +223,41 @@ export function AdminRosterPanel({ courses, departments }: Props) {
 
   return <section className="space-y-5">
     <div className="section-heading"><div><h3>College directory & account invitations</h3><p>Add students and teachers to your college. They receive a secure email invitation to activate their own account.</p></div><Users size={24}/></div>
+    <div className="rounded-2xl border border-[#d9e8de] bg-[#f8fbf8] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h4 className="font-semibold text-[#214b37]">Complete college setup from one Excel workbook</h4>
+          <p className="mt-1 max-w-3xl text-sm text-[#566a5e]">Fill the Departments, Courses and Teachers tabs, then upload once. CoursePulse creates or updates the academic structure, links teachers to their courses and sends account activation emails.</p>
+          <p className="mt-2 text-xs text-[#6b7d72]">Up to 200 departments · 500 courses · 100 teachers · 4 MB .xlsx file</p>
+        </div>
+        <FileSpreadsheet size={25} className="text-[#3b7657]"/>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <a className="button subtle compact" href="/api/admin/roster/template"><FileSpreadsheet size={14}/> Download Excel template</a>
+        <label className="button subtle compact cursor-pointer">
+          <Upload size={14}/> Choose workbook
+          <input key={workbookFile?.name ?? 'empty-workbook'} className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={event => setWorkbookFile(event.target.files?.[0] ?? null)}/>
+        </label>
+        <span className="min-w-0 truncate text-xs text-[#62766a]">{workbookFile ? workbookFile.name : 'No workbook selected'}</span>
+        <button className="button primary compact" type="button" onClick={() => void uploadWorkbook()} disabled={workbookBusy || !workbookFile}>
+          {workbookBusy ? 'Importing workbook…' : 'Import departments, courses & teachers'}
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-[#6b7d72]">Teacher passwords are never generated or shown to the HOD. Each teacher receives an email invitation and sets their own password.</p>
+      {workbookResult && <div className="mt-4 rounded-xl border border-[#dbe9df] bg-white p-4" role="status">
+        <h5 className="text-sm font-semibold text-[#285b40]">Import summary</h5>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div><b className="block text-lg tabular-nums">{workbookResult.departments_created + workbookResult.departments_updated + workbookResult.departments_reused}</b><span className="text-xs text-[#708176]">Departments processed</span></div>
+          <div><b className="block text-lg tabular-nums">{workbookResult.courses_created + workbookResult.courses_updated}</b><span className="text-xs text-[#708176]">Courses created / updated</span></div>
+          <div><b className="block text-lg tabular-nums">{workbookResult.teachers_invited} / {workbookResult.teachers_invited + workbookResult.teachers_failed}</b><span className="text-xs text-[#708176]">Teacher invitations successful</span></div>
+        </div>
+        {!!workbookResult.teacher_results.filter(result => result.status === 'FAILED').length && <div className="mt-3 border-t border-[#edf1ed] pt-3">
+          <p className="mb-2 text-xs font-semibold text-[#8a3d30]">Teacher rows needing attention</p>
+          {workbookResult.teacher_results.filter(result => result.status === 'FAILED').map(result => <p key={result.email} className="text-xs text-[#8a3d30]">{result.email}: {result.error ?? 'Invitation failed.'}</p>)}
+        </div>}
+        {!!workbookResult.warnings.length && <div className="mt-3 border-t border-[#edf1ed] pt-3">{workbookResult.warnings.map((warning,index) => <p key={index} className="text-xs text-[#8a5a20]">{warning}</p>)}</div>}
+      </div>}
+    </div>
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.85fr)]">
       <div className="rounded-2xl border border-[#e1e9e3] bg-white p-5">
         <h4 className="mb-4 font-semibold">Create invitation</h4>
@@ -205,7 +276,7 @@ export function AdminRosterPanel({ courses, departments }: Props) {
         <div className="mt-4 flex flex-wrap justify-between gap-2"><span className="fine-print">{courseIds.length} course(s) selected</span><button type="button" className="button primary" onClick={addDraft} disabled={!activeCourses.length}><MailPlus size={15}/> Add to invitation queue</button></div>
       </div>
       <div className="rounded-2xl border border-[#e1e9e3] bg-white p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><h4 className="font-semibold">Bulk roster import</h4><p className="fine-print mt-1">Upload up to 100 rows in CSV format.</p></div><FileSpreadsheet size={23}/></div>
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><h4 className="font-semibold">Quick roster invitation (CSV)</h4><p className="fine-print mt-1">For adding existing-course students or teachers after the main Excel setup.</p></div><FileSpreadsheet size={23}/></div>
         <p className="mt-4 text-sm text-[#566a5e]">Required columns: <code>email, full_name, role, course_codes</code>. Student rows also need <code>student_number</code>. Course codes and department codes must match your academic workspace. Separate multiple course codes with semicolons.</p>
         <div className="mt-4 flex flex-wrap gap-2"><button className="button subtle compact" type="button" onClick={downloadTemplate}><FileSpreadsheet size={14}/> Download CSV template</button><label className="button subtle compact cursor-pointer"><Upload size={14}/> Upload CSV<input className="sr-only" type="file" accept=".csv,text/csv" onChange={event => void importCsv(event)}/></label></div>
         <p className="mt-4 rounded-xl bg-[#f6f9f6] p-3 text-xs text-[#6b7d72]">No passwords are generated or displayed here. Accounts are activated through the college email invitation.</p>
