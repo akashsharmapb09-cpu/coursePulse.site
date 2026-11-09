@@ -28,18 +28,50 @@ The deployed `private.submit_anonymous_feedback(uuid,jsonb)` definition still co
 
 The Supabase Security Advisor returned zero security lints after the change.
 
-## Verification limits
+## Transactional regression test
 
-This change has **not** yet been tested with real Supabase Auth-issued browser sessions or a complete signed-in HTTP role matrix. Required follow-up tests:
+A transaction-only test used three synthetic Auth identities (one Instructor, one enrolled Student, one unenrolled Student), one published course, one open feedback form, and one enrollment. The SQL set the PostgreSQL role to `authenticated` and set the request JWT subject/role/assurance claims. The test ran all cases in one transaction and rolled it back.
+
+| Case | Result |
+|---|---|
+| Enrolled Student calls `private.submit_anonymous_feedback` | Passed; one identity-free answer row created inside the transaction |
+| Duplicate submission by same Student | Passed; RPC returned SQLSTATE `23505` |
+| Unenrolled Student calls submission RPC | Passed; RPC returned SQLSTATE `P0002` |
+| Authenticated role attempts direct INSERT to `public.responses` | Passed; rejected for insufficient privilege |
+| One-time eligibility for enrolled Student | Passed; consumed exactly once |
+| Eligibility row for unenrolled Student | Passed; no row created |
+| Legacy response row for test feedback | Passed; no row created |
+
+After rollback, a separate query confirmed the QA workspace was restored to its initial empty state: zero Auth users, profiles, courses, feedback forms, enrollments, legacy responses, and anonymous submissions; organization status returned to `SETUP_REQUIRED`.
+
+**Test boundary:** this validates PostgreSQL privileges, RLS/request-claim behavior, and the database RPC in an authenticated database-role context. It is not a real GoTrue-issued signed JWT, browser sign-in, or end-to-end HTTP test through `/api/responses`.
+
+## CI evidence
+
+GitHub Actions run [42603966256](https://github.com/akashsharmapb09-cpu/coursePulse.site/actions/runs/42603966256) for the PR commit `c956aee8a4e49bcacd02b8b796b1724af0b1b9ff` completed successfully. The workflow passed:
+
+- repository secret-history scan
+- dependency audit
+- Prisma validation
+- TypeScript typecheck
+- Vitest tests
+- production build
+- public Playwright browser smoke tests
+- mobile Lighthouse audit
+
+These browser tests are the repository's configured public smoke tests; they do not constitute authenticated role-matrix coverage.
+
+## Remaining verification limits
+
+The following still require real Supabase Auth-issued sessions and signed-in HTTP tests:
 
 1. Enrolled Student submits via `/api/responses` → 201.
-2. Duplicate submission → 409.
-3. Unenrolled Student submission → rejected.
-4. Authenticated direct Data API INSERT into `public.responses` → denied.
+2. Duplicate HTTP submission → 409.
+3. Unenrolled Student HTTP submission → rejected.
+4. Supabase Data API HTTP INSERT into `public.responses` → denied.
 5. Student legacy SELECT remains own-row-only.
 6. Teacher/HOD raw-answer access remains denied and aggregate RPCs remain functional.
-7. `public.anonymous_submissions` remains unreadable to anon/authenticated.
-8. Re-run CI and Security Advisor.
+7. `public.anonymous_submissions` remains unreadable to anon/authenticated through the Data API.
 
 ## Migration-history note
 
