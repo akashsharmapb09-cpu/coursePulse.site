@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { LoaderCircle, Smartphone, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -34,7 +34,7 @@ export function PhoneAccountLink() {
     return () => { active = false; };
   }, []);
 
-  async function requestVerification(event: React.FormEvent) {
+  async function requestVerification(event: FormEvent) {
     event.preventDefault();
     setError('');
     setNotice('');
