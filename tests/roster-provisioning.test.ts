@@ -6,6 +6,8 @@ const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/invite-coll
 const route = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/invitations/route.ts'), 'utf8');
 const headRoster = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/route.ts'), 'utf8');
 const teacherRoster = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/route.ts'), 'utf8');
+const teacherInvite = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/invitations/route.ts'), 'utf8');
+const teacherUi = readFileSync(resolve(process.cwd(), 'components/teacher-roster.tsx'), 'utf8');
 const functionSql = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108165944_coursepulse_existing_account_roster_linking.sql'), 'utf8');
 
 describe('secure student/teacher roster provisioning', () => {
@@ -42,5 +44,16 @@ describe('secure student/teacher roster provisioning', () => {
     expect(headRoster).toContain("rpc('get_head_student_roster'");
     expect(route).toContain('getCurrentUser');
     expect(route).toContain('admin:user-update');
+  });
+
+  it('lets instructors add students only to assigned classes, never create teacher accounts', () => {
+    expect(edge).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
+    expect(edge).toContain('Teachers can invite students only.');
+    expect(edge).toContain('assignedCourseIds.has(courseId)');
+    expect(teacherInvite).toContain("auth.profile.role !== 'INSTRUCTOR'");
+    expect(teacherInvite).toContain("role: 'STUDENT'");
+    expect(teacherUi).toContain("fetch('/api/teacher/roster/invitations'");
+    expect(teacherUi).toContain('student_number:studentNumber');
+    expect(teacherUi).toContain('section:studentSection');
   });
 });

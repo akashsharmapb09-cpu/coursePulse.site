@@ -105,3 +105,5 @@ Institution name/branding; verified support contact; department and semester cat
 
 - [x] DONE: guarded legacy profile backfill attaches unassigned users to the original tenant only while exactly one organization exists; if multiple tenants exist, migration refuses to guess ownership.
 - [ ] REQUIRED: Deno Edge Function sources are validated/deployed by Supabase separately from the Next.js Node TypeScript project; app typecheck intentionally excludes `supabase/functions`.
+
+- [x] DONE: assigned teachers can add student records/invitations directly to their own courses/sections. The server-side invitation function allows instructors to invite students only and checks each course against primary/secondary instructor assignments; Head continues to have bulk roster import.

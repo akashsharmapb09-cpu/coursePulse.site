@@ -105,15 +105,20 @@ Deno.serve(async (request: Request) => {
   } catch {
     return json({ error: "The session could not be verified." }, 401, cors);
   }
-  if (claims.sub !== identity.user.id || claims.aal !== "aal2") {
-    return json({ error: "College Head MFA verification is required." }, 403, cors);
+  if (claims.sub !== identity.user.id) {
+    return json({ error: "The session could not be verified." }, 401, cors);
   }
 
   const { data: profile, error: profileError } = await admin.from("users")
-    .select("id,role,is_active,organization_id")
+    .select("id,role,is_active,organization_id,department_id")
     .eq("id", identity.user.id).maybeSingle();
-  if (profileError || !profile || !profile.is_active || profile.role !== "ADMIN" || !profile.organization_id) {
-    return json({ error: "College Head access is required." }, 403, cors);
+  if (profileError || !profile || !profile.is_active || !profile.organization_id) {
+    return json({ error: "An active college staff account is required." }, 403, cors);
+  }
+  const isHead = profile.role === "ADMIN" && claims.aal === "aal2";
+  const isTeacher = profile.role === "INSTRUCTOR";
+  if (!isHead && !isTeacher) {
+    return json({ error: "College Head or assigned teacher access is required." }, 403, cors);
   }
   const { data: organization, error: orgError } = await admin.from("organizations")
     .select("id,status,name").eq("id", profile.organization_id).maybeSingle();
@@ -135,6 +140,9 @@ Deno.serve(async (request: Request) => {
     return json({ error: "One or more invitations contain invalid details." }, 400, cors);
   }
   const invites = parsed as Invite[];
+  if (isTeacher && invites.some((invite) => invite.role !== "STUDENT")) {
+    return json({ error: "Teachers can invite students only." }, 403, cors);
+  }
 
   const duplicateEmails = new Set<string>();
   for (const invite of invites) {
@@ -144,16 +152,42 @@ Deno.serve(async (request: Request) => {
 
   const allCourses = [...new Set(invites.flatMap((invite) => invite.course_ids))];
   const allDepartments = [...new Set(invites.map((invite) => invite.department_id).filter((id): id is string => Boolean(id)))];
-  const [courseCheck, departmentCheck] = await Promise.all([
-    admin.from("courses").select("id").eq("organization_id", profile.organization_id).in("id", allCourses),
+  const [courseCheck, departmentCheck, assignmentCheck] = await Promise.all([
+    admin.from("courses").select("id,instructor_id,department_id").eq("organization_id", profile.organization_id).in("id", allCourses),
     allDepartments.length
       ? admin.from("departments").select("id").eq("organization_id", profile.organization_id).in("id", allDepartments)
       : Promise.resolve({ data: [], error: null }),
+    isTeacher
+      ? admin.from("instructor_course_assignments").select("course_id")
+          .eq("organization_id", profile.organization_id)
+          .eq("instructor_id", identity.user.id)
+          .in("course_id", allCourses)
+      : Promise.resolve({ data: [], error: null }),
   ]);
-  if (courseCheck.error || departmentCheck.error ||
+  if (courseCheck.error || departmentCheck.error || assignmentCheck.error ||
     (courseCheck.data?.length ?? 0) !== allCourses.length ||
     (departmentCheck.data?.length ?? 0) !== allDepartments.length) {
     return json({ error: "Every selected course and department must belong to your college." }, 400, cors);
+  }
+  if (isTeacher) {
+    const assignedCourseIds = new Set([
+      ...(courseCheck.data ?? []).filter((course) => course.instructor_id === identity.user.id).map((course) => course.id),
+      ...(assignmentCheck.data ?? []).map((assignment) => assignment.course_id),
+    ]);
+    if (allCourses.some((courseId) => !assignedCourseIds.has(courseId))) {
+      return json({ error: "You can invite students only to courses assigned to your teacher account." }, 403, cors);
+    }
+    const courseDepartments = new Set((courseCheck.data ?? [])
+      .map((course) => course.department_id)
+      .filter((id): id is string => Boolean(id)));
+    if (invites.some((invite) => invite.department_id && !courseDepartments.has(invite.department_id))) {
+      return json({ error: "A teacher can use only the department linked to an assigned course." }, 403, cors);
+    }
+    for (const invite of invites) {
+      if (!invite.department_id && courseDepartments.size === 1) {
+        invite.department_id = [...courseDepartments][0];
+      }
+    }
   }
 
   const results: Array<{ email: string; role: string; status: string; error?: string }> = [];
