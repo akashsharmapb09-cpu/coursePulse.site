@@ -78,3 +78,18 @@ The following still require real Supabase Auth-issued sessions and signed-in HTT
 Repository migration timestamps do not currently match remote QA migration timestamps, although the logical migration names were present on both sides. The Supabase CLI compares timestamps; this PR does not rewrite prior migration history. Reconcile that history separately before using a bulk `db push` workflow.
 
 No production database, deployment, or production data was modified.
+
+
+## Legacy-read and anonymity compatibility regression
+
+A second transaction-only fixture created two Students in the same QA tenant and inserted one synthetic legacy response for each as the database owner. Under the PostgreSQL `authenticated` role with Student A's request claims:
+
+- Student A could see exactly one row in `public.responses` (their own).
+- Student A could not see Student B's legacy response.
+- SELECT from `public.anonymous_submissions` failed with insufficient privilege.
+
+Under the PostgreSQL `anon` role, SELECT from `public.anonymous_submissions` also failed with insufficient privilege.
+
+The second transaction was rolled back. A separate query confirmed QA returned to zero Auth users, profiles, courses, feedback forms, legacy responses and anonymous submissions; the workspace status remained `SETUP_REQUIRED`.
+
+These are PostgreSQL role/request-claim simulations, not HTTP tests using signed Supabase Auth access tokens.
