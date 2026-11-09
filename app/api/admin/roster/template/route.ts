@@ -78,14 +78,16 @@ export async function GET() {
   styleHeader(courses);
   courses.getColumn(1).numFmt = '@';
   courses.getColumn(3).numFmt = '@';
-  courses.dataValidations.add('E2:E501', {
-    type: 'list',
-    allowBlank: true,
-    formulae: ['"DRAFT,PUBLISHED"'],
-    showErrorMessage: true,
-    errorTitle: 'Invalid course status',
-    error: 'Choose DRAFT or PUBLISHED.',
-  });
+  for (let row = 2; row <= 501; row += 1) {
+    courses.getCell(row, 5).dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"DRAFT,PUBLISHED"'],
+      showErrorMessage: true,
+      errorTitle: 'Invalid course status',
+      error: 'Choose DRAFT or PUBLISHED.',
+    };
+  }
 
   const teachers = workbook.addWorksheet('Teachers');
   teachers.columns = [
