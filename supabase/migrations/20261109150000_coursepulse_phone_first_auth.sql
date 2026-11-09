@@ -149,7 +149,7 @@ begin
   if coalesce(auth.jwt()->>'role','')<>'service_role' then
     raise exception 'Internal service access required' using errcode='42501';
   end if;
-  if p_phone is null or p_phone !~ '^\\+[1-9][0-9]{7,14}$' then return; end if;
+  if p_phone is null or p_phone !~ '^[+][1-9][0-9]{7,14}$' then return; end if;
   return query
   select a.id,(a.phone_confirmed_at is not null),u.role,u.organization_id
   from auth.users a
@@ -181,7 +181,8 @@ begin
 
   if v_invitation.mobile is not null then
     select * into v_auth from auth.users where phone=v_invitation.mobile for update;
-  elsif v_invitation.email is not null then
+  end if;
+  if not found and v_invitation.email is not null then
     select * into v_auth from auth.users where lower(email)=lower(v_invitation.email) for update;
   end if;
   if not found then raise exception 'No existing account was found' using errcode='P0002'; end if;
@@ -265,7 +266,8 @@ begin
 
   if v_invitation.mobile is not null then
     select * into v_auth from auth.users where phone=v_invitation.mobile for update;
-  elsif v_invitation.email is not null then
+  end if;
+  if not found and v_invitation.email is not null then
     select * into v_auth from auth.users where lower(email)=lower(v_invitation.email) for update;
   end if;
   if not found then raise exception 'No existing account was found' using errcode='P0002'; end if;
