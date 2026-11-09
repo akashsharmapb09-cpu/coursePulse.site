@@ -5,7 +5,7 @@ import { BookOpen, Users } from 'lucide-react';
 
 type Course = { id: string; title: string };
 type Student = { student_id: string; student_number: string; full_name: string; course_id: string; course_code: string | null; course_title: string; section: string | null };
-type BulkResult = { full_name: string; email: string; student_number: string; section: string; status: string; error?: string };
+type BulkResult = { full_name: string; mobile: string; student_number: string; section: string; status: string; error?: string };
 type BulkSummary = { total: number; invited: number; failed: number; section: string; results: BulkResult[] };
 
 export function TeacherRoster({ courses }: { courses: Course[] }) {
@@ -61,7 +61,7 @@ export function TeacherRoster({ courses }: { courses: Course[] }) {
       setWorkbookFile(null);
       setNotice(
         data.invited + ' student account invitation(s) successful; ' +
-        data.failed + ' failed. Students activate their accounts from the email.'
+        data.failed + ' failed. Students finish signup by verifying their mobile number with SMS OTP.'
       );
       const refreshed = await fetch('/api/teacher/roster?course_id=' + encodeURIComponent(courseId), { cache: 'no-store' });
       const roster = await refreshed.json();
@@ -105,7 +105,7 @@ export function TeacherRoster({ courses }: { courses: Course[] }) {
             {workbookBusy ? 'Importing students…' : 'Upload & create student accounts'}
           </button>
         </div>
-        <p className="mt-3 text-xs text-[#6b7d72]">Use the selected course above. Every row must belong to the same section. Student activation emails are sent automatically; teachers cannot set or view passwords.</p>
+        <p className="mt-3 text-xs text-[#6b7d72]">Use the selected course above. Every row must belong to the same section. Students create their own password and verify their mobile number with SMS OTP; teachers cannot view or set passwords.</p>
         {bulkSummary && <div className="mt-4 rounded-xl border border-[#dbe9df] bg-white p-4" role="status">
           <h5 className="text-sm font-semibold text-[#285b40]">Section {bulkSummary.section} · Import summary</h5>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -115,7 +115,7 @@ export function TeacherRoster({ courses }: { courses: Course[] }) {
           </div>
           {!!bulkSummary.failed && <div className="mt-3 border-t border-[#edf1ed] pt-3">
             <p className="mb-2 text-xs font-semibold text-[#8a3d30]">Rows needing attention</p>
-            {bulkSummary.results.filter(result => result.status === 'FAILED').map(result => <p key={result.email} className="text-xs text-[#8a3d30]">{result.student_number} · {result.email}: {result.error ?? 'Invitation failed.'}</p>)}
+            {bulkSummary.results.filter(result => result.status === 'FAILED').map(result => <p key={result.mobile} className="text-xs text-[#8a3d30]">{result.student_number} · {result.mobile}: {result.error ?? 'Invitation failed.'}</p>)}
           </div>}
         </div>}
       </div>
