@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/generate-monthly-ai-insights/index.ts'), 'utf8');
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261109090200_coursepulse_monthly_ai_insights.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261109045056_coursepulse_monthly_ai_insights.sql'), 'utf8');
 const route = readFileSync(resolve(process.cwd(), 'app/api/admin/ai-insights/route.ts'), 'utf8');
 
 describe('Head-only generative academic insights', () => {

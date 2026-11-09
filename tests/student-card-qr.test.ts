@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/issue-student-card/index.ts'), 'utf8');
 const verifyRoute = readFileSync(resolve(process.cwd(), 'app/api/student-id/verify/route.ts'), 'utf8');
 const verifyPage = readFileSync(resolve(process.cwd(), 'components/student-card-verification.tsx'), 'utf8');
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163853_coursepulse_tenant_privilege_rpc_scoping.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163318_coursepulse_multi_college_tenant_foundation.sql'), 'utf8');
 
 describe('privacy-preserving student QR verification', () => {
   it('generates a random token and stores only its SHA-256 digest', () => {

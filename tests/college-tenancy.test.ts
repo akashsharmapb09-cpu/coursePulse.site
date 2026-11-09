@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const foundation = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163318_coursepulse_multi_college_tenant_foundation.sql'), 'utf8');
 const scopedRpcs = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163853_coursepulse_tenant_privilege_rpc_scoping.sql'), 'utf8');
 const platform = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108165428_coursepulse_organization_and_platform_admin_controls.sql'), 'utf8');
-const activation = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261109090300_coursepulse_first_head_email_activation.sql'), 'utf8');
+const activation = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261109045137_coursepulse_first_head_email_activation.sql'), 'utf8');
 
 describe('college tenant isolation', () => {
   it('adds an organization boundary to academic, feedback, eligibility and notification data', () => {
