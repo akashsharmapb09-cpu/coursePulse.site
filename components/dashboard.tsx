@@ -586,6 +586,7 @@ function AdminAcademicManager({data,busy,onRefresh}:{
 
   async function uploadWorkbook(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement=event.currentTarget;
     if(!file){setError('Choose an .xlsx workbook first.');return;}
     if(!file.name.toLowerCase().endsWith('.xlsx')){setError('Only .xlsx Excel workbooks are supported.');return;}
     if(file.size>5*1024*1024){setError('The workbook must be 5 MB or smaller.');return;}
@@ -601,7 +602,7 @@ function AdminAcademicManager({data,busy,onRefresh}:{
       }
       setResult(payload);
       setFile(null);
-      event.currentTarget.reset();
+      formElement.reset();
       await onRefresh();
     } catch(caught) {
       setError(caught instanceof Error?caught.message:'The workbook could not be imported.');

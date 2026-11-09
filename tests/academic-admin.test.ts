@@ -9,6 +9,7 @@ const dashboard=readFileSync(resolve(process.cwd(),'app/dashboard/page.tsx'),'ut
 const dashboardUi=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 const academicApi=readFileSync(resolve(process.cwd(),'app/api/admin/academic/route.ts'),'utf8');
 const academicImportApi=readFileSync(resolve(process.cwd(),'app/api/admin/academic/import/route.ts'),'utf8');
+const importGrantMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261109142000_coursepulse_academic_import_course_grants.sql'),'utf8');
 
 describe('academic administration and account lifecycle contract',()=>{
   it('requires explicit enrollment for student course and feedback visibility',()=>{
@@ -41,6 +42,9 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(dashboardUi).not.toMatch(/Create academic semester/);
     expect(dashboardUi).not.toMatch(/Update department/);
     expect(dashboardUi).not.toMatch(/Update semester/);
+    expect(dashboardUi).not.toMatch(/Enroll student in course/);
+    expect(dashboardUi).not.toMatch(/Assign instructor/);
+    expect(dashboardUi).not.toMatch(/Set course department and semester/);
   });
   it('assigns and clears user departments through a MFA-protected audited RPC',()=>{
     expect(departmentMigration).toMatch(/create or replace function private\.admin_assign_user_department/);
@@ -58,6 +62,8 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(academicImportApi).toMatch(/admin_record_audit/);
     expect(academicImportApi).toMatch(/5\*1024\*1024/);
     expect(academicImportApi).toMatch(/Administrator authentication with MFA is required/);
+    expect(importGrantMigration).toMatch(/grant insert \(course_code, department_id, semester_id\)/i);
+    expect(importGrantMigration).toMatch(/grant update \(course_code, instructor_id\)/i);
   });
   it('supports enrollment, instructor assignments and academic metadata',()=>{
     expect(migration).toMatch(/create table public\.course_enrollments/);

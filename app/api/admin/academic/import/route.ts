@@ -209,7 +209,7 @@ export async function POST(request:NextRequest) {
   }
   const courses: {rowNumber:number;course_code:string;title:string;description:string;department_code:string;semester_name:string;teacher_email:string;status:'DRAFT'|'PUBLISHED'|'ARCHIVED'}[]=[];
   for(const row of courseRows) {
-    const parsed=courseSchema.safeParse(row.values);
+    const parsed=courseSchema.safeParse({...row.values,status:row.values.status||'DRAFT'});
     if(!parsed.success) issues.push({sheet:'Courses',row:row.rowNumber,message:parsed.error.issues[0]?.message??'Invalid course row.'});
     else courses.push({...parsed.data,rowNumber:row.rowNumber});
   }
@@ -260,10 +260,14 @@ export async function POST(request:NextRequest) {
   const authAdmin=createAuthAdminClient();
 
   for(const item of departments) {
-    const {data,error}=await supabase.from('departments').upsert({name:item.name,code:item.code.toUpperCase()},{onConflict:'code'}).select('id').single();
-    if(error||!data) {issues.push({sheet:'Departments',row:item.rowNumber,message:'Department could not be saved. Check for a duplicate name or code.'});continue;}
-    departmentIds.set(item.code.toLowerCase(),data.id);
-    const audit=await supabase.rpc('admin_record_audit',{p_action:'department.imported',p_target_type:'department',p_target_id:data.id,p_details:{code:item.code.toUpperCase(),imported_by:auth.user.id}});
+    const existing=existingDepartments.get(item.code.toLowerCase());
+    const saved=existing
+      ? await supabase.from('departments').update({name:item.name,code:item.code.toUpperCase()}).eq('id',existing.id).select('id').single()
+      : await supabase.from('departments').insert({name:item.name,code:item.code.toUpperCase()}).select('id').single();
+    if(saved.error||!saved.data) {issues.push({sheet:'Departments',row:item.rowNumber,message:'Department could not be saved. Check for a duplicate name or code.'});continue;}
+    departmentIds.set(item.code.toLowerCase(),saved.data.id);
+    existingDepartments.set(item.code.toLowerCase(),{id:saved.data.id,name:item.name,code:item.code.toUpperCase()});
+    const audit=await supabase.rpc('admin_record_audit',{p_action:'department.imported',p_target_type:'department',p_target_id:saved.data.id,p_details:{code:item.code.toUpperCase(),imported_by:auth.user.id}});
     if(audit.error) issues.push({sheet:'Departments',row:item.rowNumber,message:'Department saved, but its audit event failed.'});
     counts.departments++;
   }
@@ -271,10 +275,14 @@ export async function POST(request:NextRequest) {
   for(const item of freshDepartments.data??[]) departmentIds.set(item.code.toLowerCase(),item.id);
 
   for(const item of semesters) {
-    const {data,error}=await supabase.from('semesters').upsert({name:item.name,start_date:item.start_date,end_date:item.end_date,is_active:item.is_active},{onConflict:'name'}).select('id').single();
-    if(error||!data) {issues.push({sheet:'Semesters',row:item.rowNumber,message:'Semester could not be saved. Check its name and date range.'});continue;}
-    semesterIds.set(item.name.toLowerCase(),data.id);
-    const audit=await supabase.rpc('admin_record_audit',{p_action:'semester.imported',p_target_type:'semester',p_target_id:data.id,p_details:{name:item.name,imported_by:auth.user.id}});
+    const existing=existingSemesters.get(item.name.toLowerCase());
+    const saved=existing
+      ? await supabase.from('semesters').update({name:item.name,start_date:item.start_date,end_date:item.end_date,is_active:item.is_active}).eq('id',existing.id).select('id').single()
+      : await supabase.from('semesters').insert({name:item.name,start_date:item.start_date,end_date:item.end_date,is_active:item.is_active}).select('id').single();
+    if(saved.error||!saved.data) {issues.push({sheet:'Semesters',row:item.rowNumber,message:'Semester could not be saved. Check its name and date range.'});continue;}
+    semesterIds.set(item.name.toLowerCase(),saved.data.id);
+    existingSemesters.set(item.name.toLowerCase(),{id:saved.data.id,name:item.name,start_date:item.start_date,end_date:item.end_date,is_active:item.is_active});
+    const audit=await supabase.rpc('admin_record_audit',{p_action:'semester.imported',p_target_type:'semester',p_target_id:saved.data.id,p_details:{name:item.name,imported_by:auth.user.id}});
     if(audit.error) issues.push({sheet:'Semesters',row:item.rowNumber,message:'Semester saved, but its audit event failed.'});
     counts.semesters++;
   }
