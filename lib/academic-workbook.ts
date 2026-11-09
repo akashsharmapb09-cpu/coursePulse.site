@@ -92,7 +92,7 @@ function code(value: string, label: string, expression: RegExp): string {
 export async function parseAcademicWorkbook(buffer: Buffer): Promise<AcademicWorkbook> {
   const workbook = new ExcelJS.Workbook();
   try {
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
   } catch {
     throw new Error('This file is not a valid Excel .xlsx workbook. Download the CoursePulse template and try again.');
   }
