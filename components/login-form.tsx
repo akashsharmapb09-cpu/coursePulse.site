@@ -222,7 +222,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : mode === 'legacy-forgot' ? 'Reset existing account password' : verificationMode ? 'Verify your mobile number' : 'Existing account sign-in'}</h2>
     <p className="muted">
       {mode === 'signin' ? 'Sign in securely with your mobile number and password.' :
-       mode === 'signup' ? 'Create your Student account with your mobile number. We will ask you to verify it by SMS.' :
+       mode === 'signup' ? 'Your account starts as a Student. Create it with your mobile number, then verify by SMS. A college HOD can invite Teachers and Students; only CoursePulse Platform Super Admin can assign HOD access.' :
        mode === 'forgot' ? 'We will request a one-time SMS code so you can set a new password.' :
        mode === 'legacy-forgot' ? 'Use email recovery only for an older account that has not linked a mobile number yet.' :
        mode === 'verify-signup' ? 'Enter the six-digit code sent to ' + (phoneNumber ?? phone) + ' to finish creating your account.' :
