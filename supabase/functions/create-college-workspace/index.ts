@@ -119,7 +119,18 @@ Deno.serve(async (request: Request) => {
       .select("id,name,slug,status")
       .single();
     if (organizationError || !created) {
-      return reply({ error: organizationError?.code === "23505" ? "That college workspace slug is already in use." : "The college workspace could not be created." }, 409, headers);
+      console.error("create-college-workspace: organization insert failed", {
+        code: organizationError?.code ?? null,
+        message: organizationError?.message ?? "No organization row was returned",
+        details: organizationError?.details ?? null,
+        hint: organizationError?.hint ?? null,
+      });
+      const duplicateSlug = organizationError?.code === "23505";
+      return reply({
+        error: duplicateSlug
+          ? "That college workspace slug is already in use."
+          : "The college workspace could not be created. Please retry; if it continues, contact support.",
+      }, duplicateSlug ? 409 : 500, headers);
     }
     organization = created;
     createdOrganization = true;
@@ -138,6 +149,12 @@ Deno.serve(async (request: Request) => {
     .single();
 
   if (invitationError || !invitation) {
+    console.error("create-college-workspace: HOD invitation row insert failed", {
+      code: invitationError?.code ?? null,
+      message: invitationError?.message ?? "No invitation row was returned",
+      details: invitationError?.details ?? null,
+      hint: invitationError?.hint ?? null,
+    });
     if (createdOrganization) {
       await admin.from("organizations").delete().eq("id", organization.id).eq("status", "SETUP_REQUIRED");
     }
@@ -195,13 +212,19 @@ Deno.serve(async (request: Request) => {
     .eq("id", invitation.id)
     .eq("status", "PENDING");
 
-  await admin.from("platform_admin_audit").insert({
-    actor_id: identity.user.id,
-    organization_id: organization.id,
-    action: createdOrganization ? "organization.created_and_head_invited" : "organization.hod_invited",
-    new_status: "SETUP_REQUIRED",
-    ...(createdOrganization ? { new_subscription_status: "UNCONFIGURED" } : {}),
+  const { error: auditError } = await admin.rpc("platform_record_college_invitation_audit", {
+    p_actor_id: identity.user.id,
+    p_organization_id: organization.id,
+    p_action: createdOrganization ? "organization.created_and_head_invited" : "organization.hod_invited",
+    p_new_status: "SETUP_REQUIRED",
+    p_new_subscription_status: createdOrganization ? "UNCONFIGURED" : null,
   });
+  if (auditError) {
+    console.error("create-college-workspace: platform audit write failed", {
+      code: auditError.code ?? null,
+      message: auditError.message,
+    });
+  }
 
   return reply({
     organization,
