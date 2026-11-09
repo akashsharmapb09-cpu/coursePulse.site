@@ -38,7 +38,7 @@ begin
   select * into v_invitation
   from public.organization_invitations i
   where (
-      (new.phone is not null and i.mobile=new.phone)
+      (new.phone is not null and new.phone_confirmed_at is not null and i.mobile=new.phone)
       or (new.email is not null and i.email is not null and lower(i.email)=lower(new.email))
     )
     and i.status in ('PENDING','INVITED')
@@ -91,6 +91,11 @@ begin
         insert into public.instructor_course_assignments(course_id,instructor_id,assigned_by,organization_id)
         values(v_course,new.id,v_invitation.invited_by,v_invitation.organization_id)
         on conflict(course_id,instructor_id) do nothing;
+
+        update public.courses
+        set instructor_id=new.id
+        where id=v_course and organization_id=v_invitation.organization_id
+          and instructor_id=v_invitation.invited_by;
       end loop;
     end if;
   end if;
@@ -176,12 +181,14 @@ begin
       insert into private.platform_admin_audit(actor_id,organization_id,action,new_status)
       values(v_invitation.invited_by,v_invitation.organization_id,'organization.head_linked_existing_phone','ACTIVE');
     else
-      if v_role<>v_invitation.invited_role then
+      if v_role<>v_invitation.invited_role
+         and not (v_org is null and v_role='STUDENT'::public.app_role) then
         return new;
       end if;
 
       update public.users
-      set organization_id=v_invitation.organization_id,
+      set role=v_invitation.invited_role,
+          organization_id=v_invitation.organization_id,
           department_id=v_invitation.department_id,
           full_name=case when char_length(btrim(full_name))<2 then v_invitation.full_name else full_name end,
           is_active=true,
@@ -204,6 +211,11 @@ begin
           insert into public.instructor_course_assignments(course_id,instructor_id,assigned_by,organization_id)
           values(v_course,new.id,v_invitation.invited_by,v_invitation.organization_id)
           on conflict(course_id,instructor_id) do nothing;
+
+          update public.courses
+          set instructor_id=new.id
+          where id=v_course and organization_id=v_invitation.organization_id
+            and instructor_id=v_invitation.invited_by;
         end loop;
       end if;
     end if;
