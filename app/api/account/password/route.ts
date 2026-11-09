@@ -27,7 +27,8 @@ export async function POST(request:NextRequest){
   try{body=await request.json();}catch{return jsonError('Invalid JSON body.');}
   const parsed=passwordChangeSchema.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid password change request.');
-  const loginIdentity = auth.user.phone ? { phone: auth.user.phone } : auth.user.email ? { email: auth.user.email } : null;\n  if(!loginIdentity) return jsonError('This account has no verified phone or email sign-in identity.',400);
+  const loginIdentity = auth.user.phone ? { phone: auth.user.phone } : auth.user.email ? { email: auth.user.email } : null;
+  if(!loginIdentity) return jsonError('This account has no verified phone or email sign-in identity.',400);
 
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
