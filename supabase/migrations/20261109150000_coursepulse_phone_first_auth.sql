@@ -110,13 +110,112 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $
 declare
   v_org uuid;
   v_role public.app_role;
+  v_invitation public.organization_invitations%rowtype;
+  v_course uuid;
+  v_org_status text;
+  v_owner uuid;
 begin
   if new.phone is null or new.phone_confirmed_at is null then
     return new;
+  end if;
+
+  select u.organization_id,u.role into v_org,v_role
+  from public.users u
+  where u.id=new.id and u.is_active=true
+  for update;
+
+  if not found then
+    return new;
+  end if;
+
+  -- A trusted, unexpired invitation can link an existing verified phone account.
+  -- This makes the account-linking path work without relying on email delivery.
+  select * into v_invitation
+  from public.organization_invitations i
+  where i.mobile=new.phone
+    and i.status in ('PENDING','INVITED')
+    and i.expires_at>now()
+  order by i.created_at desc
+  limit 1
+  for update;
+
+  if found then
+    if v_org is not null and v_org<>v_invitation.organization_id then
+      return new;
+    end if;
+
+    if v_invitation.invited_role='ADMIN'::public.app_role then
+      select o.status,o.owner_user_id into v_org_status,v_owner
+      from public.organizations o
+      where o.id=v_invitation.organization_id
+      for update;
+      if v_role<>'STUDENT'::public.app_role or v_org_status<>'SETUP_REQUIRED' or v_owner is not null then
+        return new;
+      end if;
+
+      update public.users
+      set role='ADMIN'::public.app_role,
+          organization_id=v_invitation.organization_id,
+          department_id=null,
+          is_active=true,
+          suspended_at=null
+      where id=new.id;
+
+      update public.organizations
+      set owner_user_id=new.id,status='ACTIVE',updated_at=now()
+      where id=v_invitation.organization_id and status='SETUP_REQUIRED' and owner_user_id is null;
+
+      if not found then
+        raise exception 'College workspace could not be claimed from the verified invitation' using errcode='23514';
+      end if;
+
+      insert into private.platform_admin_audit(actor_id,organization_id,action,new_status)
+      values(v_invitation.invited_by,v_invitation.organization_id,'organization.head_linked_existing_phone','ACTIVE');
+    else
+      if v_role<>v_invitation.invited_role then
+        return new;
+      end if;
+
+      update public.users
+      set organization_id=v_invitation.organization_id,
+          department_id=v_invitation.department_id,
+          full_name=case when char_length(btrim(full_name))<2 then v_invitation.full_name else full_name end,
+          is_active=true,
+          suspended_at=null
+      where id=new.id;
+
+      if v_invitation.invited_role='STUDENT'::public.app_role then
+        insert into public.student_directory(organization_id,student_id,student_number,department_id)
+        values(v_invitation.organization_id,new.id,v_invitation.student_number,v_invitation.department_id)
+        on conflict(organization_id,student_id) do update
+        set student_number=excluded.student_number,department_id=excluded.department_id,updated_at=now();
+
+        foreach v_course in array v_invitation.course_ids loop
+          insert into public.course_enrollments(course_id,student_id,enrolled_by,organization_id,section)
+          values(v_course,new.id,v_invitation.invited_by,v_invitation.organization_id,v_invitation.section)
+          on conflict(course_id,student_id) do nothing;
+        end loop;
+      elsif v_invitation.invited_role='INSTRUCTOR'::public.app_role then
+        foreach v_course in array v_invitation.course_ids loop
+          insert into public.instructor_course_assignments(course_id,instructor_id,assigned_by,organization_id)
+          values(v_course,new.id,v_invitation.invited_by,v_invitation.organization_id)
+          on conflict(course_id,instructor_id) do nothing;
+        end loop;
+      end if;
+    end if;
+
+    update public.organization_invitations
+    set status='ACCEPTED',auth_user_id=new.id,updated_at=now()
+    where id=v_invitation.id;
+
+    insert into public.audit_logs(actor_id,action,target_type,target_id,details,organization_id)
+    values(v_invitation.invited_by,'roster.account.linked_by_verified_phone','user',new.id,
+      jsonb_build_object('role',v_invitation.invited_role,'invitation_id',v_invitation.id),
+      v_invitation.organization_id);
   end if;
 
   select u.organization_id,u.role into v_org,v_role
@@ -132,7 +231,7 @@ begin
 
   return new;
 end;
-$$;
+$;
 revoke all on function public.capture_verified_student_mobile() from public,anon,authenticated,service_role;
 drop trigger if exists auth_capture_verified_student_mobile on auth.users;
 create trigger auth_capture_verified_student_mobile
