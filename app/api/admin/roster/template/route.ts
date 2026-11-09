@@ -45,10 +45,10 @@ export async function GET() {
   guide.addRows([
     ['Departments', 'One row per department. department_code must be unique in your college.', 'CSE | Computer Science'],
     ['Courses', 'One row per course. department_code must match a department. Leave status blank to create a DRAFT course.', 'CS101 | Programming | CSE | Introductory programming | DRAFT'],
-    ['Teachers', 'One row per teacher. Use the same department_code and list 1–25 course codes separated by semicolons.', 'Asha Sharma | asha@college.edu | CSE | CS101;CS102'],
+    ['Teachers', 'One row per teacher. Use the same department_code and list 1–25 course codes separated by semicolons.', 'Asha Sharma | +919876543210 | CSE | CS101;CS102'],
     [],
     ['Important', 'Keep the worksheet names and column headings unchanged. Do not add formulas or hyperlinks in data cells.', ''],
-    ['Account activation', 'CoursePulse sends an activation email to each teacher. Teachers set their own password; the HOD never receives or chooses it.', ''],
+    ['Account activation', 'Teachers create accounts with their mobile numbers, verify by SMS OTP and set their own password. The HOD never receives or chooses it.', ''],
     ['Existing records', 'Matching department codes and course codes are updated/reused in your college. Other colleges are not affected.', ''],
     ['Limits', 'Maximum 200 departments, 500 courses and 100 teachers per workbook. A teacher can be assigned up to 25 courses.', ''],
     ['Course status', 'Allowed values: DRAFT or PUBLISHED. Blank status defaults to DRAFT so the HOD can review before students see it.', ''],
@@ -92,7 +92,7 @@ export async function GET() {
   const teachers = workbook.addWorksheet('Teachers');
   teachers.columns = [
     { header: 'teacher_name', key: 'teacher_name', width: 32 },
-    { header: 'email', key: 'email', width: 38 },
+    { header: 'mobile', key: 'mobile', width: 24 },
     { header: 'department_code', key: 'department_code', width: 22 },
     { header: 'course_codes', key: 'course_codes', width: 48 },
   ];

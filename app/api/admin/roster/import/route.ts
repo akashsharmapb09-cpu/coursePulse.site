@@ -102,14 +102,14 @@ export async function POST(request: NextRequest) {
   for (const teacher of workbook.teachers) {
     const departmentExists = importedDepartmentByCode.has(teacher.departmentCode) || existingDepartmentByCode.has(teacher.departmentCode);
     if (!departmentExists) {
-      return jsonError('Teacher ' + teacher.email + ' references unknown department ' + teacher.departmentCode + '.');
+      return jsonError('Teacher ' + teacher.mobile + ' references unknown department ' + teacher.departmentCode + '.');
     }
     for (const courseCode of teacher.courseCodes) {
       if (!plannedCourseDepartmentByCode.has(courseCode)) {
-        return jsonError('Teacher ' + teacher.email + ' references unknown course ' + courseCode + '. Add it to Courses or use an existing course code.');
+        return jsonError('Teacher ' + teacher.mobile + ' references unknown course ' + courseCode + '. Add it to Courses or use an existing course code.');
       }
       if (plannedCourseDepartmentByCode.get(courseCode) !== teacher.departmentCode) {
-        return jsonError('Teacher ' + teacher.email + ' and course ' + courseCode + ' must belong to the same department.');
+        return jsonError('Teacher ' + teacher.mobile + ' and course ' + courseCode + ' must belong to the same department.');
       }
     }
   }
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
   }
 
   const invitations = workbook.teachers.map((teacher) => ({
-    email: teacher.email,
+    mobile: teacher.mobile,
     full_name: teacher.fullName,
     role: 'INSTRUCTOR' as const,
     department_id: departmentIds.get(teacher.departmentCode) ?? existingDepartmentByCode.get(teacher.departmentCode)!.id,
@@ -218,26 +218,26 @@ export async function POST(request: NextRequest) {
     const reason = typeof inviteData?.error === 'string' ? inviteData.error : 'The secure invitation service could not be reached.';
     warnings.push(reason);
     rawResults = workbook.teachers.map((teacher) => ({
-      email: teacher.email, role: 'INSTRUCTOR', status: 'FAILED',
-      error: 'Academic data was saved, but the activation invitation was not sent. ' + reason,
+      mobile: teacher.mobile, role: 'INSTRUCTOR', status: 'FAILED',
+      error: 'Academic data was saved, but the phone signup invitation could not be prepared. ' + reason,
     }));
   } else {
     rawResults = Array.isArray(inviteData.results) ? inviteData.results as Array<Record<string, unknown>> : [];
     if (!rawResults.length) {
       rawResults = workbook.teachers.map((teacher) => ({
-        email: teacher.email, role: 'INSTRUCTOR', status: 'FAILED',
+        mobile: teacher.mobile, role: 'INSTRUCTOR', status: 'FAILED',
         error: 'The invitation service returned no result for this teacher.',
       }));
     }
   }
 
-  const teacherByEmail = new Map(workbook.teachers.map((teacher) => [teacher.email, teacher]));
+  const teacherByMobile = new Map(workbook.teachers.map((teacher) => [teacher.mobile, teacher]));
   const primaryInstructorByCourse = new Map<string, string>();
   for (const result of rawResults) {
-    const email = typeof result.email === 'string' ? result.email.toLowerCase() : '';
+    const mobile = typeof result.mobile === 'string' ? result.mobile : '';
     const userId = typeof result.user_id === 'string' ? result.user_id : '';
     const status = typeof result.status === 'string' ? result.status : '';
-    const teacher = teacherByEmail.get(email);
+    const teacher = teacherByMobile.get(mobile);
     if (!teacher || !userId || (status !== 'INVITED' && status !== 'LINKED_EXISTING')) continue;
     for (const code of teacher.courseCodes) {
       const courseId = courseIds.get(code) ?? existingCourseByCode.get(code)?.id;
@@ -252,10 +252,10 @@ export async function POST(request: NextRequest) {
     if (error) warnings.push('A primary teacher could not be set for one newly created course. Its assigned teacher access remains linked through the roster assignment.');
   }
 
-  const teachersInvited = rawResults.filter((result) => result.status === 'INVITED' || result.status === 'LINKED_EXISTING').length;
+  const teachersInvited = rawResults.filter((result) => ['INVITED','LINKED_EXISTING','PENDING_SIGNUP','WAITING_FOR_VERIFICATION'].includes(String(result.status))).length;
   const teachersFailed = workbook.teachers.length - teachersInvited;
   const teacherResults = rawResults.map((result) => ({
-    email: typeof result.email === 'string' ? result.email : 'Unknown email',
+    mobile: typeof result.mobile === 'string' ? result.mobile : 'Unknown mobile',
     role: 'TEACHER',
     status: typeof result.status === 'string' ? result.status : 'FAILED',
     ...(typeof result.error === 'string' ? { error: result.error } : {}),

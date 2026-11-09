@@ -2,14 +2,20 @@ import ExcelJS from 'exceljs';
 
 export type TeacherStudentRow = {
   fullName: string;
-  email: string;
+  mobile: string;
   studentNumber: string;
   section: string;
-  mobile: string;
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MOBILE = /^\+?[0-9 ()-]{8,24}$/;
+const MOBILE = /^\+[1-9]\d{7,14}$/;
+
+function normalizePhone(raw: string): string | null {
+  const compact = raw.trim().replace(/[\s()-]/g, '');
+  if (/^\d{10}$/.test(compact)) return '+91' + compact;
+  if (/^91\d{10}$/.test(compact)) return '+' + compact;
+  if (/^\+[1-9]\d{7,14}$/.test(compact)) return compact;
+  return null;
+}
 
 function cellText(cell: ExcelJS.Cell, rowNumber: number, column: string): string {
   const value = cell.value as unknown;
@@ -53,13 +59,13 @@ export async function parseTeacherStudentWorkbook(buffer: Buffer): Promise<Teach
     headers.set(header, column);
   });
 
-  const required = ['full_name', 'email', 'student_number', 'section'];
+  const required = ['full_name', 'mobile', 'student_number', 'section'];
   const missing = required.filter((header) => !headers.has(header));
   if (missing.length) throw new Error('Students: missing required columns: ' + missing.join(', ') + '.');
   if (sheet.rowCount < 2) throw new Error('Students: add at least one student row below the header.');
 
   const rows: TeacherStudentRow[] = [];
-  const emails = new Set<string>();
+  const mobiles = new Set<string>();
   const rollNumbers = new Set<string>();
   let workbookSection = '';
 
@@ -70,17 +76,17 @@ export async function parseTeacherStudentWorkbook(buffer: Buffer): Promise<Teach
       return column ? cellText(row.getCell(column), rowNumber, key) : '';
     };
     const fullName = get('full_name');
-    const email = get('email').toLowerCase();
+    const rawMobile = get('mobile');
+    const mobile = normalizePhone(rawMobile) ?? '';
     const studentNumber = get('student_number');
     const section = get('section');
-    const mobile = get('mobile');
 
-    if (![fullName, email, studentNumber, section, mobile].some(Boolean)) continue;
+    if (![fullName, rawMobile, studentNumber, section].some(Boolean)) continue;
     if (fullName.length < 2 || fullName.length > 120) {
       throw new Error('Students row ' + rowNumber + ': full_name must be 2–120 characters.');
     }
-    if (!EMAIL.test(email) || email.length > 254) {
-      throw new Error('Students row ' + rowNumber + ': enter a valid student email address.');
+    if (!mobile || !MOBILE.test(mobile)) {
+      throw new Error('Students row ' + rowNumber + ': enter a valid mobile number with country code (Indian 10-digit numbers are accepted).');
     }
     if (studentNumber.length < 1 || studentNumber.length > 40) {
       throw new Error('Students row ' + rowNumber + ': student_number is required and must be at most 40 characters.');
@@ -88,10 +94,7 @@ export async function parseTeacherStudentWorkbook(buffer: Buffer): Promise<Teach
     if (section.length < 1 || section.length > 30) {
       throw new Error('Students row ' + rowNumber + ': section is required and must be at most 30 characters.');
     }
-    if (mobile && !MOBILE.test(mobile)) {
-      throw new Error('Students row ' + rowNumber + ': enter a valid mobile number or leave it blank.');
-    }
-    if (emails.has(email)) throw new Error('Students row ' + rowNumber + ': duplicate email "' + email + '" in this workbook.');
+    if (mobiles.has(mobile)) throw new Error('Students row ' + rowNumber + ': duplicate mobile number "' + mobile + '" in this workbook.');
     if (rollNumbers.has(studentNumber.toLowerCase())) {
       throw new Error('Students row ' + rowNumber + ': duplicate roll number "' + studentNumber + '" in this workbook.');
     }
@@ -100,9 +103,9 @@ export async function parseTeacherStudentWorkbook(buffer: Buffer): Promise<Teach
       throw new Error('One workbook can contain only one section. Use a separate Excel file for each section.');
     }
 
-    emails.add(email);
+    mobiles.add(mobile);
     rollNumbers.add(studentNumber.toLowerCase());
-    rows.push({ fullName, email, studentNumber, section: workbookSection, mobile });
+    rows.push({ fullName, mobile, studentNumber, section: workbookSection });
     if (rows.length > 100) throw new Error('A maximum of 100 students can be imported per workbook.');
   }
 

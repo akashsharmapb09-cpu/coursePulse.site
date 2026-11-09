@@ -27,7 +27,8 @@ export async function POST(request:NextRequest){
   try{body=await request.json();}catch{return jsonError('Invalid JSON body.');}
   const parsed=passwordChangeSchema.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid password change request.');
-  if(!auth.user.email) return jsonError('Password changes require an email-based account.',400);
+  const loginIdentity = auth.user.phone ? { phone: auth.user.phone } : auth.user.email ? { email: auth.user.email } : null;
+  if(!loginIdentity) return jsonError('This account has no verified phone or email sign-in identity.',400);
 
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -39,7 +40,7 @@ export async function POST(request:NextRequest){
     auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false}
   });
   const {data:verified,error:verificationError}=await verifier.auth.signInWithPassword({
-    email:auth.user.email,
+    ...loginIdentity,
     password:parsed.data.current_password
   });
   const sameAccount=verified.user?.id===auth.user.id;

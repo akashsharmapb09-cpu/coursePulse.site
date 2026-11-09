@@ -10,7 +10,7 @@ export type WorkbookCourse = {
 };
 export type WorkbookTeacher = {
   fullName: string;
-  email: string;
+  mobile: string;
   departmentCode: string;
   courseCodes: string[];
 };
@@ -20,7 +20,7 @@ export type AcademicWorkbook = {
   teachers: WorkbookTeacher[];
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MOBILE = /^\+[1-9]\d{7,14}$/;
 const DEPARTMENT_CODE = /^[A-Z0-9][A-Z0-9_-]{1,19}$/;
 const COURSE_CODE = /^[A-Z0-9][A-Z0-9._-]{1,29}$/;
 
@@ -99,7 +99,7 @@ export async function parseAcademicWorkbook(buffer: Buffer): Promise<AcademicWor
 
   const departmentRows = rowsFromSheet(workbook, 'Departments', ['department_code', 'department_name'], 200);
   const courseRows = rowsFromSheet(workbook, 'Courses', ['course_code', 'course_name', 'department_code', 'description', 'status'], 500);
-  const teacherRows = rowsFromSheet(workbook, 'Teachers', ['teacher_name', 'email', 'department_code', 'course_codes'], 100);
+  const teacherRows = rowsFromSheet(workbook, 'Teachers', ['teacher_name', 'mobile', 'department_code', 'course_codes'], 100);
 
   const departments: WorkbookDepartment[] = [];
   const departmentCodes = new Set<string>();
@@ -134,25 +134,26 @@ export async function parseAcademicWorkbook(buffer: Buffer): Promise<AcademicWor
   }
 
   const teachers: WorkbookTeacher[] = [];
-  const teacherEmails = new Set<string>();
+  const teacherMobiles = new Set<string>();
   for (let index = 0; index < teacherRows.length; index += 1) {
     const row = teacherRows[index];
     const fullName = row.teacher_name.trim();
-    const email = row.email.trim().toLowerCase();
+    const rawMobile = row.mobile.trim().replace(/[\s()-]/g, '');
+    const mobile = /^\d{10}$/.test(rawMobile) ? '+91' + rawMobile : /^91\d{10}$/.test(rawMobile) ? '+' + rawMobile : rawMobile;
     const departmentCode = code(row.department_code, 'Teachers row ' + (index + 2) + ' department_code', DEPARTMENT_CODE);
     const courseCodesForTeacher = row.course_codes.split(';').map((item) => item.trim()).filter(Boolean)
       .map((item) => code(item, 'Teachers row ' + (index + 2) + ' course_codes', COURSE_CODE));
     if (fullName.length < 2 || fullName.length > 120) throw new Error('Teachers row ' + (index + 2) + ': teacher_name must be 2–120 characters.');
-    if (!EMAIL.test(email) || email.length > 254) throw new Error('Teachers row ' + (index + 2) + ': enter a valid email address.');
-    if (teacherEmails.has(email)) throw new Error('Teachers row ' + (index + 2) + ': duplicate teacher email "' + email + '".');
+    if (!MOBILE.test(mobile)) throw new Error('Teachers row ' + (index + 2) + ': enter a valid mobile number with country code.');
+    if (teacherMobiles.has(mobile)) throw new Error('Teachers row ' + (index + 2) + ': duplicate mobile number "' + mobile + '".');
     if (!courseCodesForTeacher.length || courseCodesForTeacher.length > 25) {
       throw new Error('Teachers row ' + (index + 2) + ': add 1–25 course codes separated by semicolons.');
     }
     if (new Set(courseCodesForTeacher).size !== courseCodesForTeacher.length) {
       throw new Error('Teachers row ' + (index + 2) + ': a course code is repeated.');
     }
-    teacherEmails.add(email);
-    teachers.push({ fullName, email, departmentCode, courseCodes: courseCodesForTeacher });
+    teacherMobiles.add(mobile);
+    teachers.push({ fullName, mobile, departmentCode, courseCodes: courseCodesForTeacher });
   }
 
   return { departments, courses, teachers };

@@ -63,13 +63,12 @@ export async function POST(request: NextRequest) {
   }
 
   const invitations = rows.map((student) => ({
-    email: student.email,
+    mobile: student.mobile,
     full_name: student.fullName,
     role: 'STUDENT' as const,
     course_ids: [courseId],
     student_number: student.studentNumber,
     section: student.section,
-    mobile: student.mobile,
   }));
 
   const { data, error } = await supabase.functions.invoke('invite-college-users', {
@@ -80,30 +79,30 @@ export async function POST(request: NextRequest) {
     },
   });
   if (error || !data) {
-    return jsonError('The secure student invitation service is unavailable. No import summary was returned; check pending invitations before retrying.', 503);
+    return jsonError('The secure student invitation service is unavailable. No import summary was returned; check pending phone invitations before retrying.', 503);
   }
   if (data.error) return jsonError(String(data.error), 403);
 
   const rawResults = Array.isArray(data.results) ? data.results as Array<{
-    email?: unknown; status?: unknown; error?: unknown;
+    mobile?: unknown; status?: unknown; error?: unknown;
   }> : [];
-  const resultByEmail = new Map(rawResults.map((result) => [
-    typeof result.email === 'string' ? result.email.toLowerCase() : '',
+  const resultByMobile = new Map(rawResults.map((result) => [
+    typeof result.mobile === 'string' ? result.mobile : '',
     result,
   ]));
   const results = rows.map((student) => {
-    const result = resultByEmail.get(student.email);
+    const result = resultByMobile.get(student.mobile);
     const status = typeof result?.status === 'string' ? result.status : 'FAILED';
     return {
       full_name: student.fullName,
-      email: student.email,
+      mobile: student.mobile,
       student_number: student.studentNumber,
       section: student.section,
       status,
       ...(typeof result?.error === 'string' ? { error: result.error } : {}),
     };
   });
-  const invited = results.filter((result) => result.status === 'INVITED' || result.status === 'LINKED_EXISTING').length;
+  const invited = results.filter((result) => ['INVITED', 'LINKED_EXISTING', 'PENDING_SIGNUP', 'WAITING_FOR_VERIFICATION'].includes(result.status)).length;
   const failed = results.length - invited;
 
   return NextResponse.json({

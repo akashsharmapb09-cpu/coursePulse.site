@@ -20,16 +20,16 @@ async function workbookBuffer(options?: { duplicateTeacher?: boolean; formula?: 
   courses.addRow(['CS101', 'Programming', 'CSE', 'Introduction to programming', 'DRAFT']);
 
   const teachers = workbook.addWorksheet('Teachers');
-  teachers.addRow(['teacher_name', 'email', 'department_code', 'course_codes']);
-  teachers.addRow(['Asha Sharma', 'asha@example.edu', 'CSE', 'CS101']);
-  if (options?.duplicateTeacher) teachers.addRow(['Asha Sharma', 'ASHA@example.edu', 'CSE', 'CS101']);
-  if (options?.formula) teachers.getCell('B2').value = { formula: '\"asha@example.edu\"' };
+  teachers.addRow(['teacher_name', 'mobile', 'department_code', 'course_codes']);
+  teachers.addRow(['Asha Sharma', '+919876543210', 'CSE', 'CS101']);
+  if (options?.duplicateTeacher) teachers.addRow(['Asha Sharma', '9876543210', 'CSE', 'CS101']);
+  if (options?.formula) teachers.getCell('B2').value = { formula: '" +919876543210 "' };
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 describe('CoursePulse college workbook import', () => {
-  it('parses the three sheets and normalizes codes and teacher emails', async () => {
+  it('parses the three sheets and normalizes teacher mobile numbers', async () => {
     const parsed = await parseAcademicWorkbook(await workbookBuffer());
     expect(parsed.departments).toEqual([{ code: 'CSE', name: 'Computer Science' }]);
     expect(parsed.courses).toEqual([{
@@ -41,15 +41,15 @@ describe('CoursePulse college workbook import', () => {
     }]);
     expect(parsed.teachers).toEqual([{
       fullName: 'Asha Sharma',
-      email: 'asha@example.edu',
+      mobile: '+919876543210',
       departmentCode: 'CSE',
       courseCodes: ['CS101'],
     }]);
   });
 
-  it('rejects duplicate teacher emails before any data is written', async () => {
+  it('rejects duplicate teacher mobile numbers before any data is written', async () => {
     await expect(parseAcademicWorkbook(await workbookBuffer({ duplicateTeacher: true })))
-      .rejects.toThrow('duplicate teacher email');
+      .rejects.toThrow('duplicate mobile number');
   });
 
   it('rejects formula cells rather than trusting calculated workbook content', async () => {
@@ -74,14 +74,16 @@ describe('CoursePulse college workbook import', () => {
     expect(templateRoute).toContain("addWorksheet('Courses')");
     expect(templateRoute).toContain("addWorksheet('Teachers')");
     expect(templateRoute).toContain("auth.profile.role !== 'ADMIN'");
+    expect(templateRoute).toContain("key: 'mobile'");
     expect(templateRoute).toContain('coursepulse-college-workbook-template.xlsx');
     expect(dashboard).toContain('/api/admin/roster/import');
     expect(dashboard).toContain('/api/admin/roster/template');
   });
 
-  it('returns teacher account IDs only for successful invites so new courses can be assigned safely', () => {
+  it('returns account IDs only for already linked teacher accounts', () => {
     expect(inviteFunction).toContain('user_id: invited.user.id');
     expect(inviteFunction).toContain('user_id: Array.isArray(linked)');
+    expect(inviteFunction).toContain('status: "PENDING_SIGNUP"');
     expect(inviteFunction).toContain('const isHead = profile.role === "ADMIN" && claims.aal === "aal2"');
     expect(inviteFunction).toContain('organization.status !== "ACTIVE"');
   });

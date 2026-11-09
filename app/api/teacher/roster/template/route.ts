@@ -43,14 +43,14 @@ export async function GET(request: NextRequest) {
   guide.getRow(2).eachCell((cell) => { cell.style = headerStyle; });
   guide.addRows([
     ['full_name', 'Student’s full name (required).', 'Aarav Sharma'],
-    ['email', 'Student’s individual email address (required). Activation email is sent here.', 'aarav@example.edu'],
+    ['mobile', 'Student mobile number is required. Use +country code; Indian 10-digit values are normalized to +91.', '+919876543210'],
     ['student_number', 'College roll/enrolment number (required). Keep it as text to preserve leading zeroes.', 'CSE-2026-001'],
     ['section', 'Section name (required). Every row in one workbook must use the same section.', 'A'],
-    ['mobile', 'Optional mobile number with country code. It is stored privately for the College Head.', '+919876543210'],
+    
     ['Course selection', 'Choose the assigned course in the Teacher Console before uploading this file.', 'CS101 · Programming'],
     ['One section per file', 'Do not mix sections in one workbook. Download/upload a separate workbook for each section.', 'Section A, then Section B'],
     ['Limits', 'Maximum 100 students and 4 MB per workbook. Keep the worksheet name and column headings unchanged.', ''],
-    ['Account security', 'CoursePulse sends activation emails. Students create their own passwords; teachers cannot view or set them.', ''],
+    ['Account security', 'Students create accounts with their mobile numbers and verify using an SMS OTP. Teachers cannot view or set passwords.', ''],
   ]);
   guide.getColumn(1).font = { bold: true, color: { argb: 'FF27533E' } };
   guide.getColumn(2).alignment = { wrapText: true, vertical: 'top' };
@@ -60,10 +60,9 @@ export async function GET(request: NextRequest) {
   const students = workbook.addWorksheet('Students');
   students.columns = [
     { header: 'full_name', key: 'full_name', width: 32 },
-    { header: 'email', key: 'email', width: 38 },
+    { header: 'mobile', key: 'mobile', width: 24 },
     { header: 'student_number', key: 'student_number', width: 24 },
     { header: 'section', key: 'section', width: 16 },
-    { header: 'mobile', key: 'mobile', width: 22 },
   ];
   const header = students.getRow(1);
   header.height = 26;
