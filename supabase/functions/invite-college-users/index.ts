@@ -21,12 +21,17 @@ const json = (body: unknown, status: number, cors: Record<string, string>) =>
   });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
 
 type Invite = {
-  email?: string; full_name: string; role: "STUDENT" | "INSTRUCTOR";
-  department_id?: string | null; course_ids: string[];
-  student_number?: string; section?: string; mobile: string;
+  email?: string;
+  full_name: string;
+  role: "STUDENT" | "INSTRUCTOR";
+  department_id?: string | null;
+  course_ids: string[];
+  student_number?: string;
+  section?: string;
+  mobile: string;
 };
 
 function normalizePhone(raw: string): string | null {
@@ -44,7 +49,9 @@ function parseInvite(raw: unknown): Invite | null {
     "email", "full_name", "role", "department_id", "course_ids",
     "student_number", "section", "mobile",
   ].includes(key))) return null;
-  const email = typeof value.email === "string" ? value.email.trim().toLowerCase() : "";
+
+  const email = typeof value.email === "string" && value.email.trim()
+    ? value.email.trim().toLowerCase() : undefined;
   const full_name = typeof value.full_name === "string" ? value.full_name.trim() : "";
   const role = value.role;
   const department_id = value.department_id === undefined || value.department_id === null
@@ -53,14 +60,16 @@ function parseInvite(raw: unknown): Invite | null {
     ? [...new Set(value.course_ids.filter((id): id is string => typeof id === "string"))] : [];
   const student_number = typeof value.student_number === "string" ? value.student_number.trim() : "";
   const section = typeof value.section === "string" ? value.section.trim() : "";
-  const mobile = typeof value.mobile === "string" ? value.mobile.trim() : "";
-  if (!EMAIL.test(email) || email.length > 254 || full_name.length < 2 || full_name.length > 120) return null;
+  const mobile = typeof value.mobile === "string" ? normalizePhone(value.mobile) : null;
+
+  if ((email !== undefined && (!EMAIL.test(email) || email.length > 254)) ||
+      !mobile || full_name.length < 2 || full_name.length > 120) return null;
   if (role !== "STUDENT" && role !== "INSTRUCTOR") return null;
   if (department_id !== null && !UUID.test(department_id)) return null;
   if (course_ids.length < 1 || course_ids.some((id) => !UUID.test(id))) return null;
   if (role === "STUDENT" && (student_number.length < 1 || student_number.length > 40)) return null;
-  if (section.length > 30 || mobile.length > 24) return null;
-  if (mobile && !/^\+?[0-9 ()-]{8,24}$/.test(mobile)) return null;
+  if (section.length > 30) return null;
+
   return { email, full_name, role, department_id, course_ids, student_number, section, mobile };
 }
 
@@ -193,8 +202,7 @@ Deno.serve(async (request: Request) => {
 
     const directoryRows = directoryCheck.data ?? [];
     const directoryStudentByNumber = new Map(directoryRows.map((row) => [row.student_number, row.student_id]));
-    const phoneOwnerByNumber = new Map<string, string>();
-    const phoneOwner = new Map(phoneLookups.map((item) => [item.mobile, item.account?.auth_user_id ?? null]));
+      const phoneOwner = new Map(phoneLookups.map((item) => [item.mobile, item.account?.auth_user_id ?? null]));
     const pendingByNumber = new Map((pendingCheck.data ?? []).map((row) => [
       row.student_number ?? "",
       { email: (row.email ?? "").toLowerCase(), mobile: row.mobile ?? "" },
@@ -206,7 +214,6 @@ Deno.serve(async (request: Request) => {
       const pending = pendingByNumber.get(number);
       const sameExistingAccount = existingStudentId !== undefined && phoneOwner.get(invite.mobile) === existingStudentId;
       const samePendingInvite = pending !== undefined && pending.mobile === invite.mobile;
-      phoneOwnerByNumber.set(number, phoneOwner.get(invite.mobile) ?? "");
       return (existingStudentId !== undefined && !sameExistingAccount) ||
         (pending !== undefined && !samePendingInvite);
     });
