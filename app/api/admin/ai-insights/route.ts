@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   if (!auth) return jsonError('College Head authentication with MFA is required.', 401);
   if (auth.profile.role !== 'ADMIN') return jsonError('College Head access is required.', 403);
 
-  const protection = await protectMutation(request, supabase, 'analytics:query', 3, 3600);
+  const protection = await protectMutation(request, supabase, 'admin:user-update', 3, 3600);
   if (protection) return protection;
 
   const parsed = z.object({ month: monthSchema }).strict().safeParse(await request.json().catch(() => null));

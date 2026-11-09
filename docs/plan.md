@@ -102,3 +102,6 @@ Institution name/branding; verified support contact; department and semester cat
 - [ ] REQUIRED: seed synthetic QA-only tenant A/B users and run authenticated RLS/IDOR, invitation acceptance, role matrix, QR expiry/revocation and full browser E2E tests. The QA database currently contains no real or synthetic Auth users.
 - [ ] NOT STARTED: payment processor/billing webhooks; subscription fields remain administrative labels only.
 - [ ] REQUIRED BEFORE PRODUCTION: institution-approved privacy/terms and retention rules, WCAG 2.2 AA and screen-reader review, backup/restore evidence, security sign-off and production rollback plan.
+
+- [x] DONE: guarded legacy profile backfill attaches unassigned users to the original tenant only while exactly one organization exists; if multiple tenants exist, migration refuses to guess ownership.
+- [ ] REQUIRED: Deno Edge Function sources are validated/deployed by Supabase separately from the Next.js Node TypeScript project; app typecheck intentionally excludes `supabase/functions`.
