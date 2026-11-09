@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 type CourseRecord = {
   id: string;
   course_code: string | null;
@@ -34,11 +34,16 @@ export async function POST(request: NextRequest) {
   const protection = await protectMutation(request, supabase, 'admin:user-update', 10, 3600);
   if (protection) return protection;
 
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    return jsonError('Your HOD sign-in session expired. Sign in again before importing this workbook.', 401);
+  }
+
   const form = await request.formData().catch(() => null);
   const file = form?.get('file');
   if (!(file instanceof File)) return jsonError('Choose the CoursePulse .xlsx workbook to upload.');
   if (!file.name.toLowerCase().endsWith('.xlsx')) return jsonError('Upload an Excel .xlsx file. CSV and legacy .xls files are not supported here.');
-  if (file.size < 1 || file.size > MAX_FILE_BYTES) return jsonError('Workbook must be smaller than 5 MB.');
+  if (file.size < 1 || file.size > MAX_FILE_BYTES) return jsonError('Workbook must be smaller than 4 MB to fit the secure upload limit.');
 
   let workbook;
   try {
@@ -198,13 +203,6 @@ export async function POST(request: NextRequest) {
     department_id: departmentIds.get(teacher.departmentCode) ?? existingDepartmentByCode.get(teacher.departmentCode)!.id,
     course_ids: teacher.courseCodes.map((courseCode) => courseIds.get(courseCode) ?? existingCourseByCode.get(courseCode)!.id),
   }));
-
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !sessionData.session?.access_token) {
-    return failure('Departments and courses were saved, but the sign-in session expired before teacher invitations could be sent. Sign in again and retry the Teachers sheet.', 401, {
-      departmentsCreated, departmentsUpdated, departmentsReused, coursesCreated, coursesUpdated,
-    });
-  }
 
   const { data: inviteData, error: inviteError } = await supabase.functions.invoke('invite-college-users', {
     body: { invitations },
