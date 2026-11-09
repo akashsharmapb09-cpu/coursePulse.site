@@ -120,8 +120,13 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
           setConfirmationPending(true);
           setError(deliveryMessage);
         } else {
-          setError('We could not complete signup. Check your email and password, then try again. If you already started signup, use the resend option below.');
-          setConfirmationPending(true);
+          const details = caught && typeof caught === 'object' ? caught as AuthErrorDetails : {};
+          setConfirmationPending(false);
+          setError(
+            details.code === 'weak_password'
+              ? 'Choose a stronger password and try again.'
+              : 'We could not complete signup. Check your email address and password, then try again.'
+          );
         }
       } else {
         setNotice('If an account exists for this email, password reset instructions can be sent. Try again later if nothing arrives.');
