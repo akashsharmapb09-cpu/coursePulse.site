@@ -77,3 +77,33 @@ Status: DONE means implementation and verification evidence exist; IN PROGRESS m
 
 ## Owner decisions required
 Institution name/branding; verified support contact; department and semester catalogue; student age/minor policy; legal basis and retention schedule; cookie/analytics policy; paid/free status; official accessibility/support contact. Do not publish guessed legal statements or contacts.
+
+
+## College workflow additions — preview-only implementation
+- [x] DONE: Student Voice suggestions are stored in a separate identified table, with student-owned reads, course-enrollment checks, immutable submission content, Head-only status changes, and audited workflow updates.
+- [x] DONE: private instructor inbox notifications use recipient-scoped RLS, immutable notification content, and read-only acknowledgement by the addressed instructor.
+- [x] DONE: full-college monthly report generation saves the Head's review threshold and response minimum, then creates idempotent private in-app meeting requests. The scheduled monthly close also evaluates the saved settings and sends notices for low-rated assigned teachers; no email provider is configured.
+- [x] DONE: an isolated QA cron job generates previous-month course, department and college aggregate snapshots on the first day of each month, stores the prior-month comparison, and evaluates the Head's saved rating/response thresholds for private teacher meeting notifications. The Head archive and threshold settings are MFA-protected.
+- [ ] NOT STARTED: bulk roster import with secure Auth provisioning, college/tenant isolation, Super Admin, institution QR verification, and external AI model integration remain release blockers.
+- [ ] REQUIRED: authenticated role-matrix tests against QA fixtures, browser tests for Student Voice/instructor inbox/Head review, and security-advisor review after applying this migration.
+
+
+## Multi-college SaaS completion slice — no-cost QA preview
+- [x] DONE: organization registry, tenant_id ownership columns, restrictive tenant-boundary RLS, composite tenant foreign keys, and organization-scoped privileged analytics/report RPCs are applied to the isolated QA project.
+- [x] DONE: Head-owned organization profile; Super Admin-only platform tenant list/status operations and a separate platform-admin membership table.
+- [x] DONE: Super Admin college creation flow provisions a setup-only tenant and invites its first Head. The tenant activates only after the Head verifies the invitation email.
+- [x] DONE: Head roster CSV import and individual account invitations for students and teachers use a server-side Supabase Auth Edge Function. Role and organization are read from the trusted invitation record, never client-editable metadata.
+- [x] DONE: student directory fields include college roll number, course, section and private mobile storage; teachers can view only their assigned class rosters without mobile numbers or feedback linkage.
+- [x] DONE: student QR uses a random 256-bit token, stores only its SHA-256 hash, rotates/revokes previous tokens, and verifies through a one-time URL fragment/POST flow.
+- [x] DONE: Head-only AI report worker is deployed and reads only minimum-five-suppressed monthly aggregate report rows. AI credentials are not present in the preview environment; the feature returns a configuration message until OPENAI_API_KEY and OPENAI_MODEL are added as Supabase Edge Function secrets.
+- [ ] REQUIRED: provision at least one internal CoursePulse platform-admin membership through a trusted operator process; the platform role cannot be self-assigned by a College Head.
+- [ ] REQUIRED: verify Supabase Auth email templates, Site URL and redirect allow-list, and successful real email delivery for a first Head, teacher and student.
+- [ ] REQUIRED: add OPENAI_API_KEY and OPENAI_MODEL through Supabase Edge secrets, then test the actual provider response and AI output review with a Head account.
+- [ ] REQUIRED: seed synthetic QA-only tenant A/B users and run authenticated RLS/IDOR, invitation acceptance, role matrix, QR expiry/revocation and full browser E2E tests. The QA database currently contains no real or synthetic Auth users.
+- [ ] NOT STARTED: payment processor/billing webhooks; subscription fields remain administrative labels only.
+- [ ] REQUIRED BEFORE PRODUCTION: institution-approved privacy/terms and retention rules, WCAG 2.2 AA and screen-reader review, backup/restore evidence, security sign-off and production rollback plan.
+
+- [x] DONE: guarded legacy profile backfill attaches unassigned users to the original tenant only while exactly one organization exists; if multiple tenants exist, migration refuses to guess ownership.
+- [ ] REQUIRED: Deno Edge Function sources are validated/deployed by Supabase separately from the Next.js Node TypeScript project; app typecheck intentionally excludes `supabase/functions`.
+
+- [x] DONE: assigned teachers can add student records/invitations directly to their own courses/sections. The server-side invitation function allows instructors to invite students only and checks each course against primary/secondary instructor assignments; Head continues to have bulk roster import.

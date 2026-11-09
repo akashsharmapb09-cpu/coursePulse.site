@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Analytics are available to instructors and admins only.', 403);
+  if (auth.profile.role === 'ADMIN') {
+    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assuranceError || assurance?.currentLevel !== 'aal2') return jsonError('Complete administrator multi-factor authentication before using this report.', 403);
+  }
   const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 30, 3600);
   if (rateLimit) return rateLimit;
   const params=request.nextUrl.searchParams;
