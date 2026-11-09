@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     },
   });
   if (error || !data) {
-    return jsonError('The secure student invitation service is unavailable. No import summary was returned; check pending invitations before retrying.', 503);
+    return jsonError('The secure student invitation service is unavailable. No import summary was returned; check pending phone invitations before retrying.', 503);
   }
   if (data.error) return jsonError(String(data.error), 403);
 
