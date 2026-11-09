@@ -39,7 +39,7 @@ export async function POST(request:NextRequest){
     auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false}
   });
   const {data:verified,error:verificationError}=await verifier.auth.signInWithPassword({
-    email:auth.user.email,
+    ...loginIdentity,
     password:parsed.data.current_password
   });
   const sameAccount=verified.user?.id===auth.user.id;
