@@ -24,10 +24,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Invite = {
-  email: string; full_name: string; role: "STUDENT" | "INSTRUCTOR";
+  email?: string; full_name: string; role: "STUDENT" | "INSTRUCTOR";
   department_id?: string | null; course_ids: string[];
-  student_number?: string; section?: string; mobile?: string;
+  student_number?: string; section?: string; mobile: string;
 };
+
+function normalizePhone(raw: string): string | null {
+  const compact = raw.trim().replace(/[\\s()-]/g, "");
+  if (/^\\d{10}$/.test(compact)) return "+91" + compact;
+  if (/^91\\d{10}$/.test(compact)) return "+" + compact;
+  if (/^\\+[1-9]\\d{7,14}$/.test(compact)) return compact;
+  return null;
+}
 
 function parseInvite(raw: unknown): Invite | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -144,15 +152,19 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Teachers can invite students only." }, 403, cors);
   }
 
+  const duplicatePhones = new Set<string>();
   const duplicateEmails = new Set<string>();
   for (const invite of invites) {
-    if (duplicateEmails.has(invite.email)) return json({ error: "Duplicate email addresses are not allowed in one roster import." }, 400, cors);
-    duplicateEmails.add(invite.email);
+    if (duplicatePhones.has(invite.mobile)) return json({ error: "Duplicate mobile numbers are not allowed in one roster import." }, 400, cors);
+    duplicatePhones.add(invite.mobile);
+    if (invite.email) {
+      if (duplicateEmails.has(invite.email)) return json({ error: "Duplicate legacy email addresses are not allowed in one roster import." }, 400, cors);
+      duplicateEmails.add(invite.email);
+    }
   }
 
   // Student numbers are unique across a college, not only within one course.
-  // Check existing directory entries and pending invitations before sending any
-  // activation emails so a batch cannot partially create duplicate roll numbers.
+  // Check existing directory entries and pending invitations before saving phone invites.
   const studentInvites = invites.filter((invite) => invite.role === "STUDENT");
   const studentNumbers = studentInvites.map((invite) => invite.student_number ?? "");
   const normalizedNumbers = new Set<string>();
@@ -164,48 +176,44 @@ Deno.serve(async (request: Request) => {
     normalizedNumbers.add(number);
   }
   if (studentNumbers.length) {
-    const [directoryCheck, pendingCheck] = await Promise.all([
+    const [directoryCheck, pendingCheck, phoneLookups] = await Promise.all([
       admin.from("student_directory").select("student_id,student_number")
         .eq("organization_id", profile.organization_id).in("student_number", studentNumbers),
-      admin.from("organization_invitations").select("email,student_number")
+      admin.from("organization_invitations").select("email,mobile,student_number")
         .eq("organization_id", profile.organization_id).eq("invited_role", "STUDENT")
         .in("status", ["PENDING", "INVITED"]).in("student_number", studentNumbers),
+      Promise.all(studentInvites.map(async (invite) => {
+        const { data, error } = await admin.rpc("resolve_roster_phone", { p_phone: invite.mobile });
+        return { mobile: invite.mobile, account: Array.isArray(data) ? data[0] : null, error };
+      })),
     ]);
-    if (directoryCheck.error || pendingCheck.error) {
-      return json({ error: "Student roll numbers could not be checked safely. No invitations were sent." }, 503, cors);
+    if (directoryCheck.error || pendingCheck.error || phoneLookups.some((item) => item.error)) {
+      return json({ error: "Student identities and roll numbers could not be checked safely. No invitations were saved." }, 503, cors);
     }
 
     const directoryRows = directoryCheck.data ?? [];
-    const directoryIds = [...new Set(directoryRows.map((row) => row.student_id))];
-    const userCheck = directoryIds.length
-      ? await admin.from("users").select("id,email").in("id", directoryIds)
-      : { data: [], error: null };
-    if (userCheck.error) {
-      return json({ error: "Existing student identities could not be checked safely. No invitations were sent." }, 503, cors);
-    }
-
-    const emailByStudentId = new Map((userCheck.data ?? [])
-      .map((user) => [user.id, (user.email ?? "").toLowerCase()]));
-    const emailByNumber = new Map(directoryRows.map((row) => [
-      row.student_number,
-      emailByStudentId.get(row.student_id) ?? "",
-    ]));
-    const pendingEmailByNumber = new Map((pendingCheck.data ?? []).map((row) => [
+    const directoryStudentByNumber = new Map(directoryRows.map((row) => [row.student_number, row.student_id]));
+    const phoneOwnerByNumber = new Map<string, string>();
+    const phoneOwner = new Map(phoneLookups.map((item) => [item.mobile, item.account?.auth_user_id ?? null]));
+    const pendingByNumber = new Map((pendingCheck.data ?? []).map((row) => [
       row.student_number ?? "",
-      (row.email ?? "").toLowerCase(),
+      { email: (row.email ?? "").toLowerCase(), mobile: row.mobile ?? "" },
     ]));
 
     const rollNumberConflict = studentInvites.find((invite) => {
       const number = invite.student_number ?? "";
-      const existingEmail = emailByNumber.get(number);
-      const pendingEmail = pendingEmailByNumber.get(number);
-      return (existingEmail !== undefined && existingEmail !== invite.email) ||
-        (pendingEmail !== undefined && pendingEmail !== invite.email);
+      const existingStudentId = directoryStudentByNumber.get(number);
+      const pending = pendingByNumber.get(number);
+      const sameExistingAccount = existingStudentId !== undefined && phoneOwner.get(invite.mobile) === existingStudentId;
+      const samePendingInvite = pending !== undefined && pending.mobile === invite.mobile;
+      phoneOwnerByNumber.set(number, phoneOwner.get(invite.mobile) ?? "");
+      return (existingStudentId !== undefined && !sameExistingAccount) ||
+        (pending !== undefined && !samePendingInvite);
     });
     if (rollNumberConflict) {
       return json({
         error: "Roll number " + (rollNumberConflict.student_number ?? "") +
-          " is already registered or pending for another email in this college. Correct the roll number or use the existing student email.",
+          " is already registered or pending for a different mobile account in this college.",
       }, 409, cors);
     }
   }
@@ -250,44 +258,46 @@ Deno.serve(async (request: Request) => {
     }
   }
 
-  const results: Array<{ email: string; role: string; status: string; error?: string; user_id?: string }> = [];
+  const results: Array<{ email?: string; mobile: string; role: string; status: string; error?: string; user_id?: string }> = [];
   for (const invite of invites) {
     const { data: invitation, error: insertError } = await admin.from("organization_invitations")
       .insert({
         organization_id: profile.organization_id,
-        email: invite.email,
+        email: invite.email ?? null,
         full_name: invite.full_name,
         invited_role: invite.role,
         department_id: invite.department_id,
         course_ids: invite.course_ids,
         student_number: invite.role === "STUDENT" ? invite.student_number : null,
         section: invite.section || null,
-        mobile: invite.role === "STUDENT" ? invite.mobile || null : null,
+        mobile: invite.mobile,
         invited_by: identity.user.id,
       }).select("id").single();
 
     if (insertError || !invitation) {
-      results.push({ email: invite.email, role: invite.role, status: "FAILED", error: insertError?.code === "23505" ? "An invitation is already pending for this email." : "Invitation could not be prepared." });
+      results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED",
+        error: insertError?.code === "23505" ? "An invitation is already pending for this mobile number." : "Invitation could not be prepared." });
       continue;
     }
 
-    // Existing accounts are linked only when their email/phone identity is
-    // already confirmed and their account is not attached to another college.
-    const { data: existing, error: lookupError } = await admin.rpc("resolve_roster_email", {
-      p_email: invite.email,
+    const { data: phoneMatch, error: phoneLookupError } = await admin.rpc("resolve_roster_phone", {
+      p_phone: invite.mobile,
     });
-    if (lookupError) {
+    if (phoneLookupError) {
       await admin.from("organization_invitations").update({ status: "FAILED" }).eq("id", invitation.id);
-      results.push({ email: invite.email, role: invite.role, status: "FAILED", error: "Existing account lookup was unavailable." });
+      results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED", error: "Existing mobile account lookup was unavailable." });
       continue;
     }
-    const existingAccount = Array.isArray(existing) ? existing[0] : null;
-    if (existingAccount) {
-      if (!existingAccount.email_confirmed) {
-        await admin.from("organization_invitations").update({ status: "FAILED" }).eq("id", invitation.id);
-        results.push({ email: invite.email, role: invite.role, status: "FAILED", error: "This email already has an account; its owner must verify the email or mobile before it can be linked." });
-        continue;
-      }
+
+    const phoneAccount = Array.isArray(phoneMatch) ? phoneMatch[0] : null;
+    if (phoneAccount && !phoneAccount.phone_confirmed) {
+      // Keep the trusted invitation pending. The user must verify this number
+      // before the database trigger is allowed to attach the college role.
+      results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "WAITING_FOR_VERIFICATION" });
+      continue;
+    }
+
+    if (phoneAccount?.phone_confirmed) {
       const { data: linked, error: linkError } = await admin.rpc("accept_existing_organization_invitation", {
         p_invitation_id: invitation.id,
       });
@@ -295,36 +305,70 @@ Deno.serve(async (request: Request) => {
         await admin.from("organization_invitations").update({ status: "FAILED" }).eq("id", invitation.id);
         const message = linkError.message.includes("another college") ? "This account already belongs to another college." :
           linkError.message.includes("role does not match") ? "The existing account role does not match this invitation." :
-          "The existing account could not be safely linked.";
-        results.push({ email: invite.email, role: invite.role, status: "FAILED", error: message });
+          "The existing phone account could not be safely linked.";
+        results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED", error: message });
       } else {
-        results.push({ email: invite.email, role: invite.role, status: "LINKED_EXISTING", user_id: Array.isArray(linked) ? linked[0]?.auth_user_id : undefined });
+        results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "LINKED_EXISTING", user_id: Array.isArray(linked) ? linked[0]?.auth_user_id : undefined });
       }
       continue;
     }
 
-    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(invite.email, {
-      data: { full_name: invite.full_name },
-      redirectTo: baseUrl + "/auth/confirm?next=/dashboard",
-    });
+    // Transitional compatibility for legacy email invitations. New templates and
+    // UI send phone-only invitations and never require email.
+    if (invite.email) {
+      const { data: legacyMatch, error: legacyLookupError } = await admin.rpc("resolve_roster_email", {
+        p_email: invite.email,
+      });
+      if (legacyLookupError) {
+        await admin.from("organization_invitations").update({ status: "FAILED" }).eq("id", invitation.id);
+        results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED", error: "Legacy account lookup was unavailable." });
+        continue;
+      }
+      const legacyAccount = Array.isArray(legacyMatch) ? legacyMatch[0] : null;
+      if (legacyAccount) {
+        if (!legacyAccount.email_confirmed) {
+          results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "WAITING_FOR_VERIFICATION" });
+          continue;
+        }
+        const { data: linked, error: linkError } = await admin.rpc("accept_existing_organization_invitation", {
+          p_invitation_id: invitation.id,
+        });
+        if (linkError) {
+          await admin.from("organization_invitations").update({ status: "FAILED" }).eq("id", invitation.id);
+          results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED", error: "The legacy account could not be safely linked." });
+        } else {
+          results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "LINKED_EXISTING", user_id: Array.isArray(linked) ? linked[0]?.auth_user_id : undefined });
+        }
+        continue;
+      }
 
-    if (inviteError || !invited.user) {
+      const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(invite.email, {
+        data: { full_name: invite.full_name },
+        redirectTo: baseUrl + "/auth/confirm?next=/dashboard",
+      });
+      if (inviteError || !invited.user) {
+        await admin.from("organization_invitations")
+          .update({ status: "FAILED", updated_at: new Date().toISOString() })
+          .eq("id", invitation.id).eq("status", "PENDING");
+        results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "FAILED", error: "Legacy email invitation could not be sent. Check the SMTP provider." });
+        continue;
+      }
       await admin.from("organization_invitations")
-        .update({ status: "FAILED", updated_at: new Date().toISOString() })
+        .update({ status: "INVITED", auth_user_id: invited.user.id, updated_at: new Date().toISOString() })
         .eq("id", invitation.id).eq("status", "PENDING");
-      results.push({ email: invite.email, role: invite.role, status: "FAILED", error: "Auth invitation could not be sent. Check the Supabase email provider and invitation delivery limits." });
+      results.push({ email: invite.email, mobile: invite.mobile, role: invite.role, status: "INVITED", user_id: invited.user.id });
       continue;
     }
 
-    // The Auth insert trigger may already have consumed this row and provisioned
-    // the account. Never overwrite ACCEPTED with INVITED.
-    await admin.from("organization_invitations")
-      .update({ status: "INVITED", auth_user_id: invited.user.id, updated_at: new Date().toISOString() })
-      .eq("id", invitation.id).eq("status", "PENDING");
-    results.push({ email: invite.email, role: invite.role, status: "INVITED", user_id: invited.user.id });
+    // Supabase Auth phone sign-up must be initiated by the user and verified via
+    // SMS. Do not create a phone account or send OTP from this privileged invite API.
+    results.push({ mobile: invite.mobile, role: invite.role, status: "PENDING_SIGNUP" });
   }
 
-  const invitedCount = results.filter((row) => row.status === "INVITED" || row.status === "LINKED_EXISTING").length;
+  const invitedCount = results.filter((row) =>
+    row.status === "INVITED" || row.status === "LINKED_EXISTING" ||
+    row.status === "PENDING_SIGNUP" || row.status === "WAITING_FOR_VERIFICATION"
+  ).length;
   return json({
     organization: organization.name,
     total: results.length,
