@@ -8,6 +8,7 @@ const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'app/dashboard/page.tsx'),'utf8');
 const dashboardUi=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 const academicApi=readFileSync(resolve(process.cwd(),'app/api/admin/academic/route.ts'),'utf8');
+const academicImportApi=readFileSync(resolve(process.cwd(),'app/api/admin/academic/import/route.ts'),'utf8');
 
 describe('academic administration and account lifecycle contract',()=>{
   it('requires explicit enrollment for student course and feedback visibility',()=>{
@@ -34,16 +35,29 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(academicApi).toMatch(/supabase\.from\('semesters'\)\.update/);
     expect(academicApi).toMatch(/department\.updated/);
     expect(academicApi).toMatch(/semester\.updated/);
-    expect(dashboardUi).toMatch(/Update department/);
-    expect(dashboardUi).toMatch(/Update semester/);
-    expect(dashboardUi).toMatch(/Active semester/);
+    expect(dashboardUi).toMatch(/Academic Excel import/);
+    expect(dashboardUi).toMatch(/Download Excel template/);
+    expect(dashboardUi).not.toMatch(/Create department/);
+    expect(dashboardUi).not.toMatch(/Create academic semester/);
+    expect(dashboardUi).not.toMatch(/Update department/);
+    expect(dashboardUi).not.toMatch(/Update semester/);
   });
   it('assigns and clears user departments through a MFA-protected audited RPC',()=>{
     expect(departmentMigration).toMatch(/create or replace function private\.admin_assign_user_department/);
     expect(departmentMigration).toMatch(/private\.is_admin\(\)/);
     expect(departmentMigration).toMatch(/private\.admin_record_audit/);
     expect(academicApi).toMatch(/admin_assign_user_department/);
-    expect(dashboardUi).toMatch(/Assign user department/);
+    expect(dashboardUi).not.toMatch(/Assign user department/);
+  });
+  it('provides an MFA-protected Excel template and server-side bulk import',()=>{
+    expect(academicImportApi).toMatch(/workbook\.xlsx\.load/);
+    expect(academicImportApi).toMatch(/inviteUserByEmail/);
+    expect(academicImportApi).toMatch(/SUPABASE_SECRET_KEY/);
+    expect(academicImportApi).toMatch(/admin_update_user/);
+    expect(academicImportApi).toMatch(/admin_assign_user_department/);
+    expect(academicImportApi).toMatch(/admin_record_audit/);
+    expect(academicImportApi).toMatch(/5\*1024\*1024/);
+    expect(academicImportApi).toMatch(/Administrator authentication with MFA is required/);
   });
   it('supports enrollment, instructor assignments and academic metadata',()=>{
     expect(migration).toMatch(/create table public\.course_enrollments/);

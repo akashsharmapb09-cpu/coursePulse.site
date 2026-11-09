@@ -560,67 +560,107 @@ function AdminConsole({users,audit,academic,overview,deletionRequests,currentUse
     </section>
     <div className="section-heading"><div><h3>User and role management</h3><p>Role changes and account suspensions require administrator MFA and are recorded in the audit log.</p></div><span className="role-chip">{users.length} accounts</span></div>
     {!users.length?<Empty icon={<Users/>} title="No accounts found" text="Newly registered users will appear here."/>:<div className="feedback-list">{users.map(user=><article className="feedback-row" key={user.id}><div className="feedback-icon"><Users size={18}/></div><div className="feedback-copy min-w-0"><b className="truncate">{user.full_name||user.email||'CoursePulse user'}</b><span className="truncate">{user.email||'No email'} · Joined {new Date(user.created_at).toLocaleDateString()}</span></div><select aria-label={`Role for ${user.email??user.id}`} value={user.role} disabled={busy||user.id===currentUserId} onChange={e=>onUpdate(user.id,e.target.value as AdminUser['role'],user.is_active)} className="max-w-32"><option value="STUDENT">Student</option><option value="INSTRUCTOR">Instructor</option><option value="ADMIN">Admin</option></select><button className={`button compact ${user.is_active?'subtle':'primary'}`} disabled={busy||user.id===currentUserId} onClick={()=>onUpdate(user.id,user.role,!user.is_active)}>{user.is_active?'Suspend':'Reactivate'}</button><span className={`status-badge ${user.is_active?'published':'archived'}`}>{user.is_active?'active':'suspended'}</span></article>)}</div>}
-    <AdminAcademicManager data={academic} busy={busy} onCreate={onAcademicCreate} onUpdate={onAcademicUpdate}/>
+    <AdminAcademicManager data={academic} busy={busy} onCreate={onAcademicCreate} onUpdate={onAcademicUpdate} onRefresh={loadAdmin}/>
     <section><div className="section-heading"><div><h3>Data deletion requests</h3><p>Review privacy requests. Only mark COMPLETED after eligible account deletion is carried out and verified through the institution's authorized process.</p></div><span className="role-chip">{deletionRequests.filter(request=>['PENDING','IN_REVIEW','APPROVED'].includes(request.status)).length} active</span></div>{deletionRequests.length?<div className="feedback-list">{deletionRequests.map(request=><AdminDeletionRequest key={request.id} request={request} busy={busy} onSave={onDeletionReview}/>)}</div>:<Empty icon={<ShieldCheck/>} title="No deletion requests" text="User privacy requests will appear here for review."/>}</section>
     <div><div className="section-heading"><div><h3>Administrator audit trail</h3><p>Latest privileged account and academic actions.</p></div></div>{!audit.length?<Empty icon={<ShieldCheck/>} title="No audit events yet" text="Administrator actions will be recorded here."/>:<div className="feedback-list">{audit.map(event=><article className="feedback-row" key={event.id}><div className="feedback-icon"><ShieldCheck size={18}/></div><div className="feedback-copy"><b>{event.action.replace(/\./g,' ')}</b><span>{event.target_type} · {event.target_id??'—'} · {new Date(event.created_at).toLocaleString()}</span></div></article>)}</div>}</div>
   </div>;
 }
 
-function AdminAcademicManager({data,busy,onCreate,onUpdate}:{data:AcademicData;busy:boolean;onCreate:(payload:AcademicAction)=>void;onUpdate:(payload:AcademicAction)=>void}) {
-  const [departmentName,setDepartmentName]=useState('');
-  const [departmentCode,setDepartmentCode]=useState('');
-  const [semesterName,setSemesterName]=useState('');
-  const [semesterStart,setSemesterStart]=useState('');
-  const [semesterEnd,setSemesterEnd]=useState('');
-  const [editDepartmentId,setEditDepartmentId]=useState('');
-  const [editDepartmentName,setEditDepartmentName]=useState('');
-  const [editDepartmentCode,setEditDepartmentCode]=useState('');
-  const [editSemesterId,setEditSemesterId]=useState('');
-  const [editSemesterName,setEditSemesterName]=useState('');
-  const [editSemesterStart,setEditSemesterStart]=useState('');
-  const [editSemesterEnd,setEditSemesterEnd]=useState('');
-  const [editSemesterActive,setEditSemesterActive]=useState(false);
-  const [departmentUserId,setDepartmentUserId]=useState('');
-  const [departmentUserDepartment,setDepartmentUserDepartment]=useState('');
-  const [enrollCourse,setEnrollCourse]=useState('');
-  const [enrollStudent,setEnrollStudent]=useState('');
-  const [assignCourse,setAssignCourse]=useState('');
-  const [assignInstructor,setAssignInstructor]=useState('');
-  const [academicCourse,setAcademicCourse]=useState('');
-  const [academicDepartment,setAcademicDepartment]=useState('');
-  const [academicSemester,setAcademicSemester]=useState('');
-  useEffect(()=>{
-    if(!editDepartmentId&&data.departments.length){
-      const item=data.departments[0];
-      setEditDepartmentId(item.id);setEditDepartmentName(item.name);setEditDepartmentCode(item.code);
+function AdminAcademicManager({data,busy,onRefresh}:{
+  data:AcademicData;
+  busy:boolean;
+  onCreate:(payload:AcademicAction)=>void;
+  onUpdate:(payload:AcademicAction)=>void;
+  onRefresh:()=>Promise<void>;
+}) {
+  const inputId=useId();
+  const [file,setFile]=useState<File|null>(null);
+  const [importing,setImporting]=useState(false);
+  const [error,setError]=useState('');
+  const [result,setResult]=useState<{
+    complete:boolean;
+    invited_teachers:number;
+    counts:{departments:number;semesters:number;teachers:number;courses:number};
+    issues:{sheet:string;row:number;message:string}[];
+  }|null>(null);
+
+  async function uploadWorkbook(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if(!file){setError('Choose an .xlsx workbook first.');return;}
+    if(!file.name.toLowerCase().endsWith('.xlsx')){setError('Only .xlsx Excel workbooks are supported.');return;}
+    if(file.size>5*1024*1024){setError('The workbook must be 5 MB or smaller.');return;}
+    setImporting(true);setError('');setResult(null);
+    try {
+      const body=new FormData();
+      body.set('file',file);
+      const response=await fetch('/api/admin/academic/import',{method:'POST',body});
+      const payload=await response.json();
+      if(!response.ok) {
+        const detail=Array.isArray(payload.issues)?payload.issues.map((item:{sheet:string;row:number;message:string})=>item.sheet+' row '+item.row+': '+item.message).join(' · '):'';
+        throw new Error([payload.error??'The workbook could not be imported.',detail].filter(Boolean).join(' '));
+      }
+      setResult(payload);
+      setFile(null);
+      event.currentTarget.reset();
+      await onRefresh();
+    } catch(caught) {
+      setError(caught instanceof Error?caught.message:'The workbook could not be imported.');
+    } finally {
+      setImporting(false);
     }
-  },[data.departments,editDepartmentId]);
-  useEffect(()=>{
-    if(!editSemesterId&&data.semesters.length){
-      const item=data.semesters[0];
-      setEditSemesterId(item.id);setEditSemesterName(item.name);setEditSemesterStart(item.start_date);setEditSemesterEnd(item.end_date);setEditSemesterActive(item.is_active);
-    }
-  },[data.semesters,editSemesterId]);
-  useEffect(()=>{
-    const selected=data.accounts.find(item=>item.id===departmentUserId);
-    if(!departmentUserId&&data.accounts.length){
-      const first=data.accounts[0];
-      setDepartmentUserId(first.id);
-      setDepartmentUserDepartment(first.department_id??'');
-    }else if(selected&&selected.department_id!==departmentUserDepartment){
-      setDepartmentUserDepartment(selected.department_id??'');
-    }
-  },[data.accounts,departmentUserId]);
-  return <section className="space-y-5"><div className="section-heading"><div><h3>Academic structure</h3><p>Manage departments, terms, student enrollments and instructor course assignments.</p></div></div>
-    <div className="grid gap-5 lg:grid-cols-2">
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'department',name:departmentName,code:departmentCode});setDepartmentName('');setDepartmentCode('');}}><h4 className="font-extrabold">Create department</h4><label>Department name<input required minLength={2} maxLength={120} value={departmentName} onChange={e=>setDepartmentName(e.target.value)} placeholder="Computer Science"/></label><label>Department code<input required minLength={2} maxLength={20} value={departmentCode} onChange={e=>setDepartmentCode(e.target.value)} placeholder="CSE"/></label><button className="button primary" disabled={busy}>Add department</button><p className="fine-print">{data.departments.length} departments configured</p></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'semester',name:semesterName,start_date:semesterStart,end_date:semesterEnd});setSemesterName('');setSemesterStart('');setSemesterEnd('');}}><h4 className="font-extrabold">Create academic semester</h4><label>Semester name<input required minLength={2} maxLength={100} value={semesterName} onChange={e=>setSemesterName(e.target.value)} placeholder="Fall 2026"/></label><label>Start date<input type="date" required value={semesterStart} onChange={e=>setSemesterStart(e.target.value)}/></label><label>End date<input type="date" required min={semesterStart||undefined} value={semesterEnd} onChange={e=>setSemesterEnd(e.target.value)}/></label><button className="button primary" disabled={busy}>Add semester</button><p className="fine-print">{data.semesters.length} semesters configured</p></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onUpdate({action:'department_update',department_id:editDepartmentId,name:editDepartmentName,code:editDepartmentCode});}}><h4 className="font-extrabold">Update department</h4><label>Department<select required value={editDepartmentId} onChange={e=>{const item=data.departments.find(value=>value.id===e.target.value);setEditDepartmentId(e.target.value);setEditDepartmentName(item?.name??'');setEditDepartmentCode(item?.code??'');}}><option value="">Select department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><label>Department name<input required minLength={2} maxLength={120} value={editDepartmentName} onChange={e=>setEditDepartmentName(e.target.value)}/></label><label>Department code<input required minLength={2} maxLength={20} value={editDepartmentCode} onChange={e=>setEditDepartmentCode(e.target.value)}/></label><button className="button subtle" disabled={busy||!editDepartmentId}>Save department</button></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onUpdate({action:'semester_update',semester_id:editSemesterId,name:editSemesterName,start_date:editSemesterStart,end_date:editSemesterEnd,is_active:editSemesterActive});}}><h4 className="font-extrabold">Update semester</h4><label>Semester<select required value={editSemesterId} onChange={e=>{const item=data.semesters.find(value=>value.id===e.target.value);setEditSemesterId(e.target.value);setEditSemesterName(item?.name??'');setEditSemesterStart(item?.start_date??'');setEditSemesterEnd(item?.end_date??'');setEditSemesterActive(item?.is_active??false);}}><option value="">Select semester</option>{data.semesters.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Semester name<input required minLength={2} maxLength={100} value={editSemesterName} onChange={e=>setEditSemesterName(e.target.value)}/></label><div className="grid gap-4 sm:grid-cols-2"><label>Start date<input type="date" required value={editSemesterStart} onChange={e=>setEditSemesterStart(e.target.value)}/></label><label>End date<input type="date" required min={editSemesterStart||undefined} value={editSemesterEnd} onChange={e=>setEditSemesterEnd(e.target.value)}/></label></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editSemesterActive} onChange={e=>setEditSemesterActive(e.target.checked)}/> Active semester</label><button className="button subtle self-start" disabled={busy||!editSemesterId}>Save semester</button></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5 lg:col-span-2" onSubmit={e=>{e.preventDefault();onCreate({action:'user_department',user_id:departmentUserId,department_id:departmentUserDepartment||null});}}><h4 className="font-extrabold">Assign user department</h4><p className="fine-print">Set or clear the department for an account. This action requires admin MFA and creates an audit event.</p><label>User account<select required value={departmentUserId} onChange={e=>{const selected=data.accounts.find(item=>item.id===e.target.value);setDepartmentUserId(e.target.value);setDepartmentUserDepartment(selected?.department_id??'');}}><option value="">Select user</option>{data.accounts.map(item=><option key={item.id} value={item.id}>{item.full_name||item.email||item.id} · {item.role}{item.is_active?'':' · Suspended'}</option>)}</select></label><label>Department<select value={departmentUserDepartment} onChange={e=>setDepartmentUserDepartment(e.target.value)}><option value="">No department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><button className="button primary self-start" disabled={busy||!departmentUserId}>Save user department</button></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'enroll',course_id:enrollCourse,student_id:enrollStudent});}}><h4 className="font-extrabold">Enroll student in course</h4><label>Course<select required value={enrollCourse} onChange={e=>setEnrollCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Student<select required value={enrollStudent} onChange={e=>setEnrollStudent(e.target.value)}><option value="">Select student</option>{data.students.map(student=><option key={student.id} value={student.id}>{student.full_name||student.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.students.length||!data.courses.length}>Enroll student</button><p className="fine-print">{data.enrollments.length} course enrollments</p></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5" onSubmit={e=>{e.preventDefault();onCreate({action:'assign',course_id:assignCourse,instructor_id:assignInstructor});}}><h4 className="font-extrabold">Assign instructor</h4><label>Course<select required value={assignCourse} onChange={e=>setAssignCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><label>Instructor<select required value={assignInstructor} onChange={e=>setAssignInstructor(e.target.value)}><option value="">Select instructor</option>{data.instructors.map(instructor=><option key={instructor.id} value={instructor.id}>{instructor.full_name||instructor.email}</option>)}</select></label><button className="button primary" disabled={busy||!data.instructors.length||!data.courses.length}>Assign instructor</button><p className="fine-print">{data.assignments.length} instructor assignments</p></form>
-      <form className="stack-form rounded-2xl border border-[#e5ece6] bg-white p-5 lg:col-span-2" onSubmit={e=>{e.preventDefault();onCreate({action:'course_academic',course_id:academicCourse,department_id:academicDepartment||null,semester_id:academicSemester||null});}}><h4 className="font-extrabold">Set course department and semester</h4><label>Course<select required value={academicCourse} onChange={e=>setAcademicCourse(e.target.value)}><option value="">Select course</option>{data.courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label>Department<select value={academicDepartment} onChange={e=>setAcademicDepartment(e.target.value)}><option value="">No department</option>{data.departments.map(item=><option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></label><label>Semester<select value={academicSemester} onChange={e=>setAcademicSemester(e.target.value)}><option value="">No semester</option>{data.semesters.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div><button className="button primary self-start" disabled={busy||!academicCourse}>Save course structure</button></form>
+  }
+
+  const currentCounts=[
+    data.departments.length+' departments',
+    data.semesters.length+' semesters',
+    data.instructors.length+' active teachers',
+    data.courses.length+' courses'
+  ].join(' · ');
+
+  return <section className="space-y-5">
+    <div className="section-heading">
+      <div>
+        <h3>Academic Excel import</h3>
+        <p>Upload one college workbook to create or update departments, semesters, teacher access and course assignments together.</p>
+      </div>
+      <span className="role-chip">Bulk setup</span>
+    </div>
+    <div className="rounded-2xl border border-[#e5ece6] bg-white p-5 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h4 className="font-extrabold">College master workbook</h4>
+          <p className="fine-print mt-1">Use the template so every column is matched safely.</p>
+        </div>
+        <a className="button subtle" href="/api/admin/academic/import">Download Excel template</a>
+      </div>
+      <div className="rounded-xl bg-[#f5f8f5] p-4">
+        <p className="font-semibold text-sm">Workbook sheets</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <p className="text-sm"><b>Departments</b><span className="fine-print block">Name and unique department code</span></p>
+          <p className="text-sm"><b>Semesters</b><span className="fine-print block">Name, date range and active status</span></p>
+          <p className="text-sm"><b>Teachers</b><span className="fine-print block">Email, full name and department code</span></p>
+          <p className="text-sm"><b>Courses</b><span className="fine-print block">Course code, title, semester and teacher email</span></p>
+        </div>
+      </div>
+      <form className="stack-form" onSubmit={uploadWorkbook}>
+        <label htmlFor={inputId} className="rounded-xl border-2 border-dashed border-[#cbd9d0] bg-[#fbfdfb] p-6 text-center cursor-pointer">
+          <span className="block font-bold">{file?file.name:'Choose Excel workbook (.xlsx)'}</span>
+          <span className="fine-print block mt-1">{file?Math.max(1,Math.round(file.size/1024))+' KB · Ready to upload':'Maximum file size 5 MB'}</span>
+          <input id={inputId} className="sr-only" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={event=>{setFile(event.target.files?.[0]??null);setError('');setResult(null);}}/>
+        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <button className="button primary" type="submit" disabled={busy||importing||!file}>{importing?'Importing workbook…':'Upload and import'}</button>
+          {file&&<button className="button subtle" type="button" disabled={importing} onClick={()=>setFile(null)}>Remove file</button>}
+        </div>
+      </form>
+      {error&&<p className="alert error" role="alert">{error}</p>}
+      {result&&<div className={result.complete?'alert success':'alert error'} role="status">
+        <b>{result.complete?'Workbook imported successfully':'Workbook imported with some issues'}</b>
+        <p className="mt-1">Departments: {result.counts.departments} · Semesters: {result.counts.semesters} · Teachers: {result.counts.teachers} · Courses: {result.counts.courses}</p>
+        <p className="mt-1">Teacher invitations sent: {result.invited_teachers}</p>
+        {result.issues.length>0&&<ul className="mt-2 list-disc pl-5">{result.issues.map((item,index)=><li key={item.sheet+'-'+item.row+'-'+index}>{item.sheet} · row {item.row}: {item.message}</li>)}</ul>}
+      </div>}
+      <p className="fine-print">Current workspace: {currentCounts}. New teacher accounts receive an invitation email to set their own password. Existing student or administrator accounts are never silently changed into teacher accounts. Imports are audit logged; a workbook with row errors may be partially applied, and the result lists every reported issue.</p>
     </div>
   </section>;
 }
