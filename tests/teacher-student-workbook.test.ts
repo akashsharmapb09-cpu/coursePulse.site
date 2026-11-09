@@ -12,6 +12,7 @@ const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/invite-coll
 async function workbook(options?: {
   secondStudent?: boolean;
   duplicateEmail?: boolean;
+  duplicateRollNumber?: boolean;
   mixedSections?: boolean;
   formula?: boolean;
 }) {
@@ -23,7 +24,7 @@ async function workbook(options?: {
     students.addRow([
       'Asha Sharma',
       options.duplicateEmail ? 'aarav@example.edu' : 'asha@example.edu',
-      'CSE-002',
+      options.duplicateRollNumber ? 'CSE-001' : 'CSE-002',
       options.mixedSections ? 'B' : 'A',
       '',
     ]);
@@ -52,6 +53,7 @@ describe('teacher Excel student roster import', () => {
 
     await expect(parseTeacherStudentWorkbook(await workbook({
       secondStudent: true,
+      duplicateRollNumber: true,
     }))).rejects.toThrow('duplicate roll number');
   });
 
