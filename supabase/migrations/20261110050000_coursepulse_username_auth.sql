@@ -32,6 +32,8 @@ begin
 end;
 $function$;
 
+revoke all on function public.handle_new_auth_user() from public, anon, authenticated;
+
 -- Preserve existing accounts: use the email local-part as a familiar username where possible.
 -- Add a short stable suffix only when the local-part is missing or duplicated.
 with source_names as (
