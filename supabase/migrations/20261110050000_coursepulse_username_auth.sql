@@ -6,6 +6,32 @@ begin;
 alter table public.users
   add column if not exists username text;
 
+-- New username-only accounts use a reserved internal Auth identity. Do not copy that
+-- synthetic address into the application profile or expose it in roster/admin views.
+-- Existing real email addresses remain unchanged for legacy accounts.
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  insert into public.users (id, email, full_name, role)
+  values (
+    new.id,
+    case
+      when split_part(lower(coalesce(new.email, '')), '@', 2) = 'accounts.coursepulse.invalid'
+        then null
+      else lower(new.email)
+    end,
+    left(coalesce(new.raw_user_meta_data ->> 'full_name', ''), 120),
+    'STUDENT'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$function$;
+
 -- Preserve existing accounts: use the email local-part as a familiar username where possible.
 -- Add a short stable suffix only when the local-part is missing or duplicated.
 with source_names as (
@@ -233,6 +259,6 @@ grant execute on function public.consume_username_login_rate_limit(text, integer
   to service_role;
 
 comment on column public.users.username is
-  'Unique lowercase login identifier. Username-to-Auth-email resolution occurs only on the trusted server.';
+  'Unique lowercase login identifier. Username-to-private Supabase Auth identity resolution occurs only on the trusted server.';
 
 commit;
