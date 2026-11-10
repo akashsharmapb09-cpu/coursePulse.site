@@ -126,7 +126,7 @@ begin
 end;
 $function$;
 
-drop trigger if exists auth_users_sync_coursepulse_username on auth.users;
+drop trigger if exists zz_auth_users_sync_coursepulse_username on auth.users;
 create trigger zz_auth_users_sync_coursepulse_username
 after insert on auth.users
 for each row execute function private.sync_coursepulse_auth_username();
@@ -135,6 +135,7 @@ revoke all on function private.sync_coursepulse_auth_username() from public, ano
 
 -- Self-service username changes remain subject to the existing own-profile RLS policy.
 grant update (username) on public.users to authenticated;
+grant select (email, username, is_active) on public.users to service_role;
 
 -- Username login is an unauthenticated mutation, so it has a separate hashed-key limiter.
 -- Only the server-side elevated client may invoke the public wrapper.
