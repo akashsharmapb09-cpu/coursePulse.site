@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
   let createdUserId: string | null = null;
   try {
     const address = clientAddress(request);
-    const usernameHash = hashIdentifier('signup-username\\0' + username);
-    const usernameAddressHash = hashIdentifier('signup-username-ip\\0' + username + '\\0' + address);
-    const addressHash = hashIdentifier('signup-ip\\0' + address);
+    const usernameHash = hashIdentifier('signup-username\0' + username);
+    const usernameAddressHash = hashIdentifier('signup-username-ip\0' + username + '\0' + address);
+    const addressHash = hashIdentifier('signup-ip\0' + address);
     const admin = createAdminClient();
 
     const [usernameLimit, usernameAddressLimit, addressLimit] = await Promise.all([
