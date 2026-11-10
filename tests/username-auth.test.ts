@@ -33,6 +33,8 @@ describe('username and password authentication', () => {
   it('applies same-origin validation and independent IP/username rate limits', () => {
     expect(route).toContain('isAllowedOrigin(request)');
     expect(route).toContain('usernameAddressHash');
+    expect(route).toContain("createHmac('sha256', secret)");
+    expect(route).not.toContain("createHash('sha256')");
     expect(route).toContain('addressHash');
     expect(route).toContain('p_limit: 8');
     expect(route).toContain('p_limit: 40');
@@ -41,6 +43,8 @@ describe('username and password authentication', () => {
 
   it('keeps the username mapping private and limits the rate-limit RPC to service_role', () => {
     expect(migration).toContain('grant update (username) on public.users to authenticated');
+    expect(migration).toContain('create trigger zz_auth_users_sync_coursepulse_username');
+    expect(migration).toContain('drop trigger if exists zz_auth_users_sync_coursepulse_username');
     expect(migration).toContain('revoke all on private.username_login_rate_limits from public, anon, authenticated, service_role');
     expect(migration).toContain('grant execute on function public.consume_username_login_rate_limit(text, integer, integer)');
     expect(migration).toContain('to service_role');
