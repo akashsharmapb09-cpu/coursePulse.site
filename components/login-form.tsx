@@ -79,7 +79,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     <p className="muted">{mode === 'signin'
       ? 'Sign in with your username and password. Existing usernames are based on the part before @ in your registered email; duplicates receive a short suffix. You can change yours in Account security.'
       : mode === 'signup'
-        ? 'Choose a username for sign-in. Your email stays on your account for verification, recovery and existing account workflows.'
+        ? 'Your account starts as a Student. A college HOD can invite Teachers and Students; only CoursePulse Platform Super Admin can assign HOD access. Choose a username for sign-in. Your email stays on your account for verification, recovery and existing account workflows.'
         : 'Enter the email associated with your account to receive a secure reset link if it exists.'}</p>
 
     <form onSubmit={submit} className="stack-form">
