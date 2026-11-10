@@ -77,7 +77,7 @@ export function LoginForm({ initialMode = 'signin' }: { initialMode?: 'signin' |
     <span className="eyebrow">WELCOME TO COURSEPULSE</span>
     <h2>{mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}</h2>
     <p className="muted">{mode === 'signin'
-      ? 'Sign in with your username and password. Existing accounts start with the part before @ in their registered email; you can change it in Account security.'
+      ? 'Sign in with your username and password. Existing usernames are based on the part before @ in your registered email; duplicates receive a short suffix. You can change yours in Account security.'
       : mode === 'signup'
         ? 'Choose a username for sign-in. Your email is used only for account verification and recovery.'
         : 'Enter the email associated with your account to receive a secure reset link if it exists.'}</p>
