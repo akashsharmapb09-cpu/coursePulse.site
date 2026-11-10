@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -15,7 +15,9 @@ const loginInput = z.object({
 const RATE_WINDOW_SECONDS = 900;
 
 function hashIdentifier(value: string) {
-  return createHash('sha256').update(value).digest('hex');
+  const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) throw new Error('Server-side Supabase key is not configured.');
+  return createHmac('sha256', secret).update(value).digest('hex');
 }
 
 function isAllowedOrigin(request: NextRequest) {
@@ -69,11 +71,10 @@ export async function POST(request: NextRequest) {
   }
 
   const username = parsed.data.username.toLowerCase();
-  const address = clientAddress(request);
-  const usernameAddressHash = hashIdentifier('username-ip\0' + username + '\0' + address);
-  const addressHash = hashIdentifier('ip\0' + address);
-
   try {
+    const address = clientAddress(request);
+    const usernameAddressHash = hashIdentifier('username-ip\0' + username + '\0' + address);
+    const addressHash = hashIdentifier('ip\0' + address);
     const admin = createAdminClient();
     const [usernameLimit, addressLimit] = await Promise.all([
       admin.rpc('consume_username_login_rate_limit', {
