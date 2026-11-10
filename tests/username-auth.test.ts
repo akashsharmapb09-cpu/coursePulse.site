@@ -33,13 +33,15 @@ describe('username and password authentication', () => {
 
   it('applies same-origin validation and independent IP/username rate limits', () => {
     expect(route).toContain('isAllowedOrigin(request)');
+    expect(route).toContain('usernameHash');
     expect(route).toContain('usernameAddressHash');
     expect(route).toContain("createHmac('sha256', secret)");
     expect(route).not.toContain("createHash('sha256')");
     expect(route).toContain('addressHash');
+    expect(route).toContain('p_limit: 20');
     expect(route).toContain('p_limit: 8');
     expect(route).toContain('p_limit: 40');
-    expect(route).toContain('if (usernameLimit.error || addressLimit.error)');
+    expect(route).toContain('if (usernameLimit.error || usernameAddressLimit.error || addressLimit.error)');
   });
 
   it('keeps the username mapping private and limits the rate-limit RPC to service_role', () => {
