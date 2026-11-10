@@ -14,7 +14,7 @@ describe('HOD provisioning is controlled only by Platform Super Admin', () => {
   });
 
   it('keeps public signups as Students and explains the role hierarchy', () => {
-    expect(signup).toContain("data: { full_name: name.trim() }");
+    expect(signup).toContain("data: { full_name: name.trim(), username: username.trim().toLowerCase() }");
     expect(signup).toContain('Your account starts as a Student.');
     expect(signup).toContain('only CoursePulse Platform Super Admin can assign HOD access');
     expect(signup).not.toContain('requested_role');
