@@ -18,7 +18,7 @@ CoursePulse is a privacy-first course feedback and learning analytics portal for
 
 ## Functional scope
 ### Identity
-Signup with a unique username, email verification for account creation, username/password sign-in, sign-in/out, email-based password recovery/reset/change, session lifecycle, account suspension, three roles and admin-managed role assignment. Email is not a sign-in identifier; no phone/SMS sign-in. No self-service role escalation.
+Signup with a unique username and password only (no email or phone collection), username/password sign-in, sign-in/out, in-session password change, administrator-assisted recovery for locked-out accounts, session lifecycle, account suspension, three roles and admin-managed role assignment. New accounts use a private non-deliverable Supabase Auth identity and have no public profile email. Existing accounts retain their current Auth identities. No phone/SMS sign-in and no self-service role escalation.
 
 ### Academic structure
 Departments, academic semesters, courses/course codes, instructor assignments and student enrollments.
