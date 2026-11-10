@@ -73,10 +73,14 @@ export async function POST(request: NextRequest) {
   const username = parsed.data.username.toLowerCase();
   try {
     const address = clientAddress(request);
+    const usernameHash = hashIdentifier('username\0' + username);
     const usernameAddressHash = hashIdentifier('username-ip\0' + username + '\0' + address);
     const addressHash = hashIdentifier('ip\0' + address);
     const admin = createAdminClient();
-    const [usernameLimit, addressLimit] = await Promise.all([
+    const [usernameLimit, usernameAddressLimit, addressLimit] = await Promise.all([
+      admin.rpc('consume_username_login_rate_limit', {
+        p_identifier_hash: usernameHash, p_limit: 20, p_window_seconds: RATE_WINDOW_SECONDS
+      }),
       admin.rpc('consume_username_login_rate_limit', {
         p_identifier_hash: usernameAddressHash, p_limit: 8, p_window_seconds: RATE_WINDOW_SECONDS
       }),
@@ -85,10 +89,10 @@ export async function POST(request: NextRequest) {
       })
     ]);
 
-    if (usernameLimit.error || addressLimit.error) {
+    if (usernameLimit.error || usernameAddressLimit.error || addressLimit.error) {
       return NextResponse.json({ error: 'Sign-in is temporarily unavailable. Please try again shortly.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
     }
-    if (usernameLimit.data !== true || addressLimit.data !== true) {
+    if (usernameLimit.data !== true || usernameAddressLimit.data !== true || addressLimit.data !== true) {
       return NextResponse.json(
         { error: 'Too many sign-in attempts. Please wait and try again.' },
         { status: 429, headers: { 'Retry-After': String(RATE_WINDOW_SECONDS), 'Cache-Control': 'no-store' } }
