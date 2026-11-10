@@ -54,8 +54,9 @@ test.describe('public-page browser smoke', () => {
     await page.goto('/signup');
     await expect(page.getByLabel('Full name')).toBeVisible();
     await expect(page.getByLabel('Choose username')).toBeVisible();
-    await expect(page.getByLabel('Email for verification and recovery')).toBeVisible();
     await expect(page.getByLabel('Password')).toBeVisible();
+    await expect(page.getByLabel('Email address')).toHaveCount(0);
+    await expect(page.getByLabel('Email for verification and recovery')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /create account/i })).toBeEnabled();
   });
 
@@ -83,7 +84,6 @@ test.describe('public-page browser smoke', () => {
     await page.goto('/signup');
     const signupName = page.getByLabel('Full name');
     const signupUsername = page.getByLabel('Choose username');
-    const signupEmail = page.getByLabel('Email for verification and recovery');
     const signupPassword = page.getByLabel('Password');
     const signupSubmit = page.getByRole('button', { name: /create account/i });
 
@@ -91,8 +91,6 @@ test.describe('public-page browser smoke', () => {
     await expect(signupName).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(signupUsername).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(signupEmail).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(signupPassword).toBeFocused();
     await page.keyboard.press('Tab');
