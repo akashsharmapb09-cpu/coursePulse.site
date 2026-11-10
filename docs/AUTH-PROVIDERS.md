@@ -8,7 +8,7 @@ Supabase Auth currently authenticates password credentials with an email address
 
 - Existing accounts receive a unique username derived from the email local-part where possible. Users can change it in Account security.
 - New students choose a username during registration.
-- Email is collected at registration for account verification and password recovery; it is not the sign-in identifier.
+- Email remains attached to the account for verification, recovery and existing account workflows, but it is not the sign-in identifier.
 - Password recovery remains email-based until a separate recovery method is designed and verified.
 - The username is a login identifier, not a role or permission claim. Authorization continues to use the protected profile and database policies.
 - The username lookup is rate-limited by a hash of the username/IP pair and by IP. The lookup limiter fails closed.
