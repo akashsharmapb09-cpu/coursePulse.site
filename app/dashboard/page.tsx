@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile, error } = await supabase.from('users').select('id,email,full_name,role,is_active').eq('id', user.id).single();
+  const { data: profile, error } = await supabase.from('users').select('id,email,username,full_name,role,is_active').eq('id', user.id).single();
   if (error || !profile || !profile.is_active) redirect('/login?error=disabled');
   if (profile.role === 'ADMIN') {
     const [{ data: assurance }, { data: factors }] = await Promise.all([
