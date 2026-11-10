@@ -12,6 +12,10 @@ describe('account profile update boundary', () => {
     expect(route).toContain("getCurrentUser(supabase)");
     expect(route).toContain(".update(parsed.data)");
     expect(route).toContain(".eq('id', auth.user.id)");
+    expect(route).toContain('admin.auth.admin.updateUserById(auth.user.id');
+    expect(route).toContain('usernameToAuthEmail(data.username)');
+    expect(route).toContain(".update({ username: auth.profile.username })");
+    expect(route).toContain('usesPrivateUsernameIdentity');
     expect(route).not.toContain('user_id');
     expect(route).not.toContain('role:');
   });
