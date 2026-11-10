@@ -18,7 +18,7 @@ CoursePulse is a privacy-first course feedback and learning analytics portal for
 
 ## Functional scope
 ### Identity
-Signup, email confirmation, sign-in/out, password recovery/reset/change, session lifecycle, account suspension, three roles and admin-managed role assignment. No self-service role escalation.
+Signup with a unique username, email verification for account creation, username/password sign-in, sign-in/out, email-based password recovery/reset/change, session lifecycle, account suspension, three roles and admin-managed role assignment. Email is not a sign-in identifier; no phone/SMS sign-in. No self-service role escalation.
 
 ### Academic structure
 Departments, academic semesters, courses/course codes, instructor assignments and student enrollments.
