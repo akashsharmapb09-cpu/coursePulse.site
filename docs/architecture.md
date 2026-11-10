@@ -7,7 +7,7 @@
 - Vercel hosting; GitHub Actions dependency audit, Prisma validation, TypeScript, Vitest and Next.js production build.
 
 ## Runtime modules
-- Identity and profile: sign-up, email confirmation, login/logout, password reset/change, display-name update, active-account checks and role protection.
+- Identity and profile: username/password-only signup and sign-in, server-generated private non-deliverable Supabase Auth identities for new accounts, no email/phone collection, in-session password change, administrator-assisted recovery for locked-out accounts, username/display-name update, active-account checks and role protection.
 - Academic catalogue: departments, semesters, courses/course codes, enrollments and instructor assignments.
 - Feedback lifecycle: multi-question form schema, categories, deadlines, open/close, form version snapshots and restore.
 - Student submission: private eligibility ledger, atomic duplicate prevention, anonymous answer storage, completion status, history and confirmation.
@@ -23,7 +23,7 @@ The legacy `public.responses` table still has `student_id` alongside answers. It
 Free-text questions can be collected, but raw text is not included in ordinary analytics or exports. A privacy-reviewed anonymized comment workflow is not implemented.
 
 ## Authorization and operations
-Every route authenticates and resolves role from protected server-side profile data. RLS scopes student enrollments, instructor ownership/assignment and admin actions. The private schema contains eligibility, rate limits, feedback-version snapshots, deletion requests and SECURITY DEFINER helpers. Admin RPCs require AAL2. Profile self-update is limited to `users.full_name`. Deletion requests can be reviewed and audited, but actual Supabase Auth account deletion is a separate authorized owner operation; the app has no service-role credential for automatic deletion.
+Every route authenticates and resolves role from protected server-side profile data. RLS scopes student enrollments, instructor ownership/assignment and admin actions. The private schema contains eligibility, rate limits, feedback-version snapshots, deletion requests and SECURITY DEFINER helpers. Admin RPCs require AAL2. Profile self-update is limited to `users.full_name` and `users.username`; username-to-private Auth identity resolution is server-only and rate-limited. New email-free profiles store `users.email = NULL`; existing email identities remain unchanged. Deletion requests can be reviewed and audited, but actual Supabase Auth account deletion is a separate authorized owner operation; the app has no service-role credential for automatic deletion.
 
 Production database changes must be additive, reviewed, recorded in the Supabase migration ledger and tested before deployment. Never reset production or use student data for an unreviewed test. Preview and production currently share the production Supabase project, so browser tests that create records require a disposable staging project.
 

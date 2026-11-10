@@ -1,32 +1,39 @@
-# CoursePulse email and password sign-in
+# CoursePulse username and password authentication
 
-The login page exposes email and password authentication only.
+CoursePulse uses **username + password only** for public sign-in and signup. The forms do not ask for a Gmail address, another email address, or a phone number. No SMS or phone sign-in is offered.
 
-- Existing users sign in with their email address and password.
-- New users can create Student accounts with email confirmation.
-- Protected Admin registration requires the server-verified administrator signup code.
-- Google OAuth and mobile/SMS sign-in are not offered in the CoursePulse login interface.
+## How identity works
 
-## Email confirmation
+Hosted Supabase password authentication uses an email or phone identity. To support username-only accounts without collecting an email or phone number, CoursePulse creates a private, server-generated Auth identity at the reserved `accounts.coursepulse.invalid` domain. The `.invalid` domain is non-deliverable and is never shown to users.
 
-New account confirmation returns through the application callback at `/auth/confirm`. Student sign-up continues to `/dashboard`; protected Admin sign-up continues through `/auth/complete` before opening the dashboard.
+- New public accounts provide only full name, a unique username and a password.
+- Signup runs on the trusted server. It uses the Supabase Admin API to create and auto-confirm a Student account; the Admin create-user operation does not send a confirmation email.
+- The Auth user keeps the generated identity internally so Supabase can verify the password. The public `users.email` profile field is set to `NULL` for these accounts.
+- Username-to-Auth-identity resolution happens only on the server. The browser never receives the generated identity.
+- Existing accounts keep their current Auth identity and password. Their first username is backfilled from the email local-part where possible; they can change it in Account security. Existing email addresses are not deleted or migrated by this feature.
+- The username is a login identifier, not a role or permission claim. Public signup always creates a Student; protected administrative workflows assign other roles.
+- Username signup and sign-in use keyed-hash rate limits for username, username/IP pair and IP. Limiter failures are closed, and account creation is restricted to same-origin requests.
+- Signup and username login require the server-only `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`). Never expose that key with a `NEXT_PUBLIC_` prefix.
 
-Set `NEXT_PUBLIC_APP_URL` to the canonical application URL for the relevant Vercel environment. Add the matching `/auth/confirm` callback URL to Supabase Authentication → URL Configuration.
+## Password recovery
 
-## Protected administrator registration
+New email-free accounts cannot receive an email reset link. Users can change their password while signed in from Account security. If locked out, they must contact their college administrator for a controlled password reset. Do not imply that a self-service email reset is available for these accounts.
 
-- The signup screen offers **Student** and **Admin** account types. Student is the default.
-- Admin registration requires the shared code. The server validates it; the browser never assigns the role directly.
-- The Vercel project must have the encrypted server-only environment variable `ADMIN_SIGNUP_CODE` set for Production, Preview, and Development. Never use a `NEXT_PUBLIC_` prefix for this secret.
-- The admin verification cookie is HTTP-only, signed, short-lived, and bound to the email address when applicable.
-- After email confirmation, the authenticated server flow calls the database function `claim_admin_signup`, which verifies the code hash in a private table and upgrades only that account to Admin.
-- Existing Admin sign-in does not ask for the signup code.
-- Keep the database migration `20261104190000_admin_signup_code_guard.sql` in sync with the live Supabase project.
+## Roles and account creation
+
+Public registration starts as Student. HOD and Super Admin access remains controlled by existing protected administrative workflows. User metadata is used only to initialize the profile; it is not used for authorization. Admin MFA and database RLS continue to protect privileged operations.
 
 ## Verification checklist
 
-- [ ] Email/password sign-in works for an existing account.
-- [ ] Student registration sends an email confirmation.
-- [ ] Admin registration rejects an incorrect code.
-- [ ] Admin registration succeeds only after server-side code validation and identity confirmation.
-- [ ] Existing email/password login remains available after signup.
+- [ ] Sign-in and signup show no email or phone fields.
+- [ ] New Student signup creates an auto-confirmed Auth user and an application profile whose email is NULL.
+- [ ] New users can immediately sign in with username and password after signup.
+- [ ] Existing active accounts can sign in with their assigned username and current password.
+- [ ] Unknown usernames and incorrect passwords return the same public failure.
+- [ ] Inactive accounts cannot sign in.
+- [ ] Username signup/login rate limits work and fail closed.
+- [ ] Duplicate usernames are rejected by the database unique constraint.
+- [ ] Signed-in password change works for email-free accounts.
+- [ ] Locked-out email-free account recovery is handled by a college administrator.
+- [ ] Student, Teacher, HOD and Super Admin authorization remains unchanged.
+- [ ] Real browser tests cover successful and failed sign-in using QA accounts.

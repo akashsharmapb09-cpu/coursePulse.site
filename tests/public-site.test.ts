@@ -27,7 +27,10 @@ describe('public college-project website experience',()=>{
     expect(home).toContain('href="/login"');
     expect(home).toContain('href="/signup"');
     expect(signup).toContain('<LoginForm initialMode="signup" />');
-    expect(loginForm).toContain("useState<'signin' | 'signup' | 'forgot'>(initialMode)");
+    expect(loginForm).toContain("useState<'signin' | 'signup'>(initialMode)");
+    expect(loginForm).not.toContain("mode === 'forgot'");
+    expect(loginForm).not.toContain('type="email"');
+    expect(loginForm).not.toContain('name="email"');
     expect(robots).toContain("'/signup'");
     expect(signup).toContain("robots: { index: false, follow: false }");
   });

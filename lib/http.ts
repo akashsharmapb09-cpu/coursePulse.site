@@ -5,7 +5,7 @@ export function jsonError(message: string, status = 400) {
 export async function getCurrentUser(supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>) {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;
-  const { data: profile, error: profileError } = await supabase.from('users').select('id,email,full_name,role,is_active').eq('id', user.id).single();
+  const { data: profile, error: profileError } = await supabase.from('users').select('id,email,username,full_name,role,is_active').eq('id', user.id).single();
   if (profileError || !profile || !profile.is_active) return null;
   if (profile.role === 'ADMIN') { const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(); if (assuranceError || assurance?.currentLevel !== 'aal2') return null; }
   return { user, profile };
