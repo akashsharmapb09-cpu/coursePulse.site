@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { usernameToAuthEmail } from '@/lib/auth/username-identity';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -109,9 +110,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sign-in is temporarily unavailable. Please try again shortly.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
     }
 
-    const usableProfile = Boolean(profile?.is_active && profile.email);
+    const usableProfile = Boolean(profile?.is_active);
     const dummyEmail = 'unknown-' + hashIdentifier(username).slice(0, 16) + '@coursepulse.invalid';
-    const authEmail = usableProfile ? profile!.email! : dummyEmail;
+    const authEmail = usableProfile ? (profile!.email || usernameToAuthEmail(username)) : dummyEmail;
     const supabase = await createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: authEmail,
