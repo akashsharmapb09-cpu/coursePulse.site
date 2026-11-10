@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 const login = readFileSync(resolve(process.cwd(), 'components/login-form.tsx'), 'utf8');
 const loginRoute = readFileSync(resolve(process.cwd(), 'app/api/auth/username-login/route.ts'), 'utf8');
 const signupRoute = readFileSync(resolve(process.cwd(), 'app/api/auth/username-signup/route.ts'), 'utf8');
+const identity = readFileSync(resolve(process.cwd(), 'lib/auth/username-identity.ts'), 'utf8');
 
 describe('authentication response privacy', () => {
   it('uses the same public sign-in failure for unknown usernames and incorrect passwords', () => {
@@ -21,7 +22,8 @@ describe('authentication response privacy', () => {
     expect(signupRoute).toContain("email_confirm: true");
     expect(signupRoute).toContain("return NextResponse.json({ success: true }");
     expect(signupRoute).not.toContain('return NextResponse.json({ email:');
-    expect(signupRoute).toContain('accounts.coursepulse.invalid');
+    expect(signupRoute).toContain('usernameToAuthEmail(username)');
+    expect(identity).toContain('accounts.coursepulse.invalid');
   });
 
   it('clearly explains administrator-only recovery for accounts without an email', () => {
