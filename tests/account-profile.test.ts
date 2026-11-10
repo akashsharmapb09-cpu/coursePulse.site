@@ -8,7 +8,7 @@ const usernameMigration = readFileSync(resolve(process.cwd(), 'supabase/migratio
 const http = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
 
 describe('account profile update boundary', () => {
-  it('updates only the active account name and derives the user id from authentication', () => {
+  it('updates only the active account name or username and derives the user id from authentication', () => {
     expect(route).toContain("getCurrentUser(supabase)");
     expect(route).toContain(".update(parsed.data)");
     expect(route).toContain(".eq('id', auth.user.id)");
