@@ -11,7 +11,8 @@ describe('username and password authentication', () => {
     expect(login).toContain('Sign in with your username and password.');
     expect(login).toContain('>Username<span');
     expect(login).not.toContain('signInWithPassword({ email: email.trim()');
-    expect(login).not.toMatch(/mode === 'signin'[^\\n]*Email address/);
+    expect(login).toContain("mode === 'signin' && <label>Username");
+    expect(login).not.toContain("mode === 'signin' && <label>Email address");
   });
 
   it('keeps email limited to signup verification and password recovery', () => {
