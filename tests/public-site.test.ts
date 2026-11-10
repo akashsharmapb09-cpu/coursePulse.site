@@ -29,7 +29,8 @@ describe('public college-project website experience',()=>{
     expect(signup).toContain('<LoginForm initialMode="signup" />');
     expect(loginForm).toContain("useState<'signin' | 'signup'>(initialMode)");
     expect(loginForm).not.toContain("mode === 'forgot'");
-    expect(loginForm).not.toContain('Email address');
+    expect(loginForm).not.toContain('type="email"');
+    expect(loginForm).not.toContain('name="email"');
     expect(robots).toContain("'/signup'");
     expect(signup).toContain("robots: { index: false, follow: false }");
   });
