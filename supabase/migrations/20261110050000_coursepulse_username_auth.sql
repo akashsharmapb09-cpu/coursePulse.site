@@ -147,6 +147,9 @@ create table if not exists private.username_login_rate_limits (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists username_login_rate_limits_updated_at_idx
+  on private.username_login_rate_limits (updated_at);
+
 revoke all on private.username_login_rate_limits from public, anon, authenticated, service_role;
 
 create or replace function private.consume_username_login_rate_limit(
