@@ -3,57 +3,67 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const login = readFileSync(resolve(process.cwd(), 'components/login-form.tsx'), 'utf8');
-const route = readFileSync(resolve(process.cwd(), 'app/api/auth/username-login/route.ts'), 'utf8');
+const loginRoute = readFileSync(resolve(process.cwd(), 'app/api/auth/username-login/route.ts'), 'utf8');
+const signupRoute = readFileSync(resolve(process.cwd(), 'app/api/auth/username-signup/route.ts'), 'utf8');
+const identity = readFileSync(resolve(process.cwd(), 'lib/auth/username-identity.ts'), 'utf8');
 const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261110050000_coursepulse_username_auth.sql'), 'utf8');
 
-describe('username and password authentication', () => {
-  it('shows username rather than email or phone on the sign-in form', () => {
+describe('username and password authentication without email collection', () => {
+  it('shows only username and password on sign-in and signup', () => {
     expect(login).toContain('Sign in with your username and password.');
-    expect(login).toContain('>Username<span');
-    expect(login).not.toContain('signInWithPassword({ email: email.trim()');
-    expect(login).toContain("mode === 'signin' && <label>Username");
-    expect(login).not.toContain("mode === 'signin' && <label>Email address");
+    expect(login).toContain('No Gmail, email address or phone number needed.');
+    expect(login).toContain("mode === 'signin' ? 'Username' : 'Choose username'");
+    expect(login).toContain("mode === 'signup' && <label>Full name");
+    expect(login).not.toContain('Email address');
+    expect(login).not.toContain('Email for verification');
+    expect(login).not.toContain('resetPasswordForEmail');
+    expect(login).not.toContain('createClient');
   });
 
-  it('keeps email limited to signup verification and password recovery', () => {
-    expect(login).toContain('Your email stays on your account for verification, recovery and existing account workflows.');
-    expect(login).toContain('Email for verification and recovery');
-    expect(login).toContain('resetPasswordForEmail(email.trim()');
-    expect(login).toContain('username: username.trim().toLowerCase()');
+  it('creates a server-side confirmed Student account with a reserved internal identity', () => {
+    expect(signupRoute).toContain('admin.auth.admin.createUser({');
+    expect(signupRoute).toContain('email: authEmail');
+    expect(signupRoute).toContain('email_confirm: true');
+    expect(signupRoute).toContain('user_metadata: { full_name: fullName, username }');
+    expect(signupRoute).toContain("profile.role !== 'STUDENT'");
+    expect(signupRoute).toContain("admin.rpc('consume_username_login_rate_limit'");
+    expect(signupRoute).toContain('isAllowedOrigin(request)');
+    expect(signupRoute).toContain('return NextResponse.json({ success: true }');
+    expect(signupRoute).not.toContain('email: parsed.data');
+    expect(identity).toContain("accounts.coursepulse.invalid");
   });
 
-  it('resolves the username on the server and never returns the Auth email', () => {
-    expect(route).toContain(".select('email,is_active')");
-    expect(route).toContain(".eq('username', username)");
-    expect(route).toContain('supabase.auth.signInWithPassword({');
-    expect(route).toContain('return authFailure()');
-    expect(route).not.toContain('profile.email }');
-    expect(route).toContain("'Cache-Control': 'no-store'");
+  it('resolves usernames to private Auth identities without returning them to the browser', () => {
+    expect(loginRoute).toContain(".select('email,is_active')");
+    expect(loginRoute).toContain(".eq('username', username)");
+    expect(loginRoute).toContain('supabase.auth.signInWithPassword({');
+    expect(loginRoute).toContain('profile!.email || usernameToAuthEmail(username)');
+    expect(loginRoute).toContain('return authFailure()');
+    expect(loginRoute).toContain("'Cache-Control': 'no-store'");
+    expect(loginRoute).toContain("createHmac('sha256', secret)");
   });
 
-  it('applies same-origin validation and independent IP/username rate limits', () => {
-    expect(route).toContain('isAllowedOrigin(request)');
-    expect(route).toContain('usernameHash');
-    expect(route).toContain('usernameAddressHash');
-    expect(route).toContain("createHmac('sha256', secret)");
-    expect(route).not.toContain("createHash('sha256')");
-    expect(route).toContain('addressHash');
-    expect(route).toContain('p_limit: 20');
-    expect(route).toContain('p_limit: 8');
-    expect(route).toContain('p_limit: 40');
-    expect(route).toContain('if (usernameLimit.error || usernameAddressLimit.error || addressLimit.error)');
+  it('applies independent signup and login rate limits and fails closed', () => {
+    expect(signupRoute).toContain('usernameHash');
+    expect(signupRoute).toContain('usernameAddressHash');
+    expect(signupRoute).toContain('addressHash');
+    expect(signupRoute).toContain('p_limit: 5');
+    expect(signupRoute).toContain('p_limit: 20');
+    expect(signupRoute).toContain('if (usernameLimit.error || usernameAddressLimit.error || addressLimit.error)');
+    expect(loginRoute).toContain('p_limit: 20');
+    expect(loginRoute).toContain('p_limit: 8');
+    expect(loginRoute).toContain('p_limit: 40');
+    expect(loginRoute).toContain('if (usernameLimit.error || usernameAddressLimit.error || addressLimit.error)');
   });
 
-  it('keeps the username mapping private and limits the rate-limit RPC to service_role', () => {
+  it('keeps the private identity out of public profiles and preserves protected username rules', () => {
+    expect(migration).toContain("split_part(lower(coalesce(new.email, '')), '@', 2) = 'accounts.coursepulse.invalid'");
+    expect(migration).toContain('then null');
     expect(migration).toContain('grant update (username) on public.users to authenticated');
     expect(migration).toContain('row_number() over (partition by base_name order by id)');
-    expect(migration).toContain("left(r.base_name, 21) || '-' || left(replace(r.id::text, '-', ''), 8)");
-    expect(migration).toContain('username_login_rate_limits_updated_at_idx');
     expect(migration).toContain('create trigger zz_auth_users_sync_coursepulse_username');
-    expect(migration).toContain('drop trigger if exists zz_auth_users_sync_coursepulse_username');
     expect(migration).toContain('revoke all on private.username_login_rate_limits from public, anon, authenticated, service_role');
-    expect(migration).toContain('grant execute on function public.consume_username_login_rate_limit(text, integer, integer)');
     expect(migration).toContain('to service_role');
-    expect(migration).not.toMatch(/grant select on public\.users to anon/i);
+    expect(migration).not.toMatch(/grant select on public\\.users to anon/i);
   });
 });
