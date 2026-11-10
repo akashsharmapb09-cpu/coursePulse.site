@@ -43,6 +43,9 @@ describe('username and password authentication', () => {
 
   it('keeps the username mapping private and limits the rate-limit RPC to service_role', () => {
     expect(migration).toContain('grant update (username) on public.users to authenticated');
+    expect(migration).toContain('row_number() over (partition by base_name order by id)');
+    expect(migration).toContain("left(r.base_name, 21) || '-' || left(replace(r.id::text, '-', ''), 8)");
+    expect(migration).toContain('username_login_rate_limits_updated_at_idx');
     expect(migration).toContain('create trigger zz_auth_users_sync_coursepulse_username');
     expect(migration).toContain('drop trigger if exists zz_auth_users_sync_coursepulse_username');
     expect(migration).toContain('revoke all on private.username_login_rate_limits from public, anon, authenticated, service_role');
