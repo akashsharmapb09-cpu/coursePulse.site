@@ -16,6 +16,7 @@ describe('username and password authentication', () => {
   });
 
   it('keeps email limited to signup verification and password recovery', () => {
+    expect(login).toContain('Your email stays on your account for verification, recovery and existing account workflows.');
     expect(login).toContain('Email for verification and recovery');
     expect(login).toContain('resetPasswordForEmail(email.trim()');
     expect(login).toContain('username: username.trim().toLowerCase()');
