@@ -127,7 +127,7 @@ end;
 $function$;
 
 drop trigger if exists auth_users_sync_coursepulse_username on auth.users;
-create trigger auth_users_sync_coursepulse_username
+create trigger zz_auth_users_sync_coursepulse_username
 after insert on auth.users
 for each row execute function private.sync_coursepulse_auth_username();
 
