@@ -25,6 +25,7 @@ enum CourseStatus {
 model User {
   id        String   @id @db.Uuid
   email     String?
+  username  String   @unique
   fullName  String   @default("") @map("full_name")
   role      AppRole  @default(STUDENT)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
