@@ -32,8 +32,11 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     setError('');
 
     const normalizedUsername = username.trim().toLowerCase();
-    if (!/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
-      setError('Username must be 3–24 characters using lowercase letters, numbers or underscores.');
+    const instructorEmailSignIn = mode === 'signin' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedUsername);
+    if (!instructorEmailSignIn && !/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
+      setError(mode === 'signup'
+        ? 'Username must be 3–24 characters using lowercase letters, numbers or underscores.'
+        : 'Enter your Student username or Instructor college email.');
       return;
     }
 
@@ -59,6 +62,26 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     setBusy(true);
     try {
       const supabase = createClient();
+      if (instructorEmailSignIn) {
+        const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email: normalizedUsername, password });
+        if (signInError || !signIn.user) throw new Error('Email or password is incorrect.');
+        const { data: instructorProfile, error: instructorProfileError } = await supabase
+          .from('users').select('role,is_active').eq('id', signIn.user.id).maybeSingle();
+        if (instructorProfileError || !instructorProfile?.is_active || !['INSTRUCTOR','ADMIN'].includes(instructorProfile.role)) {
+          await supabase.auth.signOut();
+          throw new Error('This email is not linked to an active Instructor account. Students should sign in with their username.');
+        }
+        if (instructorProfile.role === 'ADMIN') {
+          const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+          if (assuranceError || assurance?.currentLevel !== 'aal2') {
+            await supabase.auth.signOut();
+            throw new Error('Complete administrator multi-factor authentication before opening this workspace.');
+          }
+        }
+        router.replace('/dashboard');
+        router.refresh();
+        return;
+      }
       const chosenProgramme = programme === 'Other' ? customProgramme.trim() : programme;
       const { data: result, error: functionError } = await supabase.functions.invoke('student-username-auth', {
         body: mode === 'signup'
@@ -128,7 +151,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     <h2>{isSignup ? 'Create your student account' : 'Welcome back'}</h2>
     <p className="muted">{isSignup
       ? 'Enter your name, choose your programme and create a username and password. No email address is needed.'
-      : 'Sign in with the username and password you created. No email or verification code is needed.'}</p>
+      : 'Students sign in with their username. Instructors sign in with their college email and password.'}</p>
 
     <form onSubmit={submit} className="stack-form">
       {isSignup && <>
@@ -144,8 +167,8 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
           <input value={customProgramme} onChange={event => setCustomProgramme(event.target.value)} minLength={2} maxLength={80} required placeholder="For example, B.Des or LLB"/>
         </label>}
       </>}
-      <label>Username
-        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[a-zA-Z0-9_]{3,24}" required placeholder={isSignup ? "Choose a username" : "Enter your username"}/></span>
+      <label>{isSignup ? 'Username' : 'Student username or Instructor email'}
+        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student username or instructor@college.edu"}/></span>
       </label>
       {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
       <label>Password
