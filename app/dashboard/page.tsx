@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Dashboard } from '@/components/dashboard';
+import { AdminMfaGate } from '@/components/admin-mfa-gate';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,8 @@ export default async function DashboardPage() {
 
   if (profile.role === 'ADMIN') {
     const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (assuranceError || assurance?.currentLevel !== 'aal2') redirect('/login?reason=mfa-required');
+    if (assuranceError) redirect('/login?reason=mfa-error');
+    if (assurance?.currentLevel !== 'aal2') return <AdminMfaGate />;
   }
 
   return <Dashboard profile={{
