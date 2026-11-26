@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PublicFooter } from '@/components/public-site';
 import { Activity, ArrowRight, BarChart3, BookOpen, CheckCircle2, MessageSquareText, Star } from 'lucide-react';
 
 export const metadata = {
@@ -11,7 +12,7 @@ export default function Home() {
   return <main className="min-h-screen overflow-hidden bg-[#f6f3eb] text-[#20352a]">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
       <Link href="/" className="flex items-center gap-3 text-lg font-extrabold"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#245b3e] text-white"><Activity size={20}/></span>CoursePulse</Link>
-      <nav className="site-nav flex items-center gap-3"><a href="#how-it-works" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] sm:inline-flex">How it works</a><Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open workspace <ArrowRight size={16}/></Link></nav>
+      <nav className="site-nav flex items-center gap-1"><a href="#how-it-works" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] sm:inline-flex">How it works</a><Link href="/about" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] lg:inline-flex">About</Link><Link href="/privacy" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] lg:inline-flex">Privacy</Link><Link href="/cookies" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] lg:inline-flex">Cookies</Link><Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open workspace <ArrowRight size={16}/></Link></nav>
     </header>
     <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-16">
       <div><span className="inline-flex items-center gap-2 rounded-full border border-[#d9e8dc] bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-[#477456]"><span className="h-2 w-2 rounded-full bg-[#63a879]"/>COLLEGE PROJECT</span>
@@ -31,6 +32,6 @@ export default function Home() {
       <div className="mt-12 grid gap-8 md:grid-cols-3"><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">01</span><h3 className="mt-4 text-lg font-extrabold">Choose a course</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">Open the workspace and select one of the example college courses.</p></article><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">02</span><h3 className="mt-4 text-lg font-extrabold">Share feedback</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">Rate teaching clarity, class pace, and learning resources without creating an account.</p></article><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">03</span><h3 className="mt-4 text-lg font-extrabold">Review results</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">See course-level averages and export the project responses as a CSV file.</p></article></div>
     </div></section>
     <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10"><div className="flex flex-col items-start justify-between gap-8 rounded-[2rem] bg-[#214f37] p-8 text-white sm:p-12 lg:flex-row lg:items-center"><div><p className="text-xs font-bold tracking-[.18em] text-[#b8d8c0]">READY TO BEGIN</p><h2 className="mt-3 max-w-xl text-3xl font-extrabold">Make every course conversation count.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#d0e0d3]">Open the workspace and try the feedback flow. Nothing to sign up for.</p></div><Link href="/dashboard" className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#214f37]">Open workspace <ArrowRight size={16}/></Link></div></section>
-    <footer className="border-t border-[#e5ece6] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-8 text-xs text-[#718177] sm:flex-row sm:items-center sm:justify-between lg:px-10"><span>© {new Date().getFullYear()} CoursePulse. College course feedback project.</span><span>No account or role setup required.</span></div></footer>
+    <PublicFooter />
   </main>;
 }

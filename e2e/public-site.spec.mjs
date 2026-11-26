@@ -121,7 +121,7 @@ test.describe('public-page browser smoke', () => {
   });
 
   test('homepage and public content pages no longer advertise login or signup', async ({ page }) => {
-    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/terms', '/support']) {
+    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/cookies', '/terms', '/support']) {
       await page.goto(route);
       await expect(page.locator('a[href="/login"]')).toHaveCount(0);
       await expect(page.locator('a[href="/signup"]')).toHaveCount(0);
@@ -129,6 +129,14 @@ test.describe('public-page browser smoke', () => {
     }
     await page.goto('/');
     await expect(page.locator('a[href="/dashboard"]').first()).toBeVisible();
+  });
+
+  test('home footer exposes About, Privacy Policy and Cookie Policy', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('footer a[href="/about"]')).toBeVisible();
+    await expect(page.locator('footer a[href="/privacy"]')).toBeVisible();
+    await expect(page.locator('footer a[href="/cookies"]')).toBeVisible();
+    await expect(page.locator('footer').getByRole('button', { name: 'Cookie settings' })).toBeVisible();
   });
 
   test('public pages do not throw uncaught browser exceptions', async ({ page }) => {

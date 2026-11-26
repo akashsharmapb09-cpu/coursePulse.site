@@ -1,3 +1,32 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-export const metadata={title:'About CoursePulse',description:'About the CoursePulse college course-feedback project.',alternates:{canonical:'/about'}};
-export default function AboutPage(){return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]"><article className="mx-auto max-w-3xl rounded-3xl border border-[#e2ebe3] bg-white p-8 sm:p-12"><Link href="/" className="text-sm font-bold text-[#477956]">← CoursePulse</Link><p className="mt-8 text-xs font-extrabold tracking-widest text-[#3f6b4b]">ABOUT THE PROJECT</p><h1 className="mt-3 text-3xl font-extrabold">A clearer feedback loop for learning.</h1><p className="mt-5 text-sm leading-7 text-[#526158]">CoursePulse is a college project for collecting student opinions about courses and presenting simple course-level results. It is designed as one public workspace, without login screens or Admin and HOD roles.</p><h2 className="mt-8 text-lg font-extrabold">How it works</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[#526158]"><li>Choose a course and submit an anonymous rating.</li><li>Review average scores for teaching clarity, class pace, and learning resources.</li><li>Export the responses saved in the current browser as a CSV file.</li></ul><h2 className="mt-8 text-lg font-extrabold">Demo data</h2><p className="mt-3 text-sm leading-6 text-[#526158]">This hosted demonstration stores responses in the browser’s local storage. They are not sent to a shared college database and are not visible on another device or browser. Do not enter names, email addresses, roll numbers, or other personal information.</p><div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/dashboard" className="inline-flex items-center rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open the workspace</Link></div></article></main>;}
+import { PublicPage } from '@/components/public-site';
+
+export const metadata: Metadata = {
+  title: 'About CoursePulse',
+  description: 'Learn about CoursePulse, a simple college project for course feedback and results.',
+  alternates: { canonical: '/about' }
+};
+
+export default function AboutPage() {
+  return <PublicPage eyebrow="About the project" title="Course feedback, without the extra complexity." description="CoursePulse is a straightforward college project built to collect course feedback and make the results easy to understand.">
+    <section>
+      <h2>Why CoursePulse exists</h2>
+      <p>The project gives students one simple place to share their experience of a course. It demonstrates how structured feedback can be collected and summarised without building a full college-management or SaaS platform.</p>
+    </section>
+    <section>
+      <h2>What you can do</h2>
+      <p>Choose an example course, rate the overall experience, teaching clarity, class pace, and learning resources, then review the course-level summary. The Results page can also export the responses saved in your browser as a CSV file.</p>
+    </section>
+    <section>
+      <h2>One shared public workspace</h2>
+      <p>There is no sign-in, account registration, Admin role, or HOD role in this version. Every visitor uses the same public project interface.</p>
+    </section>
+    <section>
+      <h2>About the demo data</h2>
+      <p>Feedback is saved in the current browser only. It is not sent to a central college database or shared with visitors on other devices. The course and faculty details shown are example project data and can be replaced with your college information.</p>
+    </section>
+    <p className="public-note">CoursePulse is an academic demonstration, not an official college feedback or student-record system. Please do not enter private or confidential information.</p>
+    <p><Link className="inline-link" href="/privacy">Read the Privacy Policy</Link> or <Link className="inline-link" href="/cookies">review cookie and browser-storage information</Link>.</p>
+  </PublicPage>;
+}
