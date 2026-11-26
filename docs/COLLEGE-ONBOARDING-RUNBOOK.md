@@ -1,7 +1,7 @@
 # College Pilot Onboarding Runbook
 
 **Project:** CoursePulse `.site`  
-**Public URL:** https://coursepulse-site.vercel.app  
+**Public URL:** https://coursepulse.netlify.app  
 **Supabase project ref:** `fwmovyitmtpnwhqmvrgh`  
 **Supabase region:** `us-east-1`  
 **Snapshot date:** 2 November 2026
@@ -31,13 +31,13 @@ Set:
 
 | Supabase setting | Exact value |
 |---|---|
-| Site URL | `https://coursepulse-site.vercel.app` |
-| Additional Redirect URL | `https://coursepulse-site.vercel.app/auth/confirm` |
+| Site URL | `https://coursepulse.netlify.app` |
+| Additional Redirect URL | `https://coursepulse.netlify.app/auth/confirm` |
 | Local development only | `http://localhost:3000/auth/confirm` |
 
 Do not add a broad wildcard for all Vercel deployments. Preview and production currently share the same Supabase project, so preview writes must be treated as production writes.
 
-The Vercel `.site` project already has `NEXT_PUBLIC_APP_URL=https://coursepulse-site.vercel.app` for Production, Preview and Development. Do not change this to the separate SaaS `.com` URL.
+The Vercel `.site` project already has `NEXT_PUBLIC_APP_URL=https://coursepulse.netlify.app` for Production, Preview and Development. Keep this setting on the CoursePulse single-college production URL.
 
 Also inspect **Authentication → Sign In / Providers → Email**:
 - Keep email confirmation enabled for real users.
@@ -46,7 +46,7 @@ Also inspect **Authentication → Sign In / Providers → Email**:
 - Leaked-password protection is reported disabled. Supabase currently makes this feature available on Pro and above; the connected organization is Free. Record the risk or have the project owner decide whether to upgrade before real student accounts are used.
 
 After saving the settings, verify both flows with a controlled test account:
-1. Sign up on the production URL using an approved test mailbox; open the email and confirm that the browser returns to `https://coursepulse-site.vercel.app/auth/confirm`, then reaches the dashboard after login.
+1. Sign up on the production URL using an approved test mailbox; open the email and confirm that the browser returns to `https://coursepulse.netlify.app/auth/confirm`, then reaches the dashboard after login.
 2. Sign out, request password recovery, open the email, verify the callback reaches `/auth/confirm?next=/auth/reset`, set a new password, and sign in with it.
 3. Confirm an unapproved host/redirect is not accepted.
 4. Save the test date, account type (test only), result and screenshot in the college's private acceptance record. Do not put email addresses, tokens or screenshots containing personal data in Git.
