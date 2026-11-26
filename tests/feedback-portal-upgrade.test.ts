@@ -11,6 +11,7 @@ const filteredRpc = read('supabase/migrations/20261126160927_coursepulse_filtere
 const denyProjection = read('supabase/migrations/20261126161143_coursepulse_deny_direct_feedback_projection_reads.sql');
 const finalHardening = read('supabase/migrations/20261126161259_coursepulse_question_catalog_trigger_and_comment_pii_redaction.sql');
 const batchSync = read('supabase/migrations/20261126161742_coursepulse_guard_form_question_batch_sync.sql');
+const trackerBackfill = read('supabase/migrations/20261126162559_coursepulse_backfill_course_submission_tracker.sql');
 
 describe('CoursePulse authenticated feedback portal', () => {
   it('keeps the existing users table canonical while exposing a limited profile view', () => {
@@ -42,6 +43,8 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(tracker).toContain('course_id');
     expect(tracker).not.toMatch(/feedback_id|submission_id|answers|response_id/i);
     expect(schema).toMatch(/create trigger anonymous_submissions_track_course_once/i);
+    expect(trackerBackfill).toMatch(/from private\\.feedback_eligibility[\\s\\S]*?where eligibility\\.consumed = true/i);
+    expect(trackerBackfill).toMatch(/on conflict \\(student_id, course_id\\) do nothing/i);
   });
 
   it('keeps personally identifying student fields off the instructor response projection', () => {
