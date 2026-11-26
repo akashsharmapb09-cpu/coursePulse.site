@@ -15,24 +15,53 @@ export function StudentReminders({courses}:{courses:Course[]}) {
   const [notice,setNotice]=useState('');
   const [error,setError]=useState('');
   const [clock,setClock]=useState(Date.now());
+  const [loaded,setLoaded]=useState(false);
   const courseIds=useMemo(()=>courses.map(c=>c.id),[courses]);
   useEffect(()=>{
+    if(!courses.length||loaded)return;
     try {
       const raw=window.localStorage.getItem(REMINDER_KEY);
-      if(raw){const value:unknown=JSON.parse(raw);if(Array.isArray(value))setReminders(value.filter(item=>isFeedbackReminder(item,courseIds)).slice(0,100));}
+      if(raw){
+        const value:unknown=JSON.parse(raw);
+        if(Array.isArray(value)){
+          const legacy:{[key:string]:{code:string;title:string}}={
+            cse201:{code:'CSE 201',title:'Data Structures'},
+            cse305:{code:'CSE 305',title:'Database Management'},
+            cse310:{code:'CSE 310',title:'Web Development'},
+            cse402:{code:'CSE 402',title:'Operating Systems'}
+          };
+          const migrated=value.map(item=>{
+            if(!item||typeof item!=='object')return item;
+            const row=item as Record<string,unknown>;
+            if(typeof row.courseId!=='string'||courseIds.includes(row.courseId))return item;
+            const prior=legacy[row.courseId];
+            if(!prior)return item;
+            const match=courses.find(course=>
+              (course.course_code??'').toLowerCase()===prior.code.toLowerCase()
+              ||course.title.toLowerCase()===prior.title.toLowerCase()
+            );
+            return match?{...row,courseId:match.id}:item;
+          });
+          setReminders(migrated.filter(item=>isFeedbackReminder(item,courseIds)).slice(0,100));
+        }
+      }
     } catch {setError('Saved reminders could not be read from this browser.');}
     setPermission('Notification' in window?Notification.permission:'unsupported');
     const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(9,0,0,0);
     setReminderAt(formatLocalDateTimeInput(tomorrow));
-    const timer=window.setInterval(()=>setClock(Date.now()),15000);
-    return()=>window.clearInterval(timer);
-  },[courseIds]);
-  useEffect(()=>{try{window.localStorage.setItem(REMINDER_KEY,JSON.stringify(reminders));}catch{setError('The browser could not save your reminders.');}},[reminders]);
+    setLoaded(true);
+  },[courses,courseIds,loaded]);
+  useEffect(()=>{
+    if(!loaded)return;
+    try{window.localStorage.setItem(REMINDER_KEY,JSON.stringify(reminders));}
+    catch{setError('The browser could not save your reminders.');}
+  },[loaded,reminders]);
+  useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),15000);return()=>window.clearInterval(timer);},[]);
   const due=reminders.filter(r=>isFeedbackReminderDue(r,clock));
   const upcoming=reminders.filter(r=>!r.completedAt&&!isFeedbackReminderDue(r,clock)).sort((a,b)=>a.remindAt.localeCompare(b.remindAt));
   const completed=reminders.filter(r=>r.completedAt).sort((a,b)=>(b.completedAt??'').localeCompare(a.completedAt??''));
   useEffect(()=>{
-    if(permission!=='granted'||!('Notification' in window))return;
+    if(!loaded||permission!=='granted'||!('Notification' in window))return;
     const pending=reminders.filter(r=>shouldNotifyFeedbackReminder(r,clock));
     if(!pending.length)return;
     try{
@@ -42,7 +71,7 @@ export function StudentReminders({courses}:{courses:Course[]}) {
       });
       setReminders(current=>current.map(r=>pending.some(p=>p.id===r.id)?{...r,notifiedAt:new Date(clock).toISOString()}:r));
     }catch{/* In-app due list remains available. */}
-  },[permission,reminders,clock,courses]);
+  },[loaded,permission,reminders,clock,courses]);
   function add(event:FormEvent<HTMLFormElement>){
     event.preventDefault();setError('');setNotice('');
     if(!courseIds.includes(courseId)){setError('Choose one of your courses.');return;}
@@ -61,6 +90,7 @@ export function StudentReminders({courses}:{courses:Course[]}) {
   const label=(r:FeedbackReminder)=>courses.find(c=>c.id===r.courseId)?.title??'Course unavailable';
   return <section className="space-y-5">
     <div className="section-heading"><div><h3>Feedback reminders</h3><p>Set a personal reminder for a course feedback session. Reminders are stored in this browser, separately from submissions.</p></div><BellRing size={24}/></div>
+    {!loaded&&<p className="muted">Loading saved reminders…</p>}
     {error&&<p role="alert" className="alert error">{error}</p>}{notice&&<p role="status" className="alert success">{notice}</p>}
     <form onSubmit={add} className="grid gap-3 rounded-2xl border border-[#e5ece6] bg-white p-5 md:grid-cols-[1fr_1fr_auto] md:items-end">
       <label className="text-sm font-semibold">Course<select className="mt-2 w-full rounded-xl border border-[#dce6de] bg-white p-3 font-normal" value={courseId} onChange={e=>setCourseId(e.target.value)} required>{courses.map(c=><option key={c.id} value={c.id}>{c.course_code?c.course_code+' · ':''}{c.title}</option>)}</select></label>
