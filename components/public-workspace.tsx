@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { StudentAccountControl } from '@/components/student-account-control';
-import { Activity, ArrowLeft, ArrowRight, BarChart3, BellRing, BookOpen, Check, CheckCircle2, Clock3, Download, MessageSquareText, RotateCcw, Star, Trash2 } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, Check, CheckCircle2, Clock3, Download, MessageSquareText, RotateCcw, Star, Trash2 } from 'lucide-react';
 import { formatLocalDateTimeInput, isFeedbackReminder, isFeedbackReminderDue, isFutureReminderDateTime, shouldNotifyFeedbackReminder, type FeedbackReminder } from '@/lib/feedback-reminders';
 
 type Course = { id:string; code:string; title:string; teacher:string; semester:string };
