@@ -105,9 +105,9 @@ describe('CoursePulse authenticated feedback portal', () => {
 
   it('includes the role-specific student and instructor workspace features', () => {
     const app = read('components/dashboard.tsx');
-    expect(app).toMatch(/<StudentReminders courses=\{courses\} \/>/);
-    expect(app).toMatch(/<QuestionManagement courses=\{courses\} \/>/);
-    expect(app).toMatch(/<CourseComparison courses=\{courses\} \/>/);
-    expect(app).toMatch(/<InstructorComments courses=\{courses\} \/>/);
+    expect(app).toMatch(/<StudentReminders courses=\{courses\}\s*\/>/);
+    expect(app).toMatch(/<QuestionManagement courses=\{courses\}\s*\/>/);
+    expect(app).toMatch(/<CourseComparison courses=\{courses\}\s*\/>/);
+    expect(app).toMatch(/<InstructorComments courses=\{courses\}\s*\/>/);
   });
 });
