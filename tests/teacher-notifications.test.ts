@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const route = readFileSync(resolve(process.cwd(), 'app/api/teacher-notifications/route.ts'), 'utf8');
@@ -7,6 +7,10 @@ const inbox = readFileSync(resolve(process.cwd(), 'components/teacher-inbox.tsx'
 const triggerMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126122940_coursepulse_teacher_notification_center.sql'), 'utf8');
 const dismissalMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126123713_coursepulse_teacher_notification_dismissal.sql'), 'utf8');
 const digestRefreshMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126124137_coursepulse_refresh_dismissed_feedback_digest.sql'), 'utf8');
+const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
+const originalFeatureMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108153000_coursepulse_student_voice_teacher_notifications.sql'), 'utf8');
+const removalMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126172441_coursepulse_remove_student_voice.sql'), 'utf8');
+const monthlyNotifyRoute = readFileSync(resolve(process.cwd(), 'app/api/admin/teacher-notifications/route.ts'), 'utf8');
 
 describe('teacher Notification Center', () => {
   it('restricts the notification API to the signed-in instructor', () => {
@@ -63,5 +67,41 @@ describe('teacher Notification Center', () => {
     expect(inbox).toContain('Deadline');
     expect(inbox).toContain('Mark read');
     expect(inbox).toContain('Private and anonymous by design');
+  });
+});
+
+
+describe('CoursePulse feature scope', () => {
+  it('removes the unrelated Student Voice UI and dedicated API routes', () => {
+    expect(dashboard).not.toMatch(/Student Voice|StudentVoice|student-voice|student_suggestions/);
+    expect(existsSync(resolve(process.cwd(), 'components/student-voice.tsx'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'components/admin-student-voice.tsx'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'app/api/student-voice/route.ts'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'app/api/admin/student-voice/route.ts'))).toBe(false);
+  });
+
+  it('drops the legacy suggestions table only after locking and confirming it is empty', () => {
+    expect(removalMigration).toContain('LOCK TABLE public.student_suggestions IN ACCESS EXCLUSIVE MODE');
+    expect(removalMigration).toContain('SELECT count(*) INTO v_rows FROM public.student_suggestions');
+    expect(removalMigration).toContain('IF v_rows > 0 THEN');
+    expect(removalMigration).toContain('DROP TABLE public.student_suggestions');
+    expect(removalMigration).not.toContain('DROP TABLE public.teacher_notifications');
+    expect(removalMigration).toContain('DROP FUNCTION IF EXISTS private.guard_student_suggestion_update()');
+  });
+
+  it('keeps the independent private teacher-notification table and recipient policies', () => {
+    expect(originalFeatureMigration).toContain('create table public.teacher_notifications');
+    expect(originalFeatureMigration).toContain('teacher_notifications_recipient_read');
+    expect(originalFeatureMigration).toContain('teacher_notifications_recipient_update');
+    expect(route).toContain(".eq('recipient_id', auth.user.id)");
+    expect(route).toContain("auth.profile.role !== 'INSTRUCTOR'");
+  });
+
+  it('creates teacher review notices from privacy-safe aggregate thresholds', () => {
+    expect(monthlyNotifyRoute).toContain("rpc('get_instructor_aggregates_filtered'");
+    expect(monthlyNotifyRoute).toContain('minimum_responses');
+    expect(monthlyNotifyRoute).toContain('onConflict:');
+    expect(monthlyNotifyRoute).not.toContain('answers');
+    expect(monthlyNotifyRoute).not.toContain('student_id');
   });
 });
