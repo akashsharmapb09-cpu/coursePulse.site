@@ -43,8 +43,8 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(tracker).toContain('course_id');
     expect(tracker).not.toMatch(/feedback_id|submission_id|answers|response_id/i);
     expect(schema).toMatch(/create trigger anonymous_submissions_track_course_once/i);
-    expect(trackerBackfill).toMatch(/from private\\.feedback_eligibility[\\s\\S]*?where eligibility\\.consumed = true/i);
-    expect(trackerBackfill).toMatch(/on conflict \\(student_id, course_id\\) do nothing/i);
+    expect(trackerBackfill).toMatch(/from private\.feedback_eligibility[\s\S]*?where eligibility\.consumed = true/i);
+    expect(trackerBackfill).toMatch(/on conflict \(student_id, course_id\) do nothing/i);
   });
 
   it('keeps personally identifying student fields off the instructor response projection', () => {
