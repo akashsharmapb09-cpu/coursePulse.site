@@ -161,7 +161,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
           <input value={customProgramme} onChange={event => setCustomProgramme(event.target.value)} minLength={2} maxLength={80} required placeholder="For example, B.Des or LLB"/>
         </label>}
       </>}
-      <label>Username
+      <label>{isSignup ? 'Username' : 'Student username or Instructor email'}
         <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student username or instructor@college.edu"}/></span>
       </label>
       {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
