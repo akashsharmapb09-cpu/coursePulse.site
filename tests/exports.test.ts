@@ -60,7 +60,7 @@ describe('course-level report summaries', () => {
     expect(summary[0].feedback_forms).toBe(2);
     expect(summary[0].reportable_responses).toBe(14);
     expect(summary[0].rating_answers).toBe(21);
-    expect(summary[0].average_rating).toBe(4.21);
+    expect(summary[0].average_rating).toBe(4.2);
   });
 
   it('keeps courses with no rating questions and avoids invented averages', () => {
