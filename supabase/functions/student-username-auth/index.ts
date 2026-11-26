@@ -3,8 +3,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const secretKeys = readKeySet("SUPABASE_SECRET_KEYS");
 const publishableKeys = readKeySet("SUPABASE_PUBLISHABLE_KEYS");
-const serviceKey = secretKeys.default ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const publicKey = publishableKeys.default ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? secretKeys.default ?? "";
+const publicKey = Deno.env.get("SUPABASE_ANON_KEY") ?? publishableKeys.default ?? "";
 
 if (!supabaseUrl || !serviceKey || !publicKey) {
   throw new Error("Supabase Auth environment is not configured for student username access.");
