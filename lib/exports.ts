@@ -58,7 +58,7 @@ export function spreadsheetSafeText(value: unknown): string {
 
 export function csvCell(value: unknown): string {
   const text = spreadsheetSafeText(value);
-  return \`"\${text.replace(/"/g, '""')}"\`;
+  return '"' + text.replace(/"/g, '""') + '"';
 }
 
 export function aggregateExportRows(rows: AggregateRow[]) {
