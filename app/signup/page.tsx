@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Create student account',
-  description: 'Register for CoursePulse with your name and college programme.',
+  description: 'Register for CoursePulse using your name, username and college programme. No email address is needed.',
   robots: { index: false, follow: false }
 };
 
