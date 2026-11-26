@@ -29,9 +29,9 @@ test.describe('public-page browser smoke', () => {
   test('visible homepage navigation links have a 44px tap area', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/');
-    await expect(page.locator('.site-nav a[href="/login"]')).toBeVisible();
-    await expect(page.locator('.site-nav a[href="/signup"]')).toBeVisible();
-    const dimensions = await page.locator('.site-nav a:visible').evaluateAll((links) =>
+    await expect(page.locator('.public-header-actions a[href="/login"]')).toBeVisible();
+    await expect(page.locator('.public-header-actions a[href="/signup"]')).toBeVisible();
+    const dimensions = await page.locator('.public-nav a:visible').evaluateAll((links) =>
       links.map((link) => ({
         text: link.textContent?.trim(),
         width: link.getBoundingClientRect().width,
@@ -51,7 +51,7 @@ test.describe('public-page browser smoke', () => {
     await expect(page.getByLabel('Programme / Course')).toBeVisible();
     await expect(page.getByLabel('Username')).toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveCount(0);
-    await expect(page.getByLabel('Confirm password')).toBeVisible();
+    await expect(page.getByLabel('Confirm password', { exact: true })).toBeVisible();
     const programmes = await page.locator('select option').allTextContents();
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'Other']) expect(programmes).toContain(item);
     expect(programmes.join(' ')).not.toMatch(/admin|hod/i);
@@ -65,25 +65,31 @@ test.describe('public-page browser smoke', () => {
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
-    await page.locator('.site-nav a[href="/login"]').waitFor();
+    await page.locator('.public-header-actions a[href="/login"]').waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
-    const about = page.locator('.site-nav a[href="/about"]');
-    const privacy = page.locator('.site-nav a[href="/privacy"]');
-    const cookies = page.locator('.site-nav a[href="/cookies"]');
-    const signin = page.locator('.site-nav a[href="/login"]');
-    const createAccount = page.locator('.site-nav a[href="/signup"]');
+    const features = page.locator('.public-nav a[href="/features"]');
+    const about = page.locator('.public-nav a[href="/about"]');
+    const privacy = page.locator('.public-nav a[href="/privacy"]');
+    const cookies = page.locator('.public-nav a[href="/cookies"]');
+    const contact = page.locator('.public-nav a[href="/contact"]');
+    const signin = page.locator('.public-header-actions a[href="/login"]');
+    const createAccount = page.locator('.public-header-actions a[href="/signup"]');
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
     await page.keyboard.press('Tab');
     await expect(brand).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(howItWorks).toBeFocused();
     await page.keyboard.press('Tab');
+    await expect(features).toBeFocused();
+    await page.keyboard.press('Tab');
     await expect(about).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(privacy).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(cookies).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(contact).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(signin).toBeFocused();
     await page.keyboard.press('Tab');
@@ -139,13 +145,13 @@ test.describe('public-page browser smoke', () => {
     expect(securityResponse.headers()['content-type']).toContain('text/plain');
     const securityText = await securityResponse.text();
     expect(securityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
-    expect(securityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(securityText).toContain('Canonical: https://coursepulse.netlify.app/.well-known/security.txt');
     const rootSecurityResponse = await request.get('/security.txt');
     expect(rootSecurityResponse.status()).toBe(200);
     expect(rootSecurityResponse.headers()['content-type']).toContain('text/plain');
     const rootSecurityText = await rootSecurityResponse.text();
     expect(rootSecurityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
-    expect(rootSecurityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(rootSecurityText).toContain('Canonical: https://coursepulse.netlify.app/.well-known/security.txt');
   });
 
   test('homepage and public information pages advertise student accounts', async ({ page }) => {

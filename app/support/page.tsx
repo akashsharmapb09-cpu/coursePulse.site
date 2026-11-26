@@ -1,11 +1,37 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicPage } from '@/components/public-site';
-export const metadata: Metadata = { alternates: { canonical: '/support' }, title: 'Support', description: 'Help with CoursePulse accounts, feedback forms, and aggregate analytics.' };
-export default function SupportPage() { return <PublicPage eyebrow="Support" title="Find the right help." description="A few common questions about the CoursePulse workflow.">
-  <section><h2>I cannot see a course</h2><p>Students see courses and feedback forms made available to their account through enrollment and publication settings. Ask your institution's administrator to verify your enrollment.</p></section>
-  <section><h2>Why is a report empty?</h2><p>Analytics suppress groups with fewer than five submissions. Filters can also narrow a report to no eligible data.</p></section>
-  <section><h2>Why can an administrator not open management tools?</h2><p>Privileged administrator operations require a verified administrator role and an MFA-authenticated session. Ask your administrator to complete the configured authenticator challenge.</p></section>
-  <section><h2>How do I request account deletion?</h2><p>Sign in, open Account, and use the deletion-request workflow. The request may remain pending while an administrator reviews it.</p></section>
-  <p>For help from your institution, visit the <Link className="inline-link" href="/contact">contact page</Link>.</p>
-</PublicPage>; }
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/support' },
+  title: 'Support',
+  description: 'Help with CoursePulse student accounts, the feedback demo, and local results.'
+};
+
+export default function SupportPage() {
+  return (
+    <PublicPage
+      eyebrow="Support"
+      title="A little help when you need it."
+      description="Answers about the student account and the CoursePulse course-feedback demonstration."
+    >
+      <section>
+        <h2>Where are my courses?</h2>
+        <p>The workspace currently includes example college courses for demonstration. Course availability is not controlled by institution enrollment or HOD approval. If the example course list does not match your project brief, contact the project owner through the channel where you received the CoursePulse link.</p>
+      </section>
+      <section>
+        <h2>Why are my results empty?</h2>
+        <p>The student workspace demo saves feedback in the browser you are using. Results show only submissions made in that same browser, so a new browser or device starts with an empty summary. These are demonstration results, not live college-wide statistics.</p>
+      </section>
+      <section>
+        <h2>Is my feedback linked to my account?</h2>
+        <p>The local demonstration stores feedback separately from student sign-in details. The form does not add your name or username to a response. Keep comments general and do not include personal or confidential information.</p>
+      </section>
+      <section>
+        <h2>I forgot my password. What can I do?</h2>
+        <p>Student accounts use a username rather than an email address, so an email-based password reset is not available. Visit the <Link className="inline-link" href="/contact">contact and support page</Link> for the current project-owner contact route. Never send anyone your password or sign-in codes.</p>
+      </section>
+      <p>Still stuck? See the <Link className="inline-link" href="/contact">contact information</Link> and use the channel where the project was shared.</p>
+    </PublicPage>
+  );
+}

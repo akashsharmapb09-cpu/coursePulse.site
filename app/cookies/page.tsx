@@ -22,7 +22,7 @@ export default function CookiesPage() {
     </section>
     <section>
       <h2>3. Optional analytics</h2>
-      <p>Vercel Analytics and Speed Insights are not loaded until you opt in. If enabled, they send page-view and performance measurements for configured public pages. The student workspace and authentication routes are excluded from these analytics events.</p>
+      <p>CoursePulse is hosted on Netlify. Separately, this build integrates Vercel Analytics and Vercel Speed Insights for optional page-view and performance measurements. Those tools are not loaded until you opt in, and only configured public pages are included; the student workspace and authentication routes are excluded.</p>
     </section>
     <section>
       <h2>4. Your choices</h2>
@@ -36,7 +36,7 @@ export default function CookiesPage() {
     </section>
     <section>
       <h2>6. Third-party services and updates</h2>
-      <p>CoursePulse is hosted on Vercel and uses Supabase for student authentication. Optional analytics are provided by Vercel and are enabled only after consent. This policy may be updated if the project adds other tools or storage technologies.</p>
+      <p>CoursePulse is hosted on Netlify and uses Supabase for student authentication. Optional analytics and performance measurements are provided by Vercel services and are enabled only after consent. Hosting and analytics are separate services. This policy may be updated if the project adds other tools or storage technologies.</p>
     </section>
     <p className="public-note">This page describes the current project implementation. Browser behaviour can vary, and this notice is not a legal compliance certification.</p>
   </PublicPage>;

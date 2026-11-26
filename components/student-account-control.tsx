@@ -76,12 +76,12 @@ export function StudentAccountControl() {
 
   if (loading) return <span className="text-xs font-semibold text-[#526158]" aria-label="Checking student account">Account</span>;
 
-  if (!account) return <div className="flex items-center gap-2">
+  if (!account) return <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
     <Link href="/login" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="rounded-xl px-3 py-2 text-sm font-semibold text-[#456052] hover:bg-[#eff5f0]">Sign in</Link>
     <Link href="/signup" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="rounded-xl bg-[#245b3e] px-4 py-2 text-sm font-bold text-white hover:bg-[#194b34]">Create account</Link>
   </div>;
 
-  return <div className="flex items-center gap-2">
+  return <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
     <span className="hidden max-w-44 items-center gap-2 rounded-xl bg-[#edf5ef] px-3 py-2 text-xs font-semibold text-[#315f43] sm:inline-flex" title={`@${account.username} · ${account.program}`}>
       <UserRound size={15}/><span className="max-w-28 truncate">{account.name}</span><span className="text-[#718177]">· @{account.username}</span><span className="text-[#718177]">· {account.program}</span>
     </span>

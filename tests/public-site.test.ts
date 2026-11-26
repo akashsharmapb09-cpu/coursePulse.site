@@ -64,6 +64,13 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).not.toContain('HOD sign-up');
   });
 
+  it('allows the Netlify production app and deploy previews to call student username auth', () => {
+    expect(authFunction).toContain('https://coursepulse.netlify.app');
+    expect(authFunction).toContain('legacyProductionOrigin');
+    expect(authFunction).toContain('netlifyPreviewOrigin.test(origin)');
+    expect(authFunction).toContain('vercelPreviewOrigin.test(origin)');
+  });
+
   it('creates immediately confirmed internal accounts without sending email', () => {
     expect(authFunction).toContain('admin.auth.admin.createUser');
     expect(authFunction).toContain('email_confirm: true');
