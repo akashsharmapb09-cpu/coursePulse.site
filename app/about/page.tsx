@@ -1,28 +1,3 @@
 import Link from 'next/link';
-
-export const metadata = {
-  title: 'About',
-  description: 'Learn about the CoursePulse college project and its course-feedback workspace.',
-  alternates: { canonical: '/about' }
-};
-
-export default function AboutPage() {
-  return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]">
-    <article className="mx-auto max-w-3xl rounded-3xl border border-[#e2ebe3] bg-white p-8 sm:p-12">
-      <Link href="/" className="text-sm font-bold text-[#477956]">← CoursePulse</Link>
-      <p className="mt-8 text-xs font-extrabold tracking-widest text-[#3f6b4b]">ABOUT THE PROJECT</p>
-      <h1 className="mt-3 text-3xl font-extrabold">A clearer feedback loop for learning.</h1>
-      <p className="mt-5 text-sm leading-7 text-[#526158]">CoursePulse is a college project for collecting course feedback and helping students, instructors and administrators understand academic patterns through role-scoped dashboards.</p>
-      <h2 className="mt-8 text-lg font-extrabold">How it works</h2>
-      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[#526158]">
-        <li>Students see eligible courses and submit feedback forms once per eligible form.</li>
-        <li>Instructors review course-level aggregate insights for courses they own or are assigned to.</li>
-        <li>Administrators manage academic structure and user access through protected workflows.</li>
-      </ul>
-      <h2 className="mt-8 text-lg font-extrabold">Privacy boundary</h2>
-      <p className="mt-3 text-sm leading-6 text-[#526158]">New feedback answers are stored separately from the student eligibility ledger. Reports suppress groups below five responses and exclude free-text answers from standard analytics and exports. This reduces exposure but does not guarantee protection against every statistical inference.</p>
-      <p className="mt-4 text-sm leading-6 text-[#526158]">CoursePulse complements institutional processes; it does not replace approved academic, privacy or student-support policies.</p>
-      <div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/privacy" className="text-sm font-semibold text-[#477956]">Privacy overview</Link><span className="mx-3 text-[#c4cec6]">·</span><Link href="/terms" className="text-sm font-semibold text-[#477956]">Terms of use</Link></div>
-    </article>
-  </main>;
-}
+export const metadata={title:'About CoursePulse',description:'About the CoursePulse college course-feedback project.',alternates:{canonical:'/about'}};
+export default function AboutPage(){return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]"><article className="mx-auto max-w-3xl rounded-3xl border border-[#e2ebe3] bg-white p-8 sm:p-12"><Link href="/" className="text-sm font-bold text-[#477956]">← CoursePulse</Link><p className="mt-8 text-xs font-extrabold tracking-widest text-[#3f6b4b]">ABOUT THE PROJECT</p><h1 className="mt-3 text-3xl font-extrabold">A clearer feedback loop for learning.</h1><p className="mt-5 text-sm leading-7 text-[#526158]">CoursePulse is a college project for collecting student opinions about courses and presenting simple course-level results. It is designed as one public workspace, without login screens or Admin and HOD roles.</p><h2 className="mt-8 text-lg font-extrabold">How it works</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[#526158]"><li>Choose a course and submit an anonymous rating.</li><li>Review average scores for teaching clarity, class pace, and learning resources.</li><li>Export the responses saved in the current browser as a CSV file.</li></ul><h2 className="mt-8 text-lg font-extrabold">Demo data</h2><p className="mt-3 text-sm leading-6 text-[#526158]">This hosted demonstration stores responses in the browser’s local storage. They are not sent to a shared college database and are not visible on another device or browser. Do not enter names, email addresses, roll numbers, or other personal information.</p><div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/dashboard" className="inline-flex items-center rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open the workspace</Link></div></article></main>;}

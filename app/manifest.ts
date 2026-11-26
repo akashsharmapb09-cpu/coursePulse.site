@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'CoursePulse',
     short_name: 'CoursePulse',
-    description: 'Course feedback and aggregate learning analytics in one role-aware workspace.',
+    description: 'A simple college project for anonymous course feedback and course-level results. No login or role setup required.',
     start_url: '/',
     display: 'standalone',
     background_color: '#f7faf7',
