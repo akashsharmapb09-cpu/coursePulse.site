@@ -1,5 +1,42 @@
-import Link from 'next/link';
-export const metadata = { robots: { index: false, follow: false }, alternates: { canonical: '/cookies' }, title: 'Cookie information', description: 'Information about essential CoursePulse authentication cookies.' };
+import type { Metadata } from 'next';
+import { PublicPage } from '@/components/public-site';
+import { CookieSettingsLink } from '@/components/cookie-consent';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+  alternates: { canonical: '/cookies' },
+  title: 'Cookie Policy',
+  description: 'How CoursePulse uses browser local storage and optional analytics in its college-project demo.'
+};
+
 export default function CookiesPage() {
-  return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]"><article className="mx-auto max-w-3xl rounded-3xl border border-[#e2ebe3] bg-white p-8 sm:p-12"><Link href="/" className="text-sm font-bold text-[#477956]">← CoursePulse</Link><p className="mt-8 text-xs font-extrabold tracking-widest text-[#3f6b4b]">COOKIE INFORMATION</p><h1 className="mt-3 text-3xl font-extrabold">Cookie information</h1><p className="mt-4 text-sm leading-7 text-[#526158]">CoursePulse uses essential authentication/session cookies so signed-in users can securely access the workspace. The current application does not include a configured analytics or advertising provider. If non-essential analytics or marketing technologies are added, the institution must review consent requirements and update this page before enabling them.</p><h2 className="mt-8 text-lg font-extrabold">Managing cookies</h2><p className="mt-3 text-sm leading-6 text-[#526158]">You can manage or clear cookies in your browser settings. Clearing authentication cookies may sign you out. The institution must provide a verified privacy contact and any jurisdiction-specific cookie rights in its approved notice.</p><div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/privacy" className="text-sm font-semibold text-[#477956]">Privacy overview</Link></div></article></main>;
+  return <PublicPage eyebrow="Cookies and browser storage" title="Cookie Policy" description="A clear explanation of the browser storage used by CoursePulse and how to manage optional analytics.">
+    <p className="policy-updated">Last reviewed: 26 November 2026</p>
+    <section>
+      <h2>1. Does CoursePulse use cookies?</h2>
+      <p>The current public college-project workflow does not use a login or session cookie. It stores project feedback and your consent choice in browser local storage instead. Local storage is browser storage, not the same thing as an HTTP cookie.</p>
+    </section>
+    <section>
+      <h2>2. Essential browser storage</h2>
+      <p>CoursePulse uses <code>coursepulse-college-demo-responses-v1</code> to remember feedback in the current browser. It uses <code>coursepulse:cookie-consent:v1</code> to remember whether optional analytics have been allowed or rejected. These values stay in the browser being used and are not synchronised across devices.</p>
+    </section>
+    <section>
+      <h2>3. Optional analytics</h2>
+      <p>Vercel Analytics and Speed Insights are not loaded until you opt in. If enabled, they send page-view and performance measurements for configured public pages. The project excludes the feedback workspace and legacy authentication or administration routes from these analytics events.</p>
+    </section>
+    <section>
+      <h2>4. Your choices</h2>
+      <p>You can reject optional analytics, allow them, or choose your preference in the Cookie preferences dialog. After the first choice, use the Cookie settings control in the website footer to reopen your preferences and change the setting.</p>
+      <p><CookieSettingsLink /></p>
+    </section>
+    <section>
+      <h2>5. Managing browser data</h2>
+      <p>You can clear CoursePulse site data through your browser's privacy or site settings. Doing so also removes feedback saved in this browser and resets your consent choice. The Clear demo data option in the Results page removes feedback without changing your cookie preference.</p>
+    </section>
+    <section>
+      <h2>6. Third-party services and updates</h2>
+      <p>The site is hosted on Vercel. Optional analytics are provided by Vercel and are enabled only after consent. This policy may be updated if the project adds other tools or storage technologies.</p>
+    </section>
+    <p className="public-note">This page describes the current project implementation. Browser behaviour can vary, and this notice is not a legal compliance certification.</p>
+  </PublicPage>;
 }

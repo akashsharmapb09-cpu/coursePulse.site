@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 const links = [
   { href: '/features', label: 'Features' },
   { href: '/about', label: 'About' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/cookies', label: 'Cookies' },
   { href: '/contact', label: 'Contact' }
 ];
 
@@ -19,8 +21,11 @@ export function PublicHeader() {
 export function PublicFooter() {
   return <footer className="public-footer">
     <div className="public-footer-brand"><Link className="brand" href="/"><span className="brand-mark">◉</span><span>CoursePulse</span></Link><p>Course feedback, made useful.</p></div>
-    <div className="public-footer-links"><div><b>Explore</b><Link href="/features">Features</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link></div><div><b>Information</b><Link href="/privacy">Privacy policy</Link><Link href="/terms">Terms</Link><Link href="/refund-policy">Refund policy</Link><Link href="/support">Support</Link><CookieSettingsLink/></div></div>
-    <p className="public-footer-bottom">© \${new Date().getFullYear()} CoursePulse. Designed for thoughtful learning improvement.</p>
+    <div className="public-footer-links">
+      <div><b>Explore</b><Link href="/features">Features</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link></div>
+      <div><b>Information</b><Link href="/privacy">Privacy Policy</Link><Link href="/cookies">Cookie Policy</Link><Link href="/terms">Terms</Link><Link href="/support">Support</Link><CookieSettingsLink/></div>
+    </div>
+    <p className="public-footer-bottom">© {new Date().getFullYear()} CoursePulse. College course feedback project.</p>
   </footer>;
 }
 

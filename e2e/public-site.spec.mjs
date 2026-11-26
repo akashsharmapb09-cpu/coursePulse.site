@@ -7,10 +7,10 @@ const publicRoutes = [
 
 test.describe('public-page browser smoke', () => {
   for (const route of publicRoutes) {
-    test(\`\${route} renders successfully with a primary heading\`, async ({ page }) => {
+    test(route + ' renders successfully with a primary heading', async ({ page }) => {
       const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
-      expect(response, \`No document response for \${route}\`).not.toBeNull();
-      expect(response.status(), \`Unexpected HTTP status for \${route}\`).toBe(200);
+      expect(response, 'No document response for ' + route).not.toBeNull();
+      expect(response.status(), 'Unexpected HTTP status for ' + route).toBe(200);
       await expect(page.locator('main')).toHaveCount(1);
       await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
     });
@@ -19,7 +19,7 @@ test.describe('public-page browser smoke', () => {
   test('legacy login and role routes redirect to the public workspace', async ({ page, request }) => {
     for (const route of ['/login', '/signup', '/auth/reset', '/admin', '/super-admin', '/verify']) {
       await page.goto(route);
-      await expect(page).toHaveURL(/\\/dashboard$/);
+      await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     }
     const legacyApi = await request.get('/api/admin/academic');
@@ -45,7 +45,7 @@ test.describe('public-page browser smoke', () => {
   test('legacy authentication pages do not render sign-in or signup forms', async ({ page }) => {
     for (const route of ['/login', '/signup', '/auth/reset']) {
       await page.goto(route);
-      await expect(page).toHaveURL(/\\/dashboard$/);
+      await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByLabel('Email address')).toHaveCount(0);
       await expect(page.getByLabel('Password')).toHaveCount(0);
     }
@@ -53,7 +53,7 @@ test.describe('public-page browser smoke', () => {
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
-    const brand = page.getByRole('link', { name: 'CoursePulse' }).first();
+    const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
     await page.keyboard.press('Tab');
@@ -69,14 +69,14 @@ test.describe('public-page browser smoke', () => {
   const viewportWidths = [320, 375, 480, 768, 1024, 1280, 1440];
   for (const route of viewportRoutes) {
     for (const width of viewportWidths) {
-      test(\`\${route} has no horizontal overflow at \${width}px\`, async ({ page }) => {
+      test(route + ' has no horizontal overflow at ' + width + 'px', async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(route);
         const dimensions = await page.evaluate(() => ({
           viewportWidth: document.documentElement.clientWidth,
           contentWidth: document.documentElement.scrollWidth
         }));
-        expect(dimensions.contentWidth, \`Horizontal overflow on \${route} at \${width}px: \${JSON.stringify(dimensions)}\`).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+        expect(dimensions.contentWidth, 'Horizontal overflow on ' + route + ' at ' + width + 'px: ' + JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
       });
     }
   }
@@ -121,7 +121,7 @@ test.describe('public-page browser smoke', () => {
   });
 
   test('homepage and public content pages no longer advertise login or signup', async ({ page }) => {
-    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/terms', '/support']) {
+    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/cookies', '/terms', '/support']) {
       await page.goto(route);
       await expect(page.locator('a[href="/login"]')).toHaveCount(0);
       await expect(page.locator('a[href="/signup"]')).toHaveCount(0);
@@ -129,6 +129,14 @@ test.describe('public-page browser smoke', () => {
     }
     await page.goto('/');
     await expect(page.locator('a[href="/dashboard"]').first()).toBeVisible();
+  });
+
+  test('home footer exposes About, Privacy Policy and Cookie Policy', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('footer a[href="/about"]')).toBeVisible();
+    await expect(page.locator('footer a[href="/privacy"]')).toBeVisible();
+    await expect(page.locator('footer a[href="/cookies"]')).toBeVisible();
+    await expect(page.locator('footer').getByRole('button', { name: 'Cookie settings' })).toBeVisible();
   });
 
   test('public pages do not throw uncaught browser exceptions', async ({ page }) => {

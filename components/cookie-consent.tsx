@@ -7,7 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 
 type ConsentRecord = { version:1; essential:true; analytics:boolean; updatedAt:string };
 const STORAGE_KEY = 'coursepulse:cookie-consent:v1';
-const PUBLIC_ANALYTICS_PATHS = new Set(['/', '/features', '/about', '/privacy', '/terms', '/contact', '/support', '/refund-policy']);
+const PUBLIC_ANALYTICS_PATHS = new Set(['/', '/features', '/about', '/privacy', '/cookies', '/terms', '/contact', '/support', '/refund-policy']);
 
 function isPublicTelemetryAllowed(url:string) {
   if (!readConsent()?.analytics) return false;
@@ -57,7 +57,7 @@ export function CookieConsent() {
   return <>
     {consent?.analytics && <><Analytics beforeSend={filterPublicTelemetry}/><SpeedInsights beforeSend={filterPublicPerformance}/></>}
     {visible && <section className="cookie-banner" aria-label="Cookie preferences" aria-live="polite">
-      <div className="cookie-banner-copy"><span className="cookie-banner-icon"><Cookie size={18}/></span><div><b>Privacy comes first</b><p>CoursePulse uses essential session and security cookies. Optional analytics and performance measurements are loaded only after you opt in. Only public pages are included; signed-in routes are excluded.</p></div></div>
+      <div className="cookie-banner-copy"><span className="cookie-banner-icon"><Cookie size={18}/></span><div><b>Privacy comes first</b><p>CoursePulse saves project feedback and your consent choice in this browser. Optional page-view analytics and performance measurements are sent to Vercel only after you opt in and only for configured public pages.</p></div></div>
       <div className="cookie-banner-actions"><button className="button subtle compact" onClick={()=>save(false)}>Reject optional</button><button className="button subtle compact" onClick={()=>{setPreferencesOpen(true);setAnalyticsChoice(consent?.analytics??false);}}>Preferences</button><button className="button primary compact" onClick={()=>save(true)}>Allow optional</button></div>
     </section>}
     {!visible && <button className="cookie-settings-trigger" type="button" onClick={()=>{setAnalyticsChoice(consent?.analytics??false);setPreferencesOpen(true);}}><Settings2 size={15}/> Cookie settings</button>}
@@ -65,9 +65,9 @@ export function CookieConsent() {
       <section className="cookie-dialog" role="dialog" aria-modal="true" aria-labelledby="cookie-dialog-title">
         <div className="cookie-dialog-heading"><span className="cookie-banner-icon"><ShieldCheck size={19}/></span><button className="icon-button" type="button" onClick={()=>setPreferencesOpen(false)} aria-label="Close cookie preferences"><X size={17}/></button></div>
         <h2 id="cookie-dialog-title">Cookie preferences</h2>
-        <p>Choose which optional storage preference you allow. Essential authentication and security storage is always active. When enabled, anonymous page views and Core Web Vitals are sent to Vercel for public pages only. Signed-in workspace, admin and authentication routes are excluded.</p>
-        <div className="cookie-preference-row"><span><b>Essential</b><small>Sign-in session, security and application operation.</small></span><label className="cookie-toggle"><input type="checkbox" checked disabled/><span/></label><em>Always on</em></div>
-        <div className="cookie-preference-row"><span><b>Optional analytics and performance</b><small>Anonymous public-page views and Core Web Vitals. No signed-in routes or response content are collected.</small></span><label className="cookie-toggle"><input type="checkbox" checked={analyticsChoice} onChange={event=>setAnalyticsChoice(event.target.checked)}/><span/></label></div>
+        <p>Essential browser storage keeps this local demo's feedback and your consent choice in this browser. Optional analytics send public-page views and Core Web Vitals to Vercel only after you opt in.</p>
+        <div className="cookie-preference-row"><span><b>Essential browser storage</b><small>Remembers project feedback and your consent choice in this browser.</small></span><label className="cookie-toggle"><input type="checkbox" checked disabled/><span/></label><em>Always on</em></div>
+        <div className="cookie-preference-row"><span><b>Optional analytics and performance</b><small>Public-page views and Core Web Vitals are sent to Vercel. The feedback workspace and legacy authentication routes are excluded.</small></span><label className="cookie-toggle"><input type="checkbox" checked={analyticsChoice} onChange={event=>setAnalyticsChoice(event.target.checked)}/><span/></label></div>
         <div className="cookie-dialog-actions"><button className="button subtle" onClick={()=>save(false)}>Reject optional</button><button className="button primary" onClick={()=>save(analyticsChoice)}>Save preferences</button></div>
       </section>
     </div>}
