@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowRight, AtSign, BookOpen, LoaderCircle, LockKeyhole, UserRound } from 'lucide-react';
+import { Activity, ArrowRight, AtSign, BookOpen, Eye, EyeOff, LoaderCircle, LockKeyhole, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 const PROGRAMMES = [
@@ -22,6 +22,8 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
   const [customProgramme, setCustomProgramme] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -119,6 +121,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
   const isSignup = mode === 'signup';
 
   return <div className="auth-card">
+    <Link className="auth-home-link" href="/">← Back to CoursePulse</Link>
     <div className="mobile-brand"><span className="brand-mark"><Activity size={19}/></span> CoursePulse</div>
     <div className="auth-icon"><BookOpen size={21}/></div>
     <span className="eyebrow">STUDENT ACCESS</span>
@@ -142,14 +145,14 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         </label>}
       </>}
       <label>Username
-        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[a-zA-Z0-9_]{3,24}" required placeholder="Choose a username"/></span>
+        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[a-zA-Z0-9_]{3,24}" required placeholder={isSignup ? "Choose a username" : "Enter your username"}/></span>
       </label>
       {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
       <label>Password
-        <span className="input-wrap"><LockKeyhole size={17}/><input type="password" name="password" autoComplete={isSignup ? 'new-password' : 'current-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={isSignup ? 10 : 1} maxLength={72} required placeholder={isSignup ? 'At least 10 characters' : 'Your password'}/></span>
+        <span className="input-wrap password-input-wrap"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} name="password" autoComplete={isSignup ? 'new-password' : 'current-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={isSignup ? 10 : 1} maxLength={72} required placeholder={isSignup ? 'At least 10 characters' : 'Your password'}/><button className="password-visibility-toggle" type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span>
       </label>
       {isSignup && <label>Confirm password
-        <span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={10} maxLength={72} required placeholder="Enter your password again"/></span>
+        <span className="input-wrap password-input-wrap"><LockKeyhole size={17}/><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={10} maxLength={72} required placeholder="Enter your password again"/><button className="password-visibility-toggle" type="button" onClick={() => setShowConfirmPassword(value => !value)} aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword}>{showConfirmPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span>
       </label>}
       {error && <p className="alert error" role="alert">{error}</p>}
       <button type="submit" className="button primary full" disabled={busy}>
@@ -162,7 +165,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       <Link href={isSignup ? '/login' : '/signup'} style={{ minHeight: 44, display: "inline-flex", alignItems: "center", paddingInline: 8 }}>{isSignup ? 'Sign in' : 'Create account'}</Link>
     </p>
     <p className="fine-print">
-      Student accounts only. No email address, verification email, or email recovery is used. Keep your username and password safe; account recovery requires help from the project team.
+      Student accounts use a username and password; email-based password recovery is not available. {isSignup ? "Keep your sign-in details somewhere secure." : <>For account assistance, see <Link className="auth-support-link" href="/contact">Contact &amp; support</Link>. Never share your password or sign-in codes.</>}
     </p>
   </div>;
 }
