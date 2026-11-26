@@ -6,6 +6,9 @@
 - Prisma is the typed schema/client-generation and migration tooling contract; request runtime data access uses signed-in Supabase session clients, not a global Prisma/service-role connection.
 - Vercel hosting; GitHub Actions dependency audit, Prisma validation, TypeScript, Vitest and Next.js production build.
 
+## Deployment boundary
+A deployment serves one college workspace only. The internal organization ID remains as a database security boundary for users, courses, invitations and reports; a unique database guard prevents additional college workspaces. Platform SaaS provisioning and subscription administration are retired.
+
 ## Runtime modules
 - Identity and profile: sign-up, email confirmation, login/logout, password reset/change, display-name update, active-account checks and role protection.
 - Academic catalogue: departments, semesters, courses/course codes, enrollments and instructor assignments.

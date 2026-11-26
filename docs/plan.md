@@ -88,26 +88,13 @@ Institution name/branding; verified support contact; department and semester cat
 - [ ] REQUIRED: authenticated role-matrix tests against QA fixtures, browser tests for Student Voice/instructor inbox/Head review, and security-advisor review after applying this migration.
 
 
-## Multi-college SaaS completion slice — no-cost QA preview
-- [x] DONE: organization registry, tenant_id ownership columns, restrictive tenant-boundary RLS, composite tenant foreign keys, and organization-scoped privileged analytics/report RPCs are applied to the isolated QA project.
-- [x] DONE: Head-owned organization profile; Super Admin-only platform tenant list/status operations and a separate platform-admin membership table.
-- [x] DONE: Super Admin college creation flow provisions a setup-only tenant and invites its first Head. The tenant activates only after the Head verifies the invitation email.
-- [x] DONE: Head roster CSV import and individual account invitations for students and teachers use a server-side Supabase Auth Edge Function. Role and organization are read from the trusted invitation record, never client-editable metadata.
-- [x] DONE: student directory fields include college roll number, course, section and private mobile storage; teachers can view only their assigned class rosters without mobile numbers or feedback linkage.
-- [x] DONE: student QR uses a random 256-bit token, stores only its SHA-256 hash, rotates/revokes previous tokens, and verifies through a one-time URL fragment/POST flow.
-- [x] DONE: Head-only AI report worker is deployed and reads only minimum-five-suppressed monthly aggregate report rows. AI credentials are not present in the preview environment; the feature returns a configuration message until OPENAI_API_KEY and OPENAI_MODEL are added as Supabase Edge Function secrets.
-- [ ] REQUIRED: provision at least one internal CoursePulse platform-admin membership through a trusted operator process; the platform role cannot be self-assigned by a College Head.
-- [ ] REQUIRED: verify Supabase Auth email templates, Site URL and redirect allow-list, and successful real email delivery for a first Head, teacher and student.
-- [ ] REQUIRED: add OPENAI_API_KEY and OPENAI_MODEL through Supabase Edge secrets, then test the actual provider response and AI output review with a Head account.
-- [ ] REQUIRED: seed synthetic QA-only tenant A/B users and run authenticated RLS/IDOR, invitation acceptance, role matrix, QR expiry/revocation and full browser E2E tests. The QA database currently contains no real or synthetic Auth users.
-- [ ] NOT STARTED: payment processor/billing webhooks; subscription fields remain administrative labels only.
-- [ ] REQUIRED BEFORE PRODUCTION: institution-approved privacy/terms and retention rules, WCAG 2.2 AA and screen-reader review, backup/restore evidence, security sign-off and production rollback plan.
-
-- [x] DONE: guarded legacy profile backfill attaches unassigned users to the original tenant only while exactly one organization exists; if multiple tenants exist, migration refuses to guess ownership.
-- [ ] REQUIRED: Deno Edge Function sources are validated/deployed by Supabase separately from the Next.js Node TypeScript project; app typecheck intentionally excludes `supabase/functions`.
-
-- [x] DONE: assigned teachers can add student records/invitations directly to their own courses/sections. The server-side invitation function allows instructors to invite students only and checks each course against primary/secondary instructor assignments; Head continues to have bulk roster import.
-
+## Single-college deployment boundary
+- [x] DONE: multi-college provisioning, tenant registry UI, Platform Super Admin controls, college subscription/status management and college workspace branding controls are removed from this deployment.
+- [x] DONE: the database retains one internal workspace identifier solely for existing row-level security, course ownership, roster and reporting boundaries. A database uniqueness guard prevents creation of a second workspace.
+- [x] DONE: existing Student, Teacher and HOD accounts are retained; unassigned legacy Student profiles are linked to the sole workspace without changing their roles.
+- [x] DONE: Student username signup, Teacher college-email sign-in, HOD-managed Student/Teacher invitations, assigned class rosters, anonymous feedback and protected Teacher analytics remain in scope.
+- [x] DONE: retired Platform Super Admin membership/audit records are preserved in renamed private archive tables; the college-provisioning Edge Function returns HTTP 410.
+- [ ] REQUIRED: exact-HEAD CI, role-specific browser checks, Supabase migration verification, production smoke tests and rollback evidence.
 
 ## Student experience additions — dark mode and personal feedback reminders
 - [x] DONE: site-wide light/dark preference toggle persists locally and respects the operating-system preference on first visit.
