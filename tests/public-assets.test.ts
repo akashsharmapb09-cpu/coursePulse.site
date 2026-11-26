@@ -41,6 +41,6 @@ describe('public app identity assets',()=>{
     expect(layout).toContain("images: ['/opengraph-image']");
     expect(og).toContain('export const size = { width: 1200, height: 630 };');
     expect(og).toContain('Turn student feedback into');
-    expect(og).toContain('COLLEGE PROJECT');
+    expect(og).not.toContain('COLLEGE PROJECT');
   });
 });
