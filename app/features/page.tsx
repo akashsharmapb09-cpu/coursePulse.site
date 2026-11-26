@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { PublicPage } from '@/components/public-site';
-export const metadata: Metadata = { alternates: { canonical: '/features' }, title: 'Features', description: 'Explore CoursePulse feedback collection, role-based workspaces, aggregate analytics, and reporting capabilities.' };
-export default function FeaturesPage() { return <PublicPage eyebrow="Platform capabilities" title="The feedback workflow, in one place." description="CoursePulse connects course feedback collection with permission-aware reporting and academic administration.">
-  <section><h2>Student feedback</h2><p>Students can access feedback forms made available to their enrolled, published courses. Forms support rating, number, single-choice, multiple-selection, yes/no, short-text, and long-text questions. Submission status is tracked separately from the answer payload.</p></section>
-  <section><h2>Instructor insights</h2><p>Instructors can review aggregate response counts and numeric ratings for courses they own or are assigned to. Reporting groups with fewer than five submissions are suppressed; written answers are not included in the aggregate reporting API.</p></section>
-  <section><h2>Academic administration</h2><p>Administrators have workflows for users, roles, departments, semesters, course enrolments, instructor assignments, feedback configuration, and audit review. Privileged account-management operations require administrator multi-factor authentication.</p></section>
-  <section><h2>Exports and reporting</h2><p>Authorized users can export aggregate data in CSV, spreadsheet, or PDF formats. Exports use the same aggregate reporting boundary and do not provide individual answer records.</p></section>
-  <section><h2>Security and privacy controls</h2><p>Supabase authentication, backend role checks, database row-level policies, rate limits, separate eligibility records, and configurable response retention support a privacy-conscious approach. These controls do not constitute a claim of cryptographic anonymity or legal certification.</p></section>
-  <p className="public-note">Available features depend on the signed-in role, assigned courses, database configuration, and administrator MFA status.</p>
-</PublicPage>; }
+import Link from 'next/link';
+import { BarChart3, MessageSquareText, ShieldCheck } from 'lucide-react';
+export const metadata:Metadata={alternates:{canonical:'/features'},title:'Features',description:'Anonymous course feedback and simple course-level results for a college project.'};
+export default function FeaturesPage(){
+ const features=[
+  {icon:MessageSquareText,title:'Anonymous feedback',text:'Students can rate teaching clarity, course pace, learning resources, and their overall course experience.'},
+  {icon:BarChart3,title:'Easy-to-read results',text:'Course-level averages and response counts turn feedback into a simple summary.'},
+  {icon:ShieldCheck,title:'No account setup',text:'The project has no login page, Admin role, or HOD role. Open the workspace and start exploring.'}
+ ];
+ return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]"><section className="mx-auto max-w-4xl"><Link href="/" className="text-sm font-bold text-[#477956]">← CoursePulse</Link><p className="mt-10 text-xs font-extrabold tracking-widest text-[#3f6b4b]">PROJECT FEATURES</p><h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">The essentials for course feedback.</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-[#526158]">CoursePulse keeps the workflow focused on collecting feedback and reviewing results, without SaaS account management or a hierarchy of user roles.</p><div className="mt-10 grid gap-4 md:grid-cols-3">{features.map(({icon:Icon,title,text})=><article key={title} className="rounded-2xl border border-[#e2ebe3] bg-white p-6"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#edf5ef] text-[#477956]"><Icon size={21}/></span><h2 className="mt-5 text-lg font-extrabold">{title}</h2><p className="mt-3 text-sm leading-6 text-[#617467]">{text}</p></article>)}</div><Link href="/dashboard" className="mt-9 inline-flex items-center rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open workspace</Link></section></main>;
+}
