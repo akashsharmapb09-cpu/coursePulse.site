@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 type Account = { name: string; username: string; program: string };
 
@@ -20,7 +21,7 @@ export function StudentAccountControl() {
 
     // Use the single INITIAL_SESSION event as the source of truth. Calling getUser()
     // here as well races the subscription's own session read in WebKit.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       const user = session?.user;
       if (!user) {
         if (alive) {
