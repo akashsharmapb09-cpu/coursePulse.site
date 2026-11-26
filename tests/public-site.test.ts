@@ -97,7 +97,7 @@ describe('CoursePulse email-free student account experience', () => {
   it('shows the signed-in student name, username and programme with sign-out', () => {
     expect(accountControl).toContain('username: profile.username');
     expect(accountControl).toContain('Sign out');
-    expect(publicSite).toContain('<StudentAccountControl/>');
+    expect(publicSite).not.toContain('<StudentAccountControl/>');
     expect(workspace).toContain('<StudentAccountControl />');
   });
 
