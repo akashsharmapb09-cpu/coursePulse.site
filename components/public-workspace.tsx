@@ -2,7 +2,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { StudentAccountControl } from '@/components/student-account-control';
-import { Activity, ArrowLeft, ArrowRight, BarChart3, Bell, BookOpen, Check, CheckCircle2, Download, MessageSquareText, Moon, RotateCcw, Star, Sun, Trash2 } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BarChart3, Bell, BookOpen, CalendarDays, Check, CheckCircle2, Download, MessageSquareText, Moon, RotateCcw, Star, Sun, Trash2 } from 'lucide-react';
 
 type Course = { id:string; code:string; title:string; teacher:string; semester:string };
 type Response = { id:string; courseId:string; overall:number; clarity:number; pace:number; resources:number; comment:string; createdAt:string };
