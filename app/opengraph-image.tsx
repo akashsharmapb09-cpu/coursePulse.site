@@ -21,7 +21,6 @@ export default function OpenGraphImage() {
             </div>
           </div>
           <div style={{fontSize:30,fontWeight:800,letterSpacing:'-1px',display:'flex'}}>CoursePulse</div>
-          <div style={{marginLeft:14,border:'1px solid #d9e6dc',borderRadius:20,padding:'8px 14px',fontSize:14,color:'#52735e',display:'flex'}}>COLLEGE PROJECT</div>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:22,maxWidth:900,zIndex:1}}> 
           <div style={{fontSize:66,fontWeight:800,lineHeight:1.08,letterSpacing:'-3px',display:'flex'}}>Turn student feedback into</div>
