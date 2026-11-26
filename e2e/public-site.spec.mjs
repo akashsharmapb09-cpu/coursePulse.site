@@ -61,8 +61,12 @@ test.describe('public-page browser smoke', () => {
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('link', { name: 'Sign in' }).waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
+    const about = page.getByRole('link', { name: 'About' });
+    const privacy = page.getByRole('link', { name: 'Privacy' });
+    const cookies = page.getByRole('link', { name: 'Cookies' });
     const signin = page.getByRole('link', { name: 'Sign in' });
     const createAccount = page.getByRole('link', { name: 'Create account' }).first();
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
@@ -70,6 +74,12 @@ test.describe('public-page browser smoke', () => {
     await expect(brand).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(howItWorks).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(about).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(privacy).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cookies).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(signin).toBeFocused();
     await page.keyboard.press('Tab');
