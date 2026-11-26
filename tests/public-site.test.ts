@@ -7,6 +7,8 @@ const home = read('app/page.tsx');
 const signup = read('app/signup/page.tsx');
 const login = read('app/login/page.tsx');
 const authForm = read('components/student-auth-form.tsx');
+const authFunction = read('supabase/functions/student-username-auth/index.ts');
+const authMigration = read('supabase/migrations/20261126075627_student_username_auth.sql');
 const accountControl = read('components/student-account-control.tsx');
 const dashboard = read('app/dashboard/page.tsx');
 const workspace = read('components/public-workspace.tsx');
@@ -20,7 +22,7 @@ const consent = read('components/cookie-consent.tsx');
 const terms = read('app/terms/page.tsx');
 const prisma = read('prisma/schema.prisma');
 
-describe('CoursePulse student account experience', () => {
+describe('CoursePulse email-free student account experience', () => {
   it('offers student registration and sign-in from the homepage', () => {
     expect(home).toContain('href="/signup"');
     expect(home).toContain('href="/login"');
@@ -28,6 +30,8 @@ describe('CoursePulse student account experience', () => {
     expect(home).toContain('Student sign in');
     expect(home).toContain('B.Tech');
     expect(home).toContain('B.Com');
+    expect(home).toContain('username');
+    expect(home).not.toContain('using their name, email');
     expect(home).not.toContain('Admin signup');
     expect(home).not.toContain('HOD signup');
   });
@@ -39,20 +43,38 @@ describe('CoursePulse student account experience', () => {
     expect(login).toContain("title: 'Student sign in'");
   });
 
-  it('collects name, programme, email and a confirmed strong password', () => {
-    expect(authForm).toContain('full_name: fullName.trim()');
+  it('collects name, programme, username and a confirmed strong password only', () => {
+    expect(authForm).toContain("full_name: fullName.trim()");
     expect(authForm).toContain('program: chosenProgramme');
-    expect(authForm).toContain('supabase.auth.signUp');
-    expect(authForm).toContain('supabase.auth.signInWithPassword');
-    for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'BCA', 'MBA', 'Other']) expect(authForm).toContain(item);
+    expect(authForm).toContain("action: 'register'");
+    expect(authForm).toContain("action: 'login'");
+    expect(authForm).toContain("supabase.functions.invoke('student-username-auth'");
+    expect(authForm).toContain('supabase.auth.setSession');
     expect(authForm).toContain('Confirm password');
     expect(authForm).toContain('password !== confirmPassword');
     expect(authForm).toContain('At least 10 characters');
-    expect(authForm).toContain("profile?.role !== 'STUDENT'");
-    expect(authForm).toContain('The sign-up email could not be sent');
-    expect(authForm).not.toContain('requested_role');
+    expect(authForm).toContain('Username');
+    expect(authForm).not.toContain('Email address');
+    expect(authForm).not.toContain('type="email"');
+    expect(authForm).not.toContain('supabase.auth.signUp');
+    expect(authForm).not.toContain('signInWithPassword');
+    for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'BCA', 'MBA', 'Other']) expect(authForm).toContain(item);
     expect(authForm).not.toContain('ADMIN');
-    expect(authForm).toContain('does not offer Admin or HOD sign-up');
+    expect(authForm).not.toContain('HOD sign-up');
+  });
+
+  it('creates immediately confirmed internal accounts without sending email', () => {
+    expect(authFunction).toContain('admin.auth.admin.createUser');
+    expect(authFunction).toContain('email_confirm: true');
+    expect(authFunction).toContain('@students.coursepulse.invalid');
+    expect(authFunction).toContain('consume_student_auth_attempt');
+    expect(authFunction).toContain('admin.auth.admin.deleteUser');
+    expect(authFunction).toContain('authClient.auth.signInWithPassword');
+    expect(authFunction).toContain('login:user:');
+    expect(authMigration).toContain('users_username_unique');
+    expect(authMigration).toContain('private.student_auth_rate_limits');
+    expect(authMigration).toContain('grant execute on function public.consume_student_auth_attempt');
+    expect(prisma).toContain('username  String?');
   });
 
   it('keeps role assignment server-side and refreshes Supabase sessions', () => {
@@ -63,12 +85,13 @@ describe('CoursePulse student account experience', () => {
     expect(middleware).toContain('admin|super-admin|verify');
     expect(middleware).toContain('buildContentSecurityPolicy');
     expect(middleware).toContain('status: 410');
+    expect(accountControl).toContain("select('full_name,username,program,role,is_active')");
     expect(accountControl).toContain("profile.role !== 'STUDENT'");
-    expect(prisma).toContain('program   String?');
+    expect(accountControl).toContain('@{account.username}');
   });
 
-  it('shows a signed-in student name and programme with sign-out', () => {
-    expect(accountControl).toContain("select('full_name,program,role,is_active')");
+  it('shows the signed-in student name, username and programme with sign-out', () => {
+    expect(accountControl).toContain('username: profile.username');
     expect(accountControl).toContain('Sign out');
     expect(publicSite).toContain('<StudentAccountControl/>');
     expect(workspace).toContain('<StudentAccountControl />');
@@ -84,16 +107,18 @@ describe('CoursePulse student account experience', () => {
     expect(workspace).not.toContain('supabase.from');
   });
 
-  it('updates project, features, privacy, cookies and terms information', () => {
-    expect(about).toContain('B.Tech, M.Tech, BBA, B.Com');
-    expect(about).toContain('New self-registrations receive Student access only');
+  it('updates project, features, privacy, cookie and terms information', () => {
+    expect(about).toContain('choose a unique username');
     expect(features).toContain('Student-only accounts');
-    expect(privacy).toContain('full name, email address, selected programme');
-    expect(privacy).toContain('Supabase Authentication handles the password');
-    expect(privacy).toContain('does not add your account name or email to those responses');
+    expect(features).toContain('username, password and programme');
+    expect(privacy).toContain('full name, username, selected programme');
+    expect(privacy).toContain('No email address or phone number is requested');
+    expect(privacy).toContain('non-deliverable internal identifier');
+    expect(privacy).toContain('There is no email-based password recovery');
     expect(cookies).toContain('Essential sign-in cookies');
     expect(cookies).toContain('student sign-in session');
-    expect(terms).toContain('New public registrations are assigned Student access');
+    expect(terms).toContain('username, password and programme');
+    expect(terms).toContain('No email address or verification message is needed');
     expect(publicSite).toContain('Create account');
     expect(publicSite).toContain('Student sign in');
     expect(consent).toContain('essential first-party session cookies');
