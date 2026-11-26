@@ -9,6 +9,7 @@ const login = read('app/login/page.tsx');
 const authForm = read('components/student-auth-form.tsx');
 const authFunction = read('supabase/functions/student-username-auth/index.ts');
 const authMigration = read('supabase/migrations/20261126075627_student_username_auth.sql');
+const authRestrictionMigration = read('supabase/migrations/20261126140000_restrict_public_auth_to_student_usernames.sql');
 const accountControl = read('components/student-account-control.tsx');
 const dashboard = read('app/dashboard/page.tsx');
 const workspace = read('components/public-workspace.tsx');
@@ -71,6 +72,9 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authFunction).toContain('admin.auth.admin.deleteUser');
     expect(authFunction).toContain('authClient.auth.signInWithPassword');
     expect(authFunction).toContain('login:user:');
+    expect(authFunction).toContain('trustedCloudflareIp');
+    expect(authRestrictionMigration).toContain('if not v_is_internal_username then');
+    expect(authRestrictionMigration).toContain('values (\n    new.id,\n    null,');
     expect(authMigration).toContain('users_username_unique');
     expect(authMigration).toContain('private.student_auth_rate_limits');
     expect(authMigration).toContain('grant execute on function public.consume_student_auth_attempt');
