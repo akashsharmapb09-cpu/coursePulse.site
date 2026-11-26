@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowRight, BookOpen, LoaderCircle, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { Activity, ArrowRight, AtSign, BookOpen, LoaderCircle, LockKeyhole, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 const PROGRAMMES = [
@@ -17,19 +17,23 @@ type Mode = 'signup' | 'signin';
 export function StudentAuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [programme, setProgramme] = useState('B.Tech');
   const [customProgramme, setCustomProgramme] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
-    setNotice('');
+
+    const normalizedUsername = username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
+      setError('Username must be 3–24 characters using lowercase letters, numbers or underscores.');
+      return;
+    }
 
     if (mode === 'signup') {
       if (fullName.trim().length < 2) {
@@ -53,73 +57,57 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     setBusy(true);
     try {
       const supabase = createClient();
-      if (mode === 'signup') {
-        const chosenProgramme = programme === 'Other' ? customProgramme.trim() : programme;
-        const { data, error: signupError } = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
-          password,
-          options: {
-            data: { full_name: fullName.trim(), program: chosenProgramme },
-            // The project origin is the configured Supabase Site URL and works
-            // with the default confirmation redirect allow-list entry.
-            emailRedirectTo: `${window.location.origin}/auth/confirm?next=%2Fdashboard`
+      const chosenProgramme = programme === 'Other' ? customProgramme.trim() : programme;
+      const { data: result, error: functionError } = await supabase.functions.invoke('student-username-auth', {
+        body: mode === 'signup'
+          ? { action: 'register', username: normalizedUsername, full_name: fullName.trim(), program: chosenProgramme, password }
+          : { action: 'login', username: normalizedUsername, password }
+      });
+
+      if (functionError) {
+        const context = (functionError as typeof functionError & { context?: Response }).context;
+        if (context) {
+          try {
+            const payload = await context.clone().json() as { error?: string };
+            throw new Error(payload.error || functionError.message);
+          } catch (cause) {
+            if (cause instanceof Error && cause.message !== functionError.message) throw cause;
           }
-        });
-
-        if (signupError) throw signupError;
-
-        if (data.session && data.user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('users')
-            .select('role,is_active')
-            .eq('id', data.user.id)
-            .maybeSingle();
-
-          if (profileError || profile?.role !== 'STUDENT' || !profile.is_active) {
-            await supabase.auth.signOut();
-            throw new Error('Student profile setup is not ready. Please try again or contact the project team.');
-          }
-
-          router.replace('/dashboard');
-          router.refresh();
-          return;
         }
-
-        setNotice('Your registration has been received. Check your email for the confirmation link, then return here to sign in.');
-        setPassword('');
-        setConfirmPassword('');
-      } else {
-        const { data, error: signinError } = await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password
-        });
-
-        if (signinError) throw signinError;
-
-        const { data: profile, error: profileError } = await supabase
-          .from('users')
-          .select('role,is_active')
-          .eq('id', data.user.id)
-          .maybeSingle();
-
-        if (profileError || profile?.role !== 'STUDENT' || !profile.is_active) {
-          await supabase.auth.signOut();
-          throw new Error('This sign-in is only available for active student accounts.');
-        }
-
-        router.replace('/dashboard');
-        router.refresh();
+        throw functionError;
       }
+
+      if (!result?.session?.access_token || !result?.session?.refresh_token || result?.user?.role !== 'STUDENT') {
+        throw new Error(result?.error || 'Student account could not be started. Please try again.');
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token
+      });
+      if (sessionError) throw sessionError;
+
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('role,is_active')
+        .eq('id', result.user.id)
+        .maybeSingle();
+
+      if (profileError || profile?.role !== 'STUDENT' || !profile.is_active) {
+        await supabase.auth.signOut();
+        throw new Error('Student profile setup is not ready. Please try again.');
+      }
+
+      router.replace('/dashboard');
+      router.refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Something went wrong. Please try again.';
-      if (/invalid login credentials/i.test(message)) {
-        setError('Email or password is incorrect. Please check your details and try again.');
-      } else if (/email not confirmed/i.test(message)) {
-        setError('Please confirm your email from the message we sent before signing in.');
-      } else if (/email_address_not_authorized|email address not authorized|over_email_send_rate_limit|email rate limit exceeded/i.test(message)) {
-        setError('The sign-up email could not be sent. The project owner needs to configure a custom email provider in Supabase Authentication settings before students can receive verification links.');
-      } else if (/already registered|user already exists/i.test(message)) {
-        setError('An account may already exist for this email. Try signing in instead.');
+      if (/already taken|username.*(exists|used|duplicate)|duplicate key/i.test(message)) {
+        setError('That username is already taken. Choose another one.');
+      } else if (/invalid login credentials|username or password is incorrect/i.test(message)) {
+        setError('Username or password is incorrect.');
+      } else if (/too many/i.test(message)) {
+        setError(message);
       } else {
         setError(message);
       }
@@ -136,8 +124,8 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     <span className="eyebrow">STUDENT ACCESS</span>
     <h2>{isSignup ? 'Create your student account' : 'Welcome back'}</h2>
     <p className="muted">{isSignup
-      ? 'Enter your details and choose the programme you are studying. Every new account is a Student account.'
-      : 'Sign in to your CoursePulse student account using your email address and password.'}</p>
+      ? 'Enter your name, choose your programme and create a username and password. No email address is needed.'
+      : 'Sign in with the username and password you created. No email or verification code is needed.'}</p>
 
     <form onSubmit={submit} className="stack-form">
       {isSignup && <>
@@ -153,9 +141,10 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
           <input value={customProgramme} onChange={event => setCustomProgramme(event.target.value)} minLength={2} maxLength={80} required placeholder="For example, B.Des or LLB"/>
         </label>}
       </>}
-      <label>Email address
-        <span className="input-wrap"><Mail size={17}/><input type="email" name="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} maxLength={254} required placeholder="you@example.com"/></span>
+      <label>Username
+        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={24} pattern="[a-zA-Z0-9_]{3,24}" required placeholder="Choose a username"/></span>
       </label>
+      {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
       <label>Password
         <span className="input-wrap"><LockKeyhole size={17}/><input type="password" name="password" autoComplete={isSignup ? 'new-password' : 'current-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={isSignup ? 10 : 1} maxLength={72} required placeholder={isSignup ? 'At least 10 characters' : 'Your password'}/></span>
       </label>
@@ -163,7 +152,6 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         <span className="input-wrap"><LockKeyhole size={17}/><input type="password" autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={10} maxLength={72} required placeholder="Enter your password again"/></span>
       </label>}
       {error && <p className="alert error" role="alert">{error}</p>}
-      {notice && <p className="alert success" role="status">{notice}</p>}
       <button type="submit" className="button primary full" disabled={busy}>
         {busy ? <LoaderCircle className="spin" size={17}/> : <>{isSignup ? 'Create student account' : 'Sign in'} <ArrowRight size={17}/></>}
       </button>
@@ -174,7 +162,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       <Link href={isSignup ? '/login' : '/signup'}>{isSignup ? 'Sign in' : 'Create account'}</Link>
     </p>
     <p className="fine-print">
-      Student registration only. CoursePulse does not offer Admin or HOD sign-up. Your password is handled by Supabase Authentication; never share it with anyone.
+      Student accounts only. No email address, verification email, or email recovery is used. Keep your username and password safe; account recovery requires help from the project team.
     </p>
   </div>;
 }
