@@ -896,3 +896,21 @@ a[href$="/privacy"] {
 .text-\\[\\#75857a\\] {
   color: #526158 !important;
 }
+
+
+/* CoursePulse dashboard dark theme */
+html[data-coursepulse-theme="dark"] body{background:#101812;color:#e5eee7}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace{background:#101812!important;color:#e5eee7!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace header{background:#142019!important;border-color:#2d4034!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-white"]{background-color:#19261f!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#f5f8f5]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#edf5ef]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#eff5f0]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#eaf3ec]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#edf2ee]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#f4f8f5]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#eaf3ed]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-[#e2f0e7]"]{background-color:#213229!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="border-[#"]{border-color:#344a3b!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-[#"]{color:#c2d0c6!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-[#477956]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-[#286640]"],html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-[#245b3e]"]{color:#9bc9a7!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace input,html[data-coursepulse-theme="dark"] .coursepulse-workspace textarea,html[data-coursepulse-theme="dark"] .coursepulse-workspace select{background:#142019!important;color:#e5eee7!important;border-color:#3a5141!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace input::placeholder,html[data-coursepulse-theme="dark"] .coursepulse-workspace textarea::placeholder{color:#91a397!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-amber-50"]{background:#3b3020!important;color:#f2d6a4!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-amber-800"]{color:#f2d6a4!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-red-50"]{background:#3b2422!important;color:#f0b7ae!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-red-700"]{color:#f0b7ae!important}
+html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="divide-[#"]>*+*{border-color:#304638!important}
