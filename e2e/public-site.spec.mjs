@@ -16,14 +16,14 @@ test.describe('public-page browser smoke', () => {
     });
   }
 
-  test('legacy login and role routes redirect to the public workspace', async ({ page, request }) => {
+  test('legacy login and role routes redirect to sign-in when unauthenticated', async ({ page, request }) => {
     for (const route of ['/auth/reset', '/admin', '/super-admin', '/verify']) {
       await page.goto(route);
-      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(page).toHaveURL(/login/);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     }
     const legacyApi = await request.get('/api/admin/academic');
-    expect(legacyApi.status()).toBe(410);
+    expect(legacyApi.status()).toBe(401);
   });
 
   test('visible homepage navigation links have a 44px tap area', async ({ page }) => {
