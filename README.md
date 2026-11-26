@@ -12,6 +12,16 @@ CoursePulse is a college-project demonstration for student registration, course 
 - Course feedback is anonymous and separate from the account profile. The current demo workspace stores feedback in browser localStorage, not a central college database.
 - Course-level summaries and CSV export are available for responses saved in the current browser.
 
+## Student authentication setup
+
+The hosted Supabase Auth projects require email confirmation. Before opening registration to all students:
+
+1. In **Supabase → Authentication → URL Configuration**, set the production Site URL to `https://coursepulse-site.vercel.app` and add `https://coursepulse-site.vercel.app/auth/confirm` to Redirect URLs. Add a Vercel-preview wildcard only to the isolated preview Auth project when preview verification is needed.
+2. In **Supabase → Authentication → SMTP Settings**, configure a custom SMTP provider that can send to student email addresses. Supabase's built-in email service only sends to organization team-member addresses and has a low shared rate limit; it is not suitable for general student registration.
+3. Keep email confirmation enabled. Do not turn it off as a workaround for SMTP delivery.
+
+Supported SMTP services include Resend, Amazon SES, Postmark, SendGrid and Brevo. Enter provider credentials directly in Supabase settings; do not commit SMTP passwords or API keys to this repository.
+
 ## Important data limitation
 
 Student account credentials and profile records are stored by the connected Supabase project. Feedback is still stored separately in browser localStorage under the `coursepulse-college-demo-responses-v1` key. It is not linked to the student's account, is not synchronised between browsers/devices, and is not shared with another visitor. Clearing site data removes local feedback but does not delete the Supabase student account.
