@@ -36,8 +36,8 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(dashboard).not.toContain('AdminMfaGate');
     expect(dashboard).not.toContain('createClient');
     expect(dashboard).not.toContain('auth.getUser');
-    expect(middleware).toContain("destination.pathname = '/dashboard'");
-    expect(middleware).toContain('status: 410');
+    expect(middleware).toMatch(/destination\.pathname\s*=\s*['"]\/dashboard['"]/);
+    expect(middleware).toMatch(/status:\s*410/);
   });
   it('keeps the old audited academic API only as historical code, not as a public route',()=>{
     expect(academicApi).toMatch(/admin_record_audit/);
