@@ -53,12 +53,12 @@ export function summarizeCourseReports(rows: AggregateRow[]): CourseReportSummar
 export function spreadsheetSafeText(value: unknown): string {
   const text = value == null ? '' : String(value);
   // Spreadsheet applications may interpret formula-leading text as executable formulas.
-  return /^[\\s]*[=+@-]/.test(text) ? "'" + text : text;
+  return /^[\s]*[=+@-]/.test(text) ? "'" + text : text;
 }
 
 export function csvCell(value: unknown): string {
   const text = spreadsheetSafeText(value);
-  return `"${text.replace(/"/g, '""')}"`;
+  return \`"\${text.replace(/"/g, '""')}"\`;
 }
 
 export function aggregateExportRows(rows: AggregateRow[]) {
@@ -75,7 +75,7 @@ export function aggregateExportRows(rows: AggregateRow[]) {
 }
 
 export function toCsv(rows: ReturnType<typeof aggregateExportRows>): string {
-  if (!rows.length) return 'Course,Feedback,Question,Category,Type,Answer option,Responses (minimum 5),Average score\\r\\n';
+  if (!rows.length) return 'Course,Feedback,Question,Category,Type,Answer option,Responses (minimum 5),Average score\r\n';
   const keys = Object.keys(rows[0]);
-  return [keys.map(csvCell).join(','), ...rows.map(row => keys.map(key => csvCell(row[key as keyof typeof row])).join(','))].join('\\r\\n');
+  return [keys.map(csvCell).join(','), ...rows.map(row => keys.map(key => csvCell(row[key as keyof typeof row])).join(','))].join('\r\n');
 }
