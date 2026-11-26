@@ -20,7 +20,7 @@ export function PublicHeader() {
 
 export function PublicFooter() {
   return <footer className="public-footer">
-    <div className="public-footer-brand"><Link className="brand" href="/"><span className="brand-mark">◉</span><span>CoursePulse</span></Link><p>Course feedback, made useful.</p></div>
+    <div className="public-footer-brand"><Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="brand" href="/"><span className="brand-mark">◉</span><span>CoursePulse</span></Link><p>Course feedback, made useful.</p></div>
     <div className="public-footer-links">
       <div><b>Explore</b><Link href="/features">Features</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link></div>
       <div><b>Student accounts</b><Link href="/signup">Create account</Link><Link href="/login">Student sign in</Link></div>
