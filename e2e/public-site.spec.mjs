@@ -51,7 +51,7 @@ test.describe('public-page browser smoke', () => {
     await expect(page.getByLabel('Programme / Course')).toBeVisible();
     await expect(page.getByLabel('Username')).toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveCount(0);
-    await expect(page.getByLabel('Confirm password')).toBeVisible();
+    await expect(page.getByLabel('Confirm password', { exact: true })).toBeVisible();
     const programmes = await page.locator('select option').allTextContents();
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'Other']) expect(programmes).toContain(item);
     expect(programmes.join(' ')).not.toMatch(/admin|hod/i);
@@ -68,6 +68,7 @@ test.describe('public-page browser smoke', () => {
     await page.locator('.public-header-actions a[href="/login"]').waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
+    const features = page.locator('.public-nav a[href="/features"]');
     const about = page.locator('.public-nav a[href="/about"]');
     const privacy = page.locator('.public-nav a[href="/privacy"]');
     const cookies = page.locator('.public-nav a[href="/cookies"]');
@@ -78,6 +79,8 @@ test.describe('public-page browser smoke', () => {
     await expect(brand).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(howItWorks).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(features).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(about).toBeFocused();
     await page.keyboard.press('Tab');
