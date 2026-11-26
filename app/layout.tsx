@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans, Manrope } from 'next/font/google';
 import './globals.css';
 import { CookieConsent } from '@/components/cookie-consent';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,5 +34,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className={dmSans.variable + ' ' + manrope.variable}>{children}<CookieConsent /></body></html>;
+  return <html lang="en"><body className={dmSans.variable + ' ' + manrope.variable}>{children}<CookieConsent /><ThemeToggle /></body></html>;
 }

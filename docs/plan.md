@@ -107,3 +107,10 @@ Institution name/branding; verified support contact; department and semester cat
 - [ ] REQUIRED: Deno Edge Function sources are validated/deployed by Supabase separately from the Next.js Node TypeScript project; app typecheck intentionally excludes `supabase/functions`.
 
 - [x] DONE: assigned teachers can add student records/invitations directly to their own courses/sections. The server-side invitation function allows instructors to invite students only and checks each course against primary/secondary instructor assignments; Head continues to have bulk roster import.
+
+
+## Student experience additions — dark mode and personal feedback reminders
+- [x] DONE: site-wide light/dark preference toggle persists locally and respects the operating-system preference on first visit.
+- [x] DONE: students can create, snooze, complete and remove course-feedback reminders stored only in the current browser; reminder records contain course/time metadata only and are not linked to student identity or feedback answers.
+- [x] DONE: due reminders remain visible in the workspace; optional browser notifications are requested only by explicit user action and appear while CoursePulse is open. No background push delivery is configured.
+- [ ] REQUIRED: verify exact-commit CI, desktop/mobile browser contrast and manual notification behavior before production release.
