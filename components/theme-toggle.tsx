@@ -9,7 +9,8 @@ export function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const workspace = document.querySelector<HTMLElement>('.app-shell');
+    const studentWorkspace = document.querySelector<HTMLElement>('.coursepulse-workspace');
+    const workspace = studentWorkspace ?? document.querySelector<HTMLElement>('.app-shell');
     if (!workspace) return;
 
     let stored: string | null = null;
@@ -17,16 +18,27 @@ export function ThemeToggle() {
     const enabled = stored === 'dark';
     workspace.dataset.theme = enabled ? 'dark' : 'light';
     workspace.style.colorScheme = enabled ? 'dark' : 'light';
+    if (studentWorkspace) {
+      document.documentElement.dataset.coursepulseTheme = enabled ? 'dark' : 'light';
+    }
     setDark(enabled);
+
+    return () => {
+      if (studentWorkspace) delete document.documentElement.dataset.coursepulseTheme;
+    };
   }, []);
 
   function toggle() {
-    const workspace = document.querySelector<HTMLElement>('.app-shell');
+    const studentWorkspace = document.querySelector<HTMLElement>('.coursepulse-workspace');
+    const workspace = studentWorkspace ?? document.querySelector<HTMLElement>('.app-shell');
     if (!workspace) return;
 
     const next = !dark;
     workspace.dataset.theme = next ? 'dark' : 'light';
     workspace.style.colorScheme = next ? 'dark' : 'light';
+    if (studentWorkspace) {
+      document.documentElement.dataset.coursepulseTheme = next ? 'dark' : 'light';
+    }
     try { window.localStorage.setItem(THEME_KEY, next ? 'dark' : 'light'); } catch { /* The selection still applies for this session. */ }
     setDark(next);
   }
