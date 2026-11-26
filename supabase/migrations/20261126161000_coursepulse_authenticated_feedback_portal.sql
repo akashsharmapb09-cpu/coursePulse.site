@@ -137,7 +137,7 @@ create index if not exists feedback_submissions_filter_idx on public.feedback_su
 alter table public.feedback_submissions enable row level security;
 alter table public.feedback_submissions force row level security;
 revoke all on table public.feedback_submissions from public, anon, authenticated, service_role;
-grant select on table public.feedback_submissions to authenticated;
+-- Direct table SELECT is deliberately not granted; filtered access uses a privacy RPC.
 
 create or replace function private.feedback_submission_group_reportable(p_feedback_id uuid, p_organization_id uuid)
 returns boolean language plpgsql stable security definer set search_path = '' set row_security = off
