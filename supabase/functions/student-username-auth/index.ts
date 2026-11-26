@@ -28,9 +28,11 @@ function readKeySet(name: string): Record<string, string> {
   }
 }
 
-const productionOrigin = "https://coursepulse-site.vercel.app";
-const previewOrigin = /^https:\/\/coursepulse-site-[a-z0-9-]+-akashsharmapb09-8177\.vercel\.app$/;
-const allowedOrigins = new Set([productionOrigin, "http://localhost:3000"]);
+const productionOrigin = "https://coursepulse.netlify.app";
+const legacyProductionOrigin = "https://coursepulse-site.vercel.app";
+const vercelPreviewOrigin = /^https:\/\/coursepulse-site-[a-z0-9-]+-akashsharmapb09-8177\.vercel\.app$/;
+const netlifyPreviewOrigin = /^https:\/\/[a-z0-9-]+--coursepulse\.netlify\.app$/;
+const allowedOrigins = new Set([productionOrigin, legacyProductionOrigin, "http://localhost:3000"]);
 
 function corsHeaders(origin: string | null): HeadersInit {
   const headers: Record<string, string> = {
@@ -38,7 +40,7 @@ function corsHeaders(origin: string | null): HeadersInit {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin"
   };
-  if (origin && (allowedOrigins.has(origin) || previewOrigin.test(origin))) {
+  if (origin && (allowedOrigins.has(origin) || vercelPreviewOrigin.test(origin) || netlifyPreviewOrigin.test(origin))) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
   return headers;
