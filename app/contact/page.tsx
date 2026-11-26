@@ -16,7 +16,7 @@ export default function ContactPage() {
       <p className="mt-5 text-sm leading-7 text-[#526158]">A verified public support email, telephone number or postal address has not been supplied for this project. CoursePulse does not display invented contact details.</p>
       <h2 className="mt-8 text-lg font-extrabold">Getting help</h2>
       <p className="mt-3 text-sm leading-6 text-[#526158]">For account or course access, use your institution's established support channel or contact the project owner through the channel where this college project was provided. Do not share passwords, recovery codes or private feedback in an unverified channel.</p>
-      <div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/privacy" className="!min-h-11 inline-flex items-center px-2 text-sm font-semibold text-[#477956]">Privacy overview</Link></div>
+      <div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/privacy" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="px-2 text-sm font-semibold text-[#477956]">Privacy overview</Link></div>
     </article>
   </main>;
 }
