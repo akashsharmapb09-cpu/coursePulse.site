@@ -17,7 +17,7 @@ export default function SupportPage() {
     >
       <section>
         <h2>Where are my courses?</h2>
-        <p>The workspace currently includes example college courses for demonstration. Course availability is not controlled by institution enrollment or HOD approval. If the example course list does not match your project brief, contact the project owner through the channel where you received the CoursePulse link.</p>
+        <p>The workspace currently includes example college courses for demonstration. Course availability is not controlled by institution enrollment or HOD approval. If the example course list does not match the courses you need, use the contact route shared with you when you received CoursePulse.</p>
       </section>
       <section>
         <h2>Why are my results empty?</h2>
@@ -29,9 +29,9 @@ export default function SupportPage() {
       </section>
       <section>
         <h2>I forgot my password. What can I do?</h2>
-        <p>Student accounts use a username rather than an email address, so an email-based password reset is not available. Visit the <Link className="inline-link" href="/contact">contact and support page</Link> for the current project-owner contact route. Never send anyone your password or sign-in codes.</p>
+        <p>Student accounts use a username rather than an email address, so an email-based password reset is not available. Visit the <Link className="inline-link" href="/contact">contact and support page</Link> for the current support contact route. Never send anyone your password or sign-in codes.</p>
       </section>
-      <p>Still stuck? See the <Link className="inline-link" href="/contact">contact information</Link> and use the channel where the project was shared.</p>
+      <p>Still stuck? See the <Link className="inline-link" href="/contact">contact information</Link> and use the channel where you received CoursePulse.</p>
     </PublicPage>
   );
 }
