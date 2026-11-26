@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import ExcelJS from 'exceljs';
-import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, type AggregateRow } from '../lib/exports';
+import { csvCell, spreadsheetSafeText, toCsv, aggregateExportRows, summarizeCourseReports, type AggregateRow } from '../lib/exports';
 
 const exportRoute = readFileSync(resolve(process.cwd(), 'app/api/exports/[format]/route.ts'), 'utf8');
 const rateMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261102051456_coursepulse_report_rate_limits.sql'), 'utf8');
@@ -27,7 +27,7 @@ describe('aggregate exports', () => {
     expect(rateMigration).toContain("'exports:download'");
   });
   it('applies the shared formula sanitizer to HTML XLS and XLSX string cells', () =>{
-    expect(exportRoute).toContain('escapeHtml(spreadsheetSafeText(row[k as keyof typeof row]))');
+    expect(exportRoute).toContain('safeDetailRows(rows)');
     expect(exportRoute).toContain("typeof value === 'string' ? spreadsheetSafeText(value) : value");
   });
   it('contains aggregate metrics, not response answer data', () => {
@@ -45,5 +45,28 @@ describe('aggregate exports', () => {
     const bytes = Buffer.from(await workbook.xlsx.writeBuffer());
     expect(bytes.subarray(0, 2).toString()).toBe('PK');
     expect(bytes.length).toBeGreaterThan(100);
+  });
+});
+
+describe('course-level report summaries', () => {
+  it('counts unique feedback forms and submissions once per form, not once per question', () => {
+    const rows: AggregateRow[] = [
+      sample,
+      { ...sample, question_id: 'q2', question_label: 'Rate the instructor', response_count: 7, avg_numeric_value: 4.75 },
+      { ...sample, feedback_id: 'f2', feedback_title: 'Lab pulse', question_id: 'q3', response_count: 6, avg_numeric_value: 3.5 }
+    ];
+    const summary = summarizeCourseReports(rows);
+    expect(summary).toHaveLength(1);
+    expect(summary[0].feedback_forms).toBe(2);
+    expect(summary[0].reportable_responses).toBe(14);
+    expect(summary[0].rating_answers).toBe(21);
+    expect(summary[0].average_rating).toBe(4.21);
+  });
+
+  it('keeps courses with no rating questions and avoids invented averages', () => {
+    const rows: AggregateRow[] = [{ ...sample, question_type: 'single_choice', avg_numeric_value: null }];
+    const summary = summarizeCourseReports(rows);
+    expect(summary[0].average_rating).toBeNull();
+    expect(summary[0].rating_answers).toBe(0);
   });
 });
