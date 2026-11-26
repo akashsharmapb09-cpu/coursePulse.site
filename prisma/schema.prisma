@@ -26,6 +26,7 @@ model User {
   id        String   @id @db.Uuid
   email     String?
   fullName  String   @default("") @map("full_name")
+  program   String?  @map("program")
   role      AppRole  @default(STUDENT)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
