@@ -81,15 +81,15 @@ describe('CoursePulse feature scope', () => {
   });
 
   it('drops the legacy suggestions table only after locking and confirming it is empty', () => {
-    expect(removalMigration).toMatch(/LOCK TABLE public\\.student_suggestions IN ACCESS EXCLUSIVE MODE/i);
-    expect(removalMigration).toMatch(/SELECT count\\(\\*\\) INTO v_rows FROM public\\.student_suggestions/i);
-    expect(removalMigration).toMatch(/IF v_rows > 0 THEN/i);
-    expect(removalMigration).toMatch(/DROP TABLE public\\.student_suggestions/i);
-    expect(removalMigration).not.toMatch(/DROP TABLE public\\.teacher_notifications/i);
+    expect(removalMigration).toContain('LOCK TABLE public.student_suggestions IN ACCESS EXCLUSIVE MODE');
+    expect(removalMigration).toContain('SELECT count(*) INTO v_rows FROM public.student_suggestions');
+    expect(removalMigration).toContain('IF v_rows > 0 THEN');
+    expect(removalMigration).toContain('DROP TABLE public.student_suggestions');
+    expect(removalMigration).not.toContain('DROP TABLE public.teacher_notifications');
   });
 
   it('keeps the independent private teacher-notification table and recipient policies', () => {
-    expect(originalFeatureMigration).toMatch(/create table public\\.teacher_notifications/i);
+    expect(originalFeatureMigration).toContain('create table public.teacher_notifications');
     expect(originalFeatureMigration).toContain('teacher_notifications_recipient_read');
     expect(originalFeatureMigration).toContain('teacher_notifications_recipient_update');
     expect(route).toContain(".eq('recipient_id', auth.user.id)");
