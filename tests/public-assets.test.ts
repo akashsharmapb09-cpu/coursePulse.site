@@ -29,7 +29,7 @@ describe('public app identity assets',()=>{
   it('publishes an RFC 9116 security.txt with an HTTPS contact and expiry',()=>{
     expect(securityTxt).toMatch(/^Contact: https:\/\//m);
     expect(securityTxt).toMatch(/^Expires: 2027-/m);
-    expect(securityTxt).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(securityTxt).toContain('Canonical: https://coursepulse.netlify.app/.well-known/security.txt');
     expect(securityTxt).toMatch(/^Policy: https:\/\//m);
   });
   it('uses a valid scalable SVG mark and web-app manifest',()=>{
