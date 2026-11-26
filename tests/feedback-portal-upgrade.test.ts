@@ -6,6 +6,7 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8'
 const schema = read('supabase/migrations/20261126155310_coursepulse_feedback_portal_questions_tracker_and_anonymous_views.sql');
 const projection = read('supabase/migrations/20261126155553_coursepulse_secure_deidentified_feedback_projection.sql');
 const authMigration = read('supabase/migrations/20261126160305_coursepulse_provision_instructor_accounts_from_invitations.sql');
+const invitationFunction = read('supabase/functions/invite-college-users/index.ts');
 const questionSync = read('supabase/migrations/20261126160539_coursepulse_sync_questions_and_privacy_hardening.sql');
 const filteredRpc = read('supabase/migrations/20261126160927_coursepulse_filtered_anonymous_comment_rpc_and_read_hardening.sql');
 const denyProjection = read('supabase/migrations/20261126161143_coursepulse_deny_direct_feedback_projection_reads.sql');
@@ -83,6 +84,9 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(authMigration).toMatch(/v_invitation\.invited_role::public\.app_role/i);
     expect(authMigration).toMatch(/instructor_course_assignments/i);
     expect(authMigration).toMatch(/An active college invitation is required/i);
+    expect(invitationFunction).toContain('https://coursepulse.netlify.app');
+    expect(invitationFunction).toContain('allowedBaseUrl(request.headers.get("x-app-base-url"))');
+    expect(invitationFunction).toContain('inviteUserByEmail');
   });
 
   it('authenticates the dashboard and keeps public signup Student-only', () => {
