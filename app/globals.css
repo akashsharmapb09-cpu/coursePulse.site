@@ -875,10 +875,10 @@ a[href$="/about"],
 a[href$="#features"],
 a[href$="/privacy"] {
   min-width: 24px !important;
-  min-height: 28px !important;
+  min-height: 44px !important;
   display: inline-flex !important;
   align-items: center;
-  padding-block: 5px !important;
+  padding-block: 8px !important;
   margin-block: 2px;
 }
 
