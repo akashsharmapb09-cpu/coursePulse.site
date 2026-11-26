@@ -63,7 +63,7 @@ describe('CoursePulse database-backed feedback portal contract', () => {
     expect(page).toMatch(/auth\.getUser\(\)/);
     expect(page).toMatch(/redirect\('\/login/);
     expect(page).toMatch(/profile\.role/);
-    expect(middleware).toMatch(/pathname === '\/login'/);
+    expect(middleware).toMatch(/destination\.pathname = '\/login'/);
     expect(middleware).toMatch(/dashboard/);
     expect(exportRoute).toMatch(/from\('feedback_submissions'\)/);
     expect(exportRoute).toMatch(/detail\) === 'anonymous'/);
