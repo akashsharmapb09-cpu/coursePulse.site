@@ -4,7 +4,7 @@ import { PublicPage } from '@/components/public-site';
 export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
   title: 'Privacy Policy',
-  description: 'How CoursePulse handles student accounts, anonymous feedback, browser storage, and optional analytics.'
+  description: 'How CoursePulse handles username-based student accounts, anonymous feedback, browser storage, and optional analytics.'
 };
 
 export default function PrivacyPage() {
@@ -16,12 +16,12 @@ export default function PrivacyPage() {
     </section>
     <section>
       <h2>2. Student account information</h2>
-      <p>When you register, CoursePulse collects your full name, email address, selected programme (for example B.Tech, M.Tech, BBA or B.Com), and the password needed to authenticate your account. Supabase Authentication handles the password; CoursePulse does not receive or store your password in readable form. A student profile is stored in the connected Supabase project so you can sign in again.</p>
+      <p>When you register, CoursePulse collects your full name, username, selected programme (for example B.Tech, M.Tech, BBA or B.Com), and the password needed to authenticate your account. No email address or phone number is requested, and no verification or password-recovery email is sent. Supabase Authentication handles the password; CoursePulse does not receive or store it in readable form. A reserved, non-deliverable internal identifier is used behind the scenes for authentication and is not shown as your email address or used to send messages.</p>
       <p>New public registrations are assigned the Student role by the database. The sign-up form does not accept a role, organization, or administrative access request.</p>
     </section>
     <section>
       <h2>3. Feedback information</h2>
-      <p>The current feedback workspace records the selected example course, ratings, an optional comment, and the submission date in the browser being used. It does not add your account name or email to those responses. Please do not include identifying or sensitive details in free-text comments.</p>
+      <p>The current feedback workspace records the selected example course, ratings, an optional comment, and the submission date in the browser being used. It does not add your account name or username to those responses. Please do not include identifying or sensitive details in free-text comments.</p>
     </section>
     <section>
       <h2>4. Where information is stored</h2>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
     </section>
     <section>
       <h2>7. Export, deletion and account security</h2>
-      <p>The Results page can export the demo responses saved in this browser as a CSV file. The Clear demo data option removes local feedback after confirmation. To request help with a student account or its deletion, use the support channel provided by your college or project team. Never share your password or email verification link.</p>
+      <p>The Results page can export the demo responses saved in this browser as a CSV file. The Clear demo data option removes local feedback after confirmation. To request help with a student account or its deletion, use the support channel provided by your college or project team. There is no email-based password recovery in this version; keep your username and password safe and contact the project team if you lose access.</p>
     </section>
     <section>
       <h2>8. Hosting and third-party services</h2>
