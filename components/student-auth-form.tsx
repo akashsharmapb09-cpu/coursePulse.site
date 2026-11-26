@@ -159,7 +159,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
 
     <p className="switch-auth">
       {isSignup ? 'Already have an account?' : 'New to CoursePulse?'}{' '}
-      <Link href={isSignup ? '/login' : '/signup'}>{isSignup ? 'Sign in' : 'Create account'}</Link>
+      <Link href={isSignup ? '/login' : '/signup'} style={{ minHeight: 44, display: "inline-flex", alignItems: "center", paddingInline: 8 }}>{isSignup ? 'Sign in' : 'Create account'}</Link>
     </p>
     <p className="fine-print">
       Student accounts only. No email address, verification email, or email recovery is used. Keep your username and password safe; account recovery requires help from the project team.
