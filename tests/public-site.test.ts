@@ -91,7 +91,7 @@ describe('CoursePulse student account experience', () => {
     expect(privacy).toContain('Supabase Authentication handles the password');
     expect(privacy).toContain('does not add your account name or email to those responses');
     expect(cookies).toContain('Essential sign-in cookies');
-    expect(cookies).toContain('student session');
+    expect(cookies).toContain('student sign-in session');
     expect(terms).toContain('New public registrations are assigned Student access');
     expect(publicSite).toContain('Create account');
     expect(publicSite).toContain('Student sign in');
