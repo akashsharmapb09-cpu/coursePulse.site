@@ -43,6 +43,13 @@ export async function POST(request: NextRequest) {
     form_schema: parsed.data.form_schema, retention_days: parsed.data.retention_days, due_at: parsed.data.due_at ?? null, is_open: true
   }).select('id,course_id,title,description,is_open,created_at,due_at,version').single();
   if (error) return jsonError('Feedback form could not be created. Check course ownership.', 403);
+  const { error: questionSyncError } = await supabase.rpc('sync_feedback_form_questions', {
+    p_feedback_id: data.id,
+    p_questions: parsed.data.form_schema
+  });
+  if (questionSyncError) return jsonError('Feedback form was saved, but its question catalogue could not be synchronized.', 500);
+  const { error: catalogSyncError } = await supabase.rpc('sync_question_catalog_to_feedback', { p_course_id: parsed.data.course_id });
+  if (catalogSyncError) return jsonError('Feedback form was saved, but shared questions could not be synchronized.', 500);
   return NextResponse.json({ feedback: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -69,5 +76,14 @@ export async function PATCH(request:NextRequest) {
   const {id,...updates}=parsed.data;
   const {data,error}=await supabase.from('feedback').update(updates).eq('id',id).select('id,course_id,title,description,form_schema,is_open,due_at,created_at,version').single();
   if(error||!data) return jsonError('Feedback form could not be updated. Check course ownership.',403);
+  if (updates.form_schema) {
+    const { error: questionSyncError } = await supabase.rpc('sync_feedback_form_questions', {
+      p_feedback_id: id,
+      p_questions: updates.form_schema
+    });
+    if (questionSyncError) return jsonError('Form changes were saved, but its normalized questions could not be synchronized.', 500);
+    const { error: catalogSyncError } = await supabase.rpc('sync_question_catalog_to_feedback', { p_course_id: data.course_id });
+    if (catalogSyncError) return jsonError('Form changes were saved, but shared questions could not be synchronized.', 500);
+  }
   return NextResponse.json({feedback:data},{headers:{'Cache-Control':'no-store'}});
 }

@@ -58,9 +58,10 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).not.toContain('Email address');
     expect(authForm).not.toContain('type="email"');
     expect(authForm).not.toContain('supabase.auth.signUp');
-    expect(authForm).not.toContain('signInWithPassword');
+    expect(authForm).toContain('signInWithPassword');
+    expect(authForm).toContain('instructorEmailSignIn');
+    expect(authForm).not.toMatch(/requested_role|role:\s*['"](?:INSTRUCTOR|ADMIN)/);
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'BCA', 'MBA', 'Other']) expect(authForm).toContain(item);
-    expect(authForm).not.toContain('ADMIN');
     expect(authForm).not.toContain('HOD sign-up');
   });
 
@@ -95,7 +96,10 @@ describe('CoursePulse email-free student account experience', () => {
     expect(middleware).not.toContain("pathname === '/signup'");
     expect(middleware).toContain('admin|super-admin|verify');
     expect(middleware).toContain('buildContentSecurityPolicy');
-    expect(middleware).toContain('status: 410');
+    expect(middleware).not.toContain('status: 410');
+    expect(middleware).toContain('/dashboard');
+    expect(middleware).toContain('!user');
+    expect(dashboard).toContain("from '@/components/dashboard'");
     expect(accountControl).toContain("select('full_name,username,program,role,is_active')");
     expect(accountControl).toContain("profile.role !== 'STUDENT'");
     expect(accountControl).toContain('@{account.username}');
@@ -114,7 +118,9 @@ describe('CoursePulse email-free student account experience', () => {
     expect(workspace).toContain('Submit feedback');
     expect(workspace).toContain('Export CSV');
     expect(workspace).toContain('not linked to your student account');
-    expect(dashboard).toContain('<PublicWorkspace />');
+    expect(dashboard).toContain('<Dashboard profile={{');
+    expect(dashboard).toContain('supabase.auth.getUser()');
+    expect(dashboard).not.toContain('<PublicWorkspace />');
     expect(workspace).not.toContain('supabase.from');
   });
 
