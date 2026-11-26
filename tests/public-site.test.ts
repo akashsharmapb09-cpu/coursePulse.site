@@ -51,7 +51,7 @@ describe('CoursePulse student account experience', () => {
     expect(authForm).toContain("profile?.role !== 'STUDENT'");
     expect(authForm).not.toContain('requested_role');
     expect(authForm).not.toContain('ADMIN');
-    expect(authForm).not.toContain('HOD');
+    expect(authForm).toContain('does not offer Admin or HOD sign-up');
   });
 
   it('keeps role assignment server-side and refreshes Supabase sessions', () => {
@@ -61,6 +61,7 @@ describe('CoursePulse student account experience', () => {
     expect(middleware).not.toContain("pathname === '/signup'");
     expect(middleware).toContain('admin|super-admin|verify');
     expect(middleware).toContain('buildContentSecurityPolicy');
+    expect(middleware).toContain('status: 410');
     expect(accountControl).toContain("profile.role !== 'STUDENT'");
     expect(prisma).toContain('program   String?');
   });
@@ -88,7 +89,7 @@ describe('CoursePulse student account experience', () => {
     expect(features).toContain('Student-only accounts');
     expect(privacy).toContain('full name, email address, selected programme');
     expect(privacy).toContain('Supabase Authentication handles the password');
-    expect(privacy).toContain('not linked to your account');
+    expect(privacy).toContain('does not add your account name or email to those responses');
     expect(cookies).toContain('Essential sign-in cookies');
     expect(cookies).toContain('student session');
     expect(terms).toContain('New public registrations are assigned Student access');
