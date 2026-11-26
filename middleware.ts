@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('Content-Security-Policy', csp);
 
   const pathname = request.nextUrl.pathname;
-  if (/^\/(?:admin|super-admin|verify)(?:\/|$)/.test(pathname) || pathname === '/auth/reset') {
+  if (/^\/(?:admin|super-admin|verify)(?:\/|$)/.test(pathname) || pathname === '/auth/reset' || pathname === '/auth/complete') {
     const destination = request.nextUrl.clone();
     destination.pathname = '/dashboard';
     destination.search = '';
@@ -22,15 +22,6 @@ export async function middleware(request: NextRequest) {
     const blocked = NextResponse.json({ error: 'The public college demo does not use authenticated API routes.' }, { status: 410 });
     blocked.headers.set('Content-Security-Policy', csp);
     return blocked;
-  }
-
-  if (/^\/(?:admin|super-admin|verify)(?:\/|$)/.test(pathname) || pathname === '/auth/reset') {
-    const destination = request.nextUrl.clone();
-    destination.pathname = '/dashboard';
-    destination.search = '';
-    const redirect = NextResponse.redirect(destination);
-    redirect.headers.set('Content-Security-Policy', csp);
-    return redirect;
   }
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });
