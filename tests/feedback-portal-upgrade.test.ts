@@ -47,7 +47,7 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(privacy).toMatch(/create policy feedback_submissions_deny_api[\s\S]*?using \(false\)/i);
     expect(privacy).toMatch(/create or replace function private\.get_filtered_anonymous_feedback/i);
     expect(privacy).toMatch(/security definer[\s\S]*?set row_security = off/i);
-    expect(privacy).toMatch(/group_count\\s*>=\\s*5/i);
+    expect(privacy).toMatch(/group_count\s*>=\s*5/i);
     expect(privacy).toMatch(/p_from_date[\s\S]*?p_to_date/i);
     expect(privacy).toMatch(/create or replace function public\.get_filtered_anonymous_feedback[\s\S]*?security invoker/i);
   });
