@@ -27,7 +27,7 @@ export function PublicFooter() {
       <div><b>Student accounts</b><Link href="/signup">Create account</Link><Link href="/login">Student sign in</Link></div>
       <div><b>Information</b><Link href="/privacy">Privacy Policy</Link><Link href="/cookies">Cookie Policy</Link><Link href="/terms">Terms</Link><Link href="/support">Support</Link><CookieSettingsLink/></div>
     </div>
-    <p className="public-footer-bottom">© {new Date().getFullYear()} CoursePulse. College course feedback project.</p>
+    <p className="public-footer-bottom">© {new Date().getFullYear()} CoursePulse. Course feedback and learning insights.</p>
   </footer>;
 }
 
