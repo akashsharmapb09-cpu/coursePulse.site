@@ -13,8 +13,8 @@ const links = [
 
 export function PublicHeader() {
   return <header className="public-header">
-    <Link className="brand" href="/" aria-label="CoursePulse home"><span className="brand-mark">◉</span><span>CoursePulse</span></Link>
-    <nav className="public-nav" aria-label="Main navigation">{links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</nav>
+    <Link className="brand !min-h-11 inline-flex items-center" href="/" aria-label="CoursePulse home"><span className="brand-mark">◉</span><span>CoursePulse</span></Link>
+    <nav className="public-nav" aria-label="Main navigation">{links.map(link => <Link className="!min-h-11 inline-flex items-center px-2" key={link.href} href={link.href}>{link.label}</Link>)}</nav>
     <div className="public-header-actions flex flex-wrap items-center gap-2"><StudentAccountControl/><Link className="button primary" href="/dashboard">Open workspace</Link></div>
   </header>;
 }
