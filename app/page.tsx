@@ -4,7 +4,7 @@ import { ArrowRight, BarChart3, BookOpen, CheckCircle2, MessageSquareText, Star 
 
 export const metadata = {
   title: 'CoursePulse | College course feedback',
-  description: 'Create a student account with your name, username and programme, then share anonymous course feedback. No email required. No Admin or HOD roles.',
+  description: 'CoursePulse is a single-college course feedback portal. Students sign up with a username; Teachers sign in with their college email and review privacy-protected feedback analytics.',
   alternates: { canonical: '/' }
 };
 
@@ -14,8 +14,8 @@ export default function Home() {
     <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-16">
       <div>
         <h1 className="mt-7 max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-.055em] sm:text-6xl">Better courses begin with <span className="text-[#43805a]">honest feedback.</span></h1>
-        <p className="mt-6 max-w-xl text-lg leading-8 text-[#526158]">Students can create an account using their name, a username and their programme—B.Tech, M.Tech, BBA, B.Com and more. No email address or verification is needed. No Admin or HOD roles.</p>
-        <div className="mt-9 flex flex-wrap gap-3"><Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white">Create student account <ArrowRight size={17}/></Link><Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Student sign in</Link><Link href="/dashboard" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Explore workspace</Link></div>
+        <p className="mt-6 max-w-xl text-lg leading-8 text-[#526158]">Students create accounts with a username and programme. Teachers sign in with their college email to manage assigned courses, view protected feedback analytics and improve teaching. Student responses stay anonymous.</p>
+        <div className="mt-9 flex flex-wrap gap-3"><Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white">Create student account <ArrowRight size={17}/></Link><Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Student / Teacher sign in</Link><Link href="/dashboard" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Explore workspace</Link></div>
         <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-[#526158]"><span className="inline-flex items-center gap-2"><CheckCircle2 size={15}/>Student accounts</span><span className="inline-flex items-center gap-2"><MessageSquareText size={15}/>Anonymous feedback</span><span className="inline-flex items-center gap-2"><BarChart3 size={15}/>Simple results</span></div>
       </div>
       <div className="relative mx-auto w-full max-w-xl"><div className="absolute -inset-8 rounded-[3rem] bg-[#e4f0e6] blur-2xl"/><div className="relative rounded-[2rem] border border-[#e0e9e1] bg-white p-6 shadow-[0_30px_90px_-35px_rgba(31,76,49,.25)] sm:p-8">

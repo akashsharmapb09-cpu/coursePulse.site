@@ -28,7 +28,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(home).toContain('href="/signup"');
     expect(home).toContain('href="/login"');
     expect(home).toContain('Create student account');
-    expect(home).toContain('Student sign in');
+    expect(home).toContain('Student / Teacher sign in');
     expect(home).toContain('B.Tech');
     expect(home).toContain('B.Com');
     expect(home).toContain('username');
@@ -41,7 +41,8 @@ describe('CoursePulse email-free student account experience', () => {
     expect(signup).toContain('<StudentAuthForm mode="signup"/>');
     expect(login).toContain('<StudentAuthForm mode="signin"/>');
     expect(signup).toContain("title: 'Create student account'");
-    expect(login).toContain("title: 'Student sign in'");
+    expect(login).toContain("title: 'Student & Teacher sign in'");
+    expect(login).toContain('Teachers sign in with their college email and password.');
   });
 
   it('collects name, programme, username and a confirmed strong password only', () => {
@@ -137,7 +138,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(terms).toContain('username, password and programme');
     expect(terms).toContain('No email address or verification message is needed');
     expect(publicSite).toContain('Create account');
-    expect(publicSite).toContain('Student sign in');
+    expect(publicSite).toContain('Student / Teacher sign in');
     expect(consent).toContain('essential first-party session cookies');
     expect(consent).toContain('only after you opt in');
   });

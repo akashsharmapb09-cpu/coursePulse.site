@@ -183,7 +183,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       <Link href={isSignup ? '/login' : '/signup'} style={{ minHeight: 44, display: "inline-flex", alignItems: "center", paddingInline: 8 }}>{isSignup ? 'Sign in' : 'Create account'}</Link>
     </p>
     <p className="fine-print">
-      Student accounts use a username and password; email-based password recovery is not available. {isSignup ? "Keep your sign-in details somewhere secure." : <>For account assistance, see <Link className="auth-support-link" href="/contact">Contact &amp; support</Link>. Never share your password or sign-in codes.</>}
+      {isSignup ? <>Student accounts use a username and password; email-based password recovery is not available. Keep your sign-in details somewhere secure.</> : <>Students sign in with a username; Teachers sign in with their college email. For account assistance, see <Link className="auth-support-link" href="/contact">Contact &amp; support</Link>. Never share your password or sign-in codes.</>}
     </p>
   </div>;
 }

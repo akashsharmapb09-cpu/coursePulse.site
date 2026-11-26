@@ -7,6 +7,9 @@
 - **Reporting:** database aggregate RPCs; CSV/XLSX/PDF export handlers.
 - **Hosting:** Vercel; managed Supabase Postgres.
 
+## Single-college boundary
+Each deployment has exactly one active college workspace. The workspace ID is retained internally for database row-level security, course ownership, invitations and reporting; a database uniqueness guard blocks a second workspace. There is no Platform Super Admin, college provisioning, tenant switcher or subscription-management surface.
+
 ## Request path
 Browser -> Next middleware (origin checks on API mutations and Supabase session refresh) -> route handler -> authenticate current user -> role/resource authorization -> Zod validation -> request-scoped Supabase/RPC -> Postgres RLS/constraints -> safe response. Mutating routes use a database-backed per-user rate limiter where wired.
 

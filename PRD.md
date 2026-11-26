@@ -3,6 +3,9 @@
 ## Vision
 CoursePulse is a privacy-first course feedback and learning analytics portal for higher education. Students submit course feedback, instructors improve teaching through protected aggregates, and administrators manage the academic workspace.
 
+## Deployment model
+Each CoursePulse deployment serves one college/workspace only. Multi-college tenant provisioning, cross-college switching, platform-level college administration and subscription management are not part of this product. A single internal workspace ID remains in the database only to support row-level security and course/roster boundaries.
+
 ## Roles
 - Student: view eligible courses/forms, submit once per eligible form, and view only personal participation status.
 - Instructor: manage assigned courses/forms and view privacy-protected aggregates only.
