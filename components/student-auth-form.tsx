@@ -71,13 +71,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
           await supabase.auth.signOut();
           throw new Error('This email is not linked to an active Instructor account. Students should sign in with their username.');
         }
-        if (instructorProfile.role === 'ADMIN') {
-          const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-          if (assuranceError || assurance?.currentLevel !== 'aal2') {
-            await supabase.auth.signOut();
-            throw new Error('Complete administrator multi-factor authentication before opening this workspace.');
-          }
-        }
+        // The protected dashboard presents the existing AdminMfaGate for AAL2.
         router.replace('/dashboard');
         router.refresh();
         return;
