@@ -250,7 +250,7 @@ export async function GET(request: NextRequest, context: Context) {
         p_search: null
       }),
       supabase.from('courses')
-        .select('id,course_code,title,semester_id,department_id,semester:semesters(name),department:departments(name)')
+        .select('id,course_code,title,semester_id,department_id')
         .order('title')
     ]);
     if (rowsResult.error || courseResult.error) return jsonError('Anonymous response export could not be prepared.', 403);
@@ -269,7 +269,7 @@ export async function GET(request: NextRequest, context: Context) {
     if (feedbackResult.error) return jsonError('Feedback titles could not be loaded for export.', 500);
     const feedbackMap = new Map((feedbackResult.data ?? []).map(form => [form.id, form.title]));
     const cell = (value: unknown) => '"' + String(value ?? '').replaceAll('"', '""').replace(/[\\r\\n]+/g, ' ') + '"';
-    const headings = ['Course code','Course','Semester','Feedback form','Submitted date','Reportable responses','Anonymous comment','Ratings JSON'];
+    const headings = ['Course code','Course','Semester ID','Feedback form','Submitted date','Reportable responses','Anonymous comment','Ratings JSON'];
     const lines = [
       headings.map(cell).join(','),
       ...rows.map(row => {
@@ -277,7 +277,7 @@ export async function GET(request: NextRequest, context: Context) {
         return [
           course?.course_code ?? '',
           course?.title ?? '',
-          course?.semester?.[0]?.name ?? '',
+          course?.semester_id ?? '',
           feedbackMap.get(row.feedback_id) ?? '',
           row.created_at,
           row.response_count,
