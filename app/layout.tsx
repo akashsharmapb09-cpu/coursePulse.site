@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Manrope } from 'next/font/google';
 import './globals.css';
+import './taste.css';
 import { CookieConsent } from '@/components/cookie-consent';
 
 export const dynamic = 'force-dynamic';

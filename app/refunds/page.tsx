@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PublicPage } from '@/components/public-site';
 
 export const metadata = {
   title: 'Refund information',
@@ -8,14 +9,19 @@ export const metadata = {
 };
 
 export default function RefundsPage() {
-  return <main className="min-h-screen bg-[#f7faf7] px-6 py-12 text-[#20352a]">
-    <article className="mx-auto max-w-3xl rounded-3xl border border-[#e2ebe3] bg-white p-8 sm:p-12">
-      <Link href="/" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="text-sm font-bold text-[#477956]">← CoursePulse</Link>
-      <p className="mt-8 text-xs font-extrabold tracking-widest text-[#3f6b4b]">PAYMENTS</p>
-      <h1 className="mt-3 text-3xl font-extrabold">Refund information</h1>
-      <p className="mt-5 text-sm leading-7 text-[#526158]">This college-project version of CoursePulse does not sell subscriptions, accept payments or offer paid services. No refundable transaction can currently be made through this application.</p>
-      <p className="mt-4 text-sm leading-7 text-[#526158]">If paid services are introduced in a future version, an institution-approved refund policy and verified support details must be published before payments are enabled.</p>
-      <div className="mt-10 border-t border-[#edf1ed] pt-6"><Link href="/terms" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="text-sm font-semibold text-[#477956]">Terms of use</Link></div>
-    </article>
-  </main>;
+  return (
+    <PublicPage
+      eyebrow="Payments"
+      title="Refund information"
+      description="Payment information for this CoursePulse deployment."
+    >
+      <section>
+        <h2>No paid services are currently offered</h2>
+        <p>This college-project version of CoursePulse does not sell subscriptions, accept payments or offer paid services. No refundable transaction can currently be made through this application.</p>
+        <p>If paid services are introduced in a future version, an institution-approved refund policy and verified support details must be published before payments are enabled.</p>
+      </section>
+      <p className="public-note">This page describes the current project configuration. It is not an institutional payment or refund approval.</p>
+      <p><Link className="inline-link" href="/terms">Read the terms of use</Link>.</p>
+    </PublicPage>
+  );
 }
