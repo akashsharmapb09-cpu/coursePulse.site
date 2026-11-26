@@ -6,6 +6,12 @@ import { formatLocalDateTimeInput, isFeedbackReminder, isFeedbackReminderDue, is
 
 type Course={id:string;title:string;course_code?:string|null};
 const REMINDER_KEY='coursepulse-feedback-reminders-v1';
+const LEGACY_COURSES:Course[]=[
+  {id:'cse201',title:'Data Structures'},
+  {id:'cse305',title:'Database Management'},
+  {id:'cse310',title:'Web Development'},
+  {id:'cse402',title:'Operating Systems'}
+];
 
 export function StudentReminders({courses}:{courses:Course[]}) {
   const [reminders,setReminders]=useState<FeedbackReminder[]>([]);
@@ -16,7 +22,8 @@ export function StudentReminders({courses}:{courses:Course[]}) {
   const [error,setError]=useState('');
   const [clock,setClock]=useState(Date.now());
   const [loaded,setLoaded]=useState(false);
-  const courseIds=useMemo(()=>courses.map(c=>c.id),[courses]);
+  const courseIds=useMemo(()=>[...courses.map(c=>c.id),...LEGACY_COURSES.map(c=>c.id)],[courses]);
+  const courseTitle=(id:string)=>courses.find(c=>c.id===id)?.title??LEGACY_COURSES.find(c=>c.id===id)?.title??'Legacy course (not available)';
   useEffect(()=>{
     if(!courses.length||loaded)return;
     try {
@@ -66,7 +73,7 @@ export function StudentReminders({courses}:{courses:Course[]}) {
     if(!pending.length)return;
     try{
       new Notification(pending.length===1?'Course feedback reminder':'Course feedback reminders',{
-        body:pending.map(r=>courses.find(c=>c.id===r.courseId)?.title??'Your course').slice(0,2).join(', '),
+        body:pending.map(r=>courseTitle(r.courseId)).slice(0,2).join(', '),
         icon:'/icon.svg',tag:'coursepulse-authenticated-reminders'
       });
       setReminders(current=>current.map(r=>pending.some(p=>p.id===r.id)?{...r,notifiedAt:new Date(clock).toISOString()}:r));
@@ -87,7 +94,7 @@ export function StudentReminders({courses}:{courses:Course[]}) {
   function complete(id:string){const at=new Date().toISOString();setReminders(current=>current.map(r=>r.id===id?{...r,completedAt:at,notifiedAt:null}:r));}
   function snooze(id:string){setReminders(current=>current.map(r=>{if(r.id!==id)return r;const d=new Date(Math.max(Date.parse(r.remindAt),Date.now()));d.setHours(d.getHours()+24);return {...r,remindAt:d.toISOString(),notifiedAt:null};}));}
   function remove(id:string){setReminders(current=>current.filter(r=>r.id!==id));}
-  const label=(r:FeedbackReminder)=>courses.find(c=>c.id===r.courseId)?.title??'Course unavailable';
+  const label=(r:FeedbackReminder)=>courseTitle(r.courseId);
   return <section className="space-y-5">
     <div className="section-heading"><div><h3>Feedback reminders</h3><p>Set a personal reminder for a course feedback session. Reminders are stored in this browser, separately from submissions.</p></div><BellRing size={24}/></div>
     {!loaded&&<p className="muted">Loading saved reminders…</p>}
