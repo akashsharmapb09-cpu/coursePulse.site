@@ -11,7 +11,7 @@ export default function Home() {
   return <main className="min-h-screen overflow-hidden bg-[#f6f3eb] text-[#20352a]">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
       <Link href="/" className="flex items-center gap-3 text-lg font-extrabold"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#245b3e] text-white"><Activity size={20}/></span>CoursePulse</Link>
-      <nav className="flex items-center gap-3"><a href="#how-it-works" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] sm:inline-flex">How it works</a><Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open workspace <ArrowRight size={16}/></Link></nav>
+      <nav className="site-nav flex items-center gap-3"><a href="#how-it-works" className="hidden min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#52665a] sm:inline-flex">How it works</a><Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#245b3e] px-5 py-3 text-sm font-bold text-white">Open workspace <ArrowRight size={16}/></Link></nav>
     </header>
     <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-16">
       <div><span className="inline-flex items-center gap-2 rounded-full border border-[#d9e8dc] bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-[#477456]"><span className="h-2 w-2 rounded-full bg-[#63a879]"/>COLLEGE PROJECT</span>
