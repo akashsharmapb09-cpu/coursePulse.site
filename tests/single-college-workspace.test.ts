@@ -39,6 +39,10 @@ describe('single-college CoursePulse deployment', () => {
     expect(migration).toContain('RENAME TO retired_platform_admin_audit');
     expect(migration).toContain('DROP FUNCTION IF EXISTS public.platform_list_organizations()');
     expect(migration).toContain('DROP FUNCTION IF EXISTS public.accept_existing_college_head_invitation(uuid)');
+    expect(migration).toContain('DROP FUNCTION IF EXISTS public.admin_claim_setup_workspace(text)');
+    expect(migration).toContain('DROP FUNCTION IF EXISTS public.claim_admin_signup(text)');
+    expect(migration).toContain('DROP FUNCTION IF EXISTS private.claim_setup_workspace(text)');
+    expect(migration).toContain('DROP FUNCTION IF EXISTS private.claim_admin_signup(text)');
     expect(migration).toContain('DROP TRIGGER IF EXISTS auth_activate_college_after_verification ON auth.users');
     expect(migration).toContain("CHECK (invited_role IN ('STUDENT'::public.app_role, 'INSTRUCTOR'::public.app_role))");
     expect(collegeProvisioner).toContain('status: 410');

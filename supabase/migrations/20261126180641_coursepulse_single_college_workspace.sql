@@ -81,6 +81,12 @@ DROP FUNCTION IF EXISTS public.platform_record_college_invitation_audit(uuid, uu
 DROP FUNCTION IF EXISTS public.accept_existing_college_head_invitation(uuid);
 DROP FUNCTION IF EXISTS public.update_current_organization(text, text);
 
+-- Retire legacy, already-revoked workspace/HOD claim RPCs as well.
+DROP FUNCTION IF EXISTS public.admin_claim_setup_workspace(text);
+DROP FUNCTION IF EXISTS public.claim_admin_signup(text);
+DROP FUNCTION IF EXISTS private.claim_setup_workspace(text);
+DROP FUNCTION IF EXISTS private.claim_admin_signup(text);
+
 DROP FUNCTION IF EXISTS private.platform_list_organizations();
 DROP FUNCTION IF EXISTS private.platform_list_organization_heads();
 DROP FUNCTION IF EXISTS private.platform_get_summary();
