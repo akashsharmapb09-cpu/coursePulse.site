@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-type Account = { name: string; program: string };
+type Account = { name: string; username: string; program: string };
 
 export function StudentAccountControl() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function StudentAccountControl() {
 
       const { data: profile } = await supabase
         .from('users')
-        .select('full_name,program,role,is_active')
+        .select('full_name,username,program,role,is_active')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -40,6 +40,7 @@ export function StudentAccountControl() {
       if (alive) {
         setAccount({
           name: profile.full_name || String(user.user_metadata?.full_name || 'Student'),
+          username: profile.username || String(user.user_metadata?.username || 'student'),
           program: profile.program || String(user.user_metadata?.program || 'Student')
         });
         setLoading(false);
@@ -72,8 +73,8 @@ export function StudentAccountControl() {
   </div>;
 
   return <div className="flex items-center gap-2">
-    <span className="hidden max-w-44 items-center gap-2 rounded-xl bg-[#edf5ef] px-3 py-2 text-xs font-semibold text-[#315f43] sm:inline-flex" title={account.program}>
-      <UserRound size={15}/><span className="max-w-32 truncate">{account.name}</span><span className="text-[#718177]">· {account.program}</span>
+    <span className="hidden max-w-44 items-center gap-2 rounded-xl bg-[#edf5ef] px-3 py-2 text-xs font-semibold text-[#315f43] sm:inline-flex" title={`@${account.username} · ${account.program}`}>
+      <UserRound size={15}/><span className="max-w-28 truncate">{account.name}</span><span className="text-[#718177]">· @{account.username}</span><span className="text-[#718177]">· {account.program}</span>
     </span>
     <button type="button" onClick={signOut} disabled={signingOut} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#dce6de] bg-white px-3 py-2 text-xs font-bold text-[#456052] hover:bg-[#f4f8f5] disabled:opacity-60">
       <LogOut size={14}/>{signingOut ? 'Signing out' : 'Sign out'}
