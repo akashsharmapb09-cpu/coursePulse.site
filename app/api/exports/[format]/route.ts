@@ -238,6 +238,65 @@ export async function GET(request: NextRequest, context: Context) {
   if (!validDate(fromDate) || !validDate(toDate)) return jsonError('Dates must use YYYY-MM-DD format.');
   if (fromDate && toDate && fromDate > toDate) return jsonError('Start date must be on or before end date.');
 
+  // Optional row-level export reads only the de-identified projection table.
+  // Its RLS policy enforces course ownership and a minimum of five responses.
+  if (format === 'csv' && params.get('detail') === 'anonymous') {
+    let exportQuery = supabase.from('feedback_submissions')
+      .select('feedback_id,course_id,created_at,comment,ratings_json')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+    if (courseId) exportQuery = exportQuery.eq('course_id', courseId);
+    if (fromDate) exportQuery = exportQuery.gte('created_at', fromDate + 'T00:00:00.000Z');
+    if (toDate) exportQuery = exportQuery.lte('created_at', toDate + 'T23:59:59.999Z');
+
+    const [rowsResult, courseResult] = await Promise.all([
+      exportQuery,
+      supabase.from('courses')
+        .select('id,course_code,title,semester_id,department_id,semester:semesters(name),department:departments(name)')
+        .order('title')
+    ]);
+    if (rowsResult.error || courseResult.error) return jsonError('Anonymous response export could not be prepared.', 403);
+    const courseMap = new Map((courseResult.data ?? []).map(course => [course.id, course]));
+    const scopedCourses = (courseResult.data ?? []).filter(course =>
+      (!semesterId || course.semester_id === semesterId) &&
+      (!departmentId || course.department_id === departmentId)
+    );
+    const permittedCourseIds = new Set(scopedCourses.map(course => course.id));
+    const feedbackIds = [...new Set((rowsResult.data ?? [])
+      .filter(row => permittedCourseIds.has(row.course_id))
+      .map(row => row.feedback_id))];
+    const feedbackResult = feedbackIds.length
+      ? await supabase.from('feedback').select('id,title').in('id', feedbackIds)
+      : { data: [], error: null };
+    if (feedbackResult.error) return jsonError('Feedback titles could not be loaded for export.', 500);
+    const feedbackMap = new Map((feedbackResult.data ?? []).map(form => [form.id, form.title]));
+    const cell = (value: unknown) => '"' + String(value ?? '').replaceAll('"', '""').replace(/[\\r\\n]+/g, ' ') + '"';
+    const headings = ['Course code','Course','Semester','Feedback form','Submitted date','Anonymous comment','Ratings JSON'];
+    const lines = [
+      headings.map(cell).join(','),
+      ...(rowsResult.data ?? []).filter(row => permittedCourseIds.has(row.course_id)).map(row => {
+        const course = courseMap.get(row.course_id);
+        return [
+          course?.course_code ?? '',
+          course?.title ?? '',
+          course?.semester?.name ?? '',
+          feedbackMap.get(row.feedback_id) ?? '',
+          row.created_at,
+          row.comment,
+          JSON.stringify(row.ratings_json ?? {})
+        ].map(cell).join(',');
+      })
+    ];
+    return new NextResponse(lines.join('\\r\\n'), {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Content-Type-Options': 'nosniff',
+        'Content-Disposition': 'attachment; filename="coursepulse-anonymous-feedback-' + new Date().toISOString().slice(0,10) + '.csv"',
+        'Content-Type': 'text/csv; charset=utf-8'
+      }
+    });
+  }
+
   const rpcArgs = {
     p_course_id: courseId,
     p_from_date: fromDate,
