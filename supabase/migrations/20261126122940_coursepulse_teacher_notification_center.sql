@@ -1,0 +1,1 @@
+-- CoursePulse teacher notification center migration is managed with the connected Supabase project.
