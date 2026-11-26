@@ -97,7 +97,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(middleware).toContain('admin|super-admin|verify');
     expect(middleware).toContain('buildContentSecurityPolicy');
     expect(middleware).not.toContain('status: 410');
-    expect(middleware).toMatch(/pathname === ['"]\/dashboard/);
+    expect(middleware).toMatch(/\\/dashboard\\(\\?:\\/\\|\\$\\)/);
     expect(dashboard).toContain("from '@/components/dashboard'");
     expect(accountControl).toContain("select('full_name,username,program,role,is_active')");
     expect(accountControl).toContain("profile.role !== 'STUDENT'");
