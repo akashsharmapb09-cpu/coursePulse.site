@@ -1,7 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 
-const configuredOrigins = () => (Deno.env.get("APP_ALLOWED_ORIGINS") ?? "https://coursepulse-site.vercel.app")
-  .split(",").map((value) => value.trim()).filter(Boolean);
+const REQUIRED_ORIGINS = [
+  "https://coursepulse.netlify.app",
+  "https://deploy-preview-37--coursepulse.netlify.app",
+  "https://coursepulse-site.vercel.app",
+];
+
+const configuredOrigins = () => [...new Set([
+  ...REQUIRED_ORIGINS,
+  ...(Deno.env.get("APP_ALLOWED_ORIGINS") ?? "").split(",").map((value) => value.trim()).filter(Boolean),
+])];
 
 const corsHeaders = (origin: string | null) => {
   const allowed = configuredOrigins();
@@ -60,9 +68,12 @@ function allowedBaseUrl(raw: string | null): string | null {
   if (!raw) return null;
   try {
     const parsed = new URL(raw);
+    const hostname = parsed.hostname.toLowerCase();
     const allowed = parsed.protocol === "https:" && (
-      parsed.hostname === "coursepulse-site.vercel.app" ||
-      (parsed.hostname.startsWith("coursepulse-site-") && parsed.hostname.endsWith(".vercel.app"))
+      hostname === "coursepulse.netlify.app" ||
+      /^deploy-preview-\\d+--coursepulse\\.netlify\\.app$/.test(hostname) ||
+      hostname === "coursepulse-site.vercel.app" ||
+      (hostname.startsWith("coursepulse-site-") && hostname.endsWith(".vercel.app"))
     );
     return allowed ? parsed.origin : null;
   } catch {
@@ -126,9 +137,9 @@ Deno.serve(async (request: Request) => {
     return json({ error: "The college workspace is not active." }, 403, cors);
   }
 
-  const baseUrl = allowedBaseUrl(Deno.env.get("APP_BASE_URL")) ??
-    allowedBaseUrl(request.headers.get("x-app-base-url")) ??
-    "https://coursepulse-site.vercel.app";
+  const baseUrl = allowedBaseUrl(request.headers.get("x-app-base-url")) ??
+    allowedBaseUrl(Deno.env.get("APP_BASE_URL")) ??
+    "https://coursepulse.netlify.app";
 
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || Object.keys(body).some((key) => key !== "invitations") ||
