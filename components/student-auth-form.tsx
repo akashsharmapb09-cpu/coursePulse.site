@@ -62,7 +62,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
             data: { full_name: fullName.trim(), program: chosenProgramme },
             // The project origin is the configured Supabase Site URL and works
             // with the default confirmation redirect allow-list entry.
-            emailRedirectTo: window.location.origin
+            emailRedirectTo: `${window.location.origin}/auth/confirm?next=%2Fdashboard`
           }
         });
 
