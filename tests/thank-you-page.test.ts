@@ -8,7 +8,7 @@ describe('public feedback confirmation page',()=>{
   expect(page).toContain('Thank you for your feedback.');expect(page).toContain('Return to workspace');
  });
  it('does not show identity or individual feedback content',()=>{
-  expect(page).not.toContain('roll number');expect(page).not.toMatch(/\\.select\\([^)]*answers/i);
+  expect(page).not.toContain('roll number');expect(page).not.toContain('answers');
   expect(page).toContain('saved in this browser');
  });
 });
