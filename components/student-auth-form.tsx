@@ -151,9 +151,10 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       <label>Password
         <span className="input-wrap password-input-wrap"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} name="password" autoComplete={isSignup ? 'new-password' : 'current-password'} value={password} onChange={event => setPassword(event.target.value)} minLength={isSignup ? 10 : 1} maxLength={72} required placeholder={isSignup ? 'At least 10 characters' : 'Your password'}/><button className="password-visibility-toggle" type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span>
       </label>
-      {isSignup && <label>Confirm password
-        <span className="input-wrap password-input-wrap"><LockKeyhole size={17}/><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={10} maxLength={72} required placeholder="Enter your password again"/><button className="password-visibility-toggle" type="button" onClick={() => setShowConfirmPassword(value => !value)} aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword}>{showConfirmPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span>
-      </label>}
+      {isSignup && <div className="grid gap-[7px] text-xs font-bold text-[#40574d]">
+        <label htmlFor="confirm-password">Confirm password</label>
+        <span className="input-wrap password-input-wrap"><LockKeyhole size={17}/><input id="confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={10} maxLength={72} required placeholder="Enter your password again"/><button className="password-visibility-toggle" type="button" onClick={() => setShowConfirmPassword(value => !value)} aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} aria-pressed={showConfirmPassword}>{showConfirmPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span>
+      </div>}
       {error && <p className="alert error" role="alert">{error}</p>}
       <button type="submit" className="button primary full" disabled={busy}>
         {busy ? <LoaderCircle className="spin" size={17}/> : <>{isSignup ? 'Create student account' : 'Sign in'} <ArrowRight size={17}/></>}
