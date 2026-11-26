@@ -889,3 +889,10 @@ a[href$="/privacy"] {
   .auth-panel { width: 100%; min-width: 0; min-height: 100vh; padding: 32px 22px; }
   .auth-card { width: min(100%, 430px); margin-inline: auto; }
 }
+
+/* Keep small supporting copy readable at WCAG AA contrast on light surfaces. */
+.text-\\[\\#718177\\],
+.text-\\[\\#829087\\],
+.text-\\[\\#75857a\\] {
+  color: #526158 !important;
+}
