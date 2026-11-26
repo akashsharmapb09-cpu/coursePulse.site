@@ -58,7 +58,7 @@ test.describe('public-page browser smoke', () => {
 
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-    await expect(page.getByLabel(/Student username or Instructor email/)).toBeVisible();
+    await expect(page.getByLabel('Username')).toBeVisible();
     await expect(page.getByLabel('Email address')).toHaveCount(0);
     await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
   });
