@@ -890,9 +890,11 @@ a[href$="/privacy"] {
   .auth-card { width: min(100%, 430px); margin-inline: auto; }
 }
 
-/* Keep small supporting copy readable at WCAG AA contrast on light surfaces. */
-.text-\\[\\#718177\\],
-.text-\\[\\#829087\\],
-.text-\\[\\#75857a\\] {
+/* Keep small supporting copy readable at WCAG AA contrast on light surfaces.
+   Match literal Tailwind classes through an attribute selector so the rule is
+   independent of CSS escape handling across browsers. */
+[class~="text-[#718177]"],
+[class~="text-[#829087]"],
+[class~="text-[#75857a]"] {
   color: #526158 !important;
 }
