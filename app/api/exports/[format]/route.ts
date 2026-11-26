@@ -277,7 +277,7 @@ export async function GET(request: NextRequest, context: Context) {
         return [
           course?.course_code ?? '',
           course?.title ?? '',
-          course?.semester?.name ?? '',
+          course?.semester?.[0]?.name ?? '',
           feedbackMap.get(row.feedback_id) ?? '',
           row.created_at,
           row.response_count,
