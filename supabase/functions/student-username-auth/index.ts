@@ -57,8 +57,11 @@ async function sha256(value: string): Promise<string> {
 }
 
 function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || request.headers.get("cf-connecting-ip") || "unknown";
+  // Prefer the CDN-provided client IP over caller-supplied X-Forwarded-For.
+  const trustedCloudflareIp = request.headers.get("cf-connecting-ip")?.trim();
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  const forwardedChain = request.headers.get("x-forwarded-for")?.split(",").map(value => value.trim()).filter(Boolean);
+  return trustedCloudflareIp || realIp || forwardedChain?.at(-1) || "unknown";
 }
 
 async function checkRateLimit(bucket: string, maxAttempts: number, windowSeconds: number): Promise<boolean> {
