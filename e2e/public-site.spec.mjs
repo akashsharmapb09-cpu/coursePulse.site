@@ -173,6 +173,13 @@ test.describe('public-page browser smoke', () => {
     await expect(page.locator('footer').getByRole('button', { name: 'Cookie settings' })).toBeVisible();
   });
 
+  test('public-facing pages no longer describe CoursePulse as a project', async ({ page }) => {
+    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/terms', '/cookies', '/support', '/refunds', '/dashboard', '/feedback/thank-you']) {
+      await page.goto(route);
+      await expect(page.locator('body')).not.toContainText(/\\bproject\\b/i);
+    }
+  });
+
   test('public pages do not throw uncaught browser exceptions', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
