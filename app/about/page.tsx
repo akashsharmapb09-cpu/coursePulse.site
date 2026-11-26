@@ -20,7 +20,7 @@ export default function AboutPage() {
     </section>
     <section>
       <h2>One shared public workspace</h2>
-      <p>There is no sign-in, account registration, Admin role, or HOD role in this version. Every visitor uses the same public project interface.</p>
+      <p>This version has one shared public workspace, without login screens or Admin and HOD roles. Every visitor uses the same public project interface.</p>
     </section>
     <section>
       <h2>About the demo data</h2>
