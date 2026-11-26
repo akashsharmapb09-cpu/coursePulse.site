@@ -24,28 +24,13 @@ export async function GET(request: NextRequest) {
     return jsonError('Invalid comment filters.');
   }
 
-  let semesterCourseIds: string[] | null = null;
-  if (semesterId) {
-    const { data: semesterCourses, error: semesterError } = await supabase
-      .from('courses').select('id').eq('semester_id', semesterId);
-    if (semesterError) return jsonError('Semester filter could not be applied.', 403);
-    semesterCourseIds = (semesterCourses ?? []).map(course => course.id);
-    if (!semesterCourseIds.length || (courseId && !semesterCourseIds.includes(courseId))) {
-      return NextResponse.json({ comments: [], minimum_group_size: 5 }, { headers: { 'Cache-Control': 'no-store' } });
-    }
-  }
-
-  let query = supabase.from('feedback_submissions')
-    .select('id,feedback_id,course_id,created_at,comment,ratings_json')
-    .order('created_at', { ascending: false })
-    .limit(500);
-  if (courseId) query = query.eq('course_id', courseId);
-  else if (semesterCourseIds) query = query.in('course_id', semesterCourseIds);
-  if (fromDate) query = query.gte('created_at', fromDate + 'T00:00:00.000Z');
-  if (toDate) query = query.lte('created_at', toDate + 'T23:59:59.999Z');
-  if (search) query = query.ilike('comment', '%' + search.replace(/[,%]/g, '') + '%');
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc('get_filtered_anonymous_feedback', {
+    p_course_id: courseId,
+    p_semester_id: semesterId,
+    p_from_date: fromDate,
+    p_to_date: toDate,
+    p_search: search || null
+  });
   if (error) return jsonError('Anonymous comments could not be loaded.', 403);
   const rows = data ?? [];
   const courseIds = [...new Set(rows.map(row => row.course_id))];
