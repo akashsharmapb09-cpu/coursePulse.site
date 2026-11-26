@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
     p_search: search || null
   });
   if (error) return jsonError('Anonymous comments could not be loaded.', 403);
-  const rows = data ?? [];
+  type CommentProjectionRow = { id: string; feedback_id: string; course_id: string; created_at: string; comment: string; ratings_json: Record<string, number>; response_count: number };
+  const rows = (data ?? []) as CommentProjectionRow[];
   const courseIds = [...new Set(rows.map(row => row.course_id))];
   const feedbackIds = [...new Set(rows.map(row => row.feedback_id))];
   const [coursesResult, feedbackResult] = await Promise.all([
