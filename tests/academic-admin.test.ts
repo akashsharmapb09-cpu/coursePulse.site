@@ -30,19 +30,21 @@ describe('academic administration and account lifecycle contract',()=>{
     expect(migration).toMatch(/where u\.id=\(select auth\.uid\(\)\) and u\.is_active=true/);
     expect(http).toMatch(/!profile\.is_active/);
   });
-  it('routes the college project to a public workspace without account or MFA gates',()=>{
-    expect(dashboard).toContain("from '@/components/public-workspace'");
-    expect(dashboard).toContain('<PublicWorkspace />');
-    expect(dashboard).not.toContain('AdminMfaGate');
-    expect(dashboard).not.toContain('createClient');
-    expect(dashboard).not.toContain('auth.getUser');
-    expect(middleware).toMatch(/destination\.pathname\s*=\s*['"]\/dashboard['"]/);
-    expect(middleware).toMatch(/status:\s*410/);
+  it('protects the dashboard with Supabase Auth and routes users by role',()=>{
+    expect(dashboard).toContain("from '@/components/dashboard'");
+    expect(dashboard).toContain('supabase.auth.getUser()');
+    expect(dashboard).toMatch(/redirect\('\/login/);
+    expect(dashboard).toMatch(/profile\.role/);
+    expect(dashboard).not.toContain('<PublicWorkspace />');
+    expect(middleware).toMatch(/destination\.pathname\s*=\s*['"]\/login['"]/);
+    expect(middleware).toMatch(/dashboard/);
+    expect(middleware).not.toMatch(/status:\s*410/);
   });
-  it('keeps the old audited academic API only as historical code, not as a public route',()=>{
+  it('keeps audited academic API routes behind authenticated role checks',()=>{
     expect(academicApi).toMatch(/admin_record_audit/);
+    expect(academicApi).toMatch(/getCurrentUser/);
     expect(migration).toMatch(/create table public\.audit_logs/);
-    expect(middleware).toContain('The public college demo does not use authenticated API routes.');
+    expect(middleware).not.toContain('The public college demo does not use authenticated API routes.');
   });
   it('supports historical department and semester policies without exposing them in the demo',()=>{
     expect(academicApi).toMatch(/z\.literal\('department_update'\)/);
