@@ -46,7 +46,7 @@ describe('teacher Notification Center', () => {
     expect(dismissalMigration).toContain('add column if not exists dismissed_at timestamptz');
     expect(dismissalMigration).toContain('revoke delete on public.teacher_notifications from authenticated');
     expect(dismissalMigration).toContain('Notification dismissal is not permitted');
-    expect(dismissalMigration).toContain('teacher_notifications_unique_period');
+    expect(triggerMigration).toContain('on conflict (recipient_id, category, period_start)');
   });
 
   it('renders an unread bell, preview, individual mark-read actions and notification labels', () => {
