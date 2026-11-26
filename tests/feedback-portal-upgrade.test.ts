@@ -30,8 +30,8 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(finalHardening).toMatch(/create trigger questions_refresh_feedback_forms[\s\S]*?after insert or update or delete on public\.questions/i);
     const questionRoute = read('app/api/questions/route.ts');
     expect(questionRoute).toMatch(/export async function (GET|POST|PATCH|DELETE)/);
-    expect(batchSync).toMatch(/set_config\\('coursepulse\\.sync_questions', 'off', true\\)/i);
-    expect(batchSync).toMatch(/current_setting\\('coursepulse\\.sync_questions', true\\) = 'off'/i);
+    expect(batchSync).toMatch(/set_config\('coursepulse\.sync_questions', 'off', true\)/i);
+    expect(batchSync).toMatch(/current_setting\('coursepulse\.sync_questions', true\) = 'off'/i);
   });
 
   it('keeps course-level duplicate tracking separate from anonymous answer rows', () => {
