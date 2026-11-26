@@ -37,5 +37,7 @@ describe('CoursePulse Digital Student ID retirement', () => {
     expect(foundation).toContain('create table public.student_directory');
     expect(migration).not.toMatch(/DROP TABLE[^;]*student_directory/i);
     expect(migration).not.toMatch(/DROP TABLE[^;]*course_enrollments/i);
+    expect(migration).not.toContain('DELETE FROM public.student_directory');
+    expect(migration).not.toContain('DELETE FROM public.course_enrollments');
   });
 });
