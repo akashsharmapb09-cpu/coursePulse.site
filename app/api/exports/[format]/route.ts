@@ -254,12 +254,14 @@ export async function GET(request: NextRequest, context: Context) {
         .order('title')
     ]);
     if (rowsResult.error || courseResult.error) return jsonError('Anonymous response export could not be prepared.', 403);
+    type AnonymousExportRow = { id: string; feedback_id: string; course_id: string; created_at: string; comment: string; ratings_json: Record<string, number>; response_count: number };
+    const anonymousRows = (rowsResult.data ?? []) as AnonymousExportRow[];
     const courseMap = new Map((courseResult.data ?? []).map(course => [course.id, course]));
     const permittedCourseIds = new Set((courseResult.data ?? [])
       .filter(course => (!semesterId || course.semester_id === semesterId) &&
         (!departmentId || course.department_id === departmentId))
       .map(course => course.id));
-    const rows = (rowsResult.data ?? []).filter(row => permittedCourseIds.has(row.course_id));
+    const rows = anonymousRows.filter(row => permittedCourseIds.has(row.course_id));
     const feedbackIds = [...new Set(rows.map(row => row.feedback_id))];
     const feedbackResult = feedbackIds.length
       ? await supabase.from('feedback').select('id,title').in('id', feedbackIds)
@@ -275,7 +277,7 @@ export async function GET(request: NextRequest, context: Context) {
         return [
           course?.course_code ?? '',
           course?.title ?? '',
-          course?.semester?.name ?? '',
+          course?.semester?.[0]?.name ?? '',
           feedbackMap.get(row.feedback_id) ?? '',
           row.created_at,
           row.response_count,
