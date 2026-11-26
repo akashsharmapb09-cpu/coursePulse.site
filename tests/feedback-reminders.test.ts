@@ -6,7 +6,7 @@ import {
   isFutureReminderDateTime,
   shouldNotifyFeedbackReminder,
   type FeedbackReminder
-} from '@/lib/feedback-reminders';
+} from '../lib/feedback-reminders';
 
 const courseIds = ['cse201','cse305'];
 const reminder: FeedbackReminder = {
