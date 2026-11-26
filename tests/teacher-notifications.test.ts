@@ -9,7 +9,7 @@ const dismissalMigration = readFileSync(resolve(process.cwd(), 'supabase/migrati
 const digestRefreshMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126124137_coursepulse_refresh_dismissed_feedback_digest.sql'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 const originalFeatureMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108153000_coursepulse_student_voice_teacher_notifications.sql'), 'utf8');
-const removalMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126171000_coursepulse_remove_student_voice.sql'), 'utf8');
+const removalMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126172441_coursepulse_remove_student_voice.sql'), 'utf8');
 const monthlyNotifyRoute = readFileSync(resolve(process.cwd(), 'app/api/admin/teacher-notifications/route.ts'), 'utf8');
 
 describe('teacher Notification Center', () => {
