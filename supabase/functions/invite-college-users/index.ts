@@ -71,7 +71,7 @@ function allowedBaseUrl(raw: string | null): string | null {
     const hostname = parsed.hostname.toLowerCase();
     const allowed = parsed.protocol === "https:" && (
       hostname === "coursepulse.netlify.app" ||
-      /^deploy-preview-\\d+--coursepulse\\.netlify\\.app$/.test(hostname) ||
+      /^deploy-preview-\d+--coursepulse\.netlify\.app$/.test(hostname) ||
       hostname === "coursepulse-site.vercel.app" ||
       (hostname.startsWith("coursepulse-site-") && hostname.endsWith(".vercel.app"))
     );
