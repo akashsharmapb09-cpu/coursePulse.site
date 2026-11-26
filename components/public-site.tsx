@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 const links = [
+  { href: '/#how-it-works', label: 'How it works' },
   { href: '/features', label: 'Features' },
   { href: '/about', label: 'About' },
   { href: '/privacy', label: 'Privacy' },
