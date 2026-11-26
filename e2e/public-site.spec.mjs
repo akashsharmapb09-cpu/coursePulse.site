@@ -66,9 +66,9 @@ test.describe('public-page browser smoke', () => {
     await page.locator('.site-nav a[href="/login"]').waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
-    const about = page.getByRole('link', { name: 'About' });
-    const privacy = page.getByRole('link', { name: 'Privacy' });
-    const cookies = page.getByRole('link', { name: 'Cookies' });
+    const about = page.locator('.site-nav a[href="/about"]');
+    const privacy = page.locator('.site-nav a[href="/privacy"]');
+    const cookies = page.locator('.site-nav a[href="/cookies"]');
     const signin = page.locator('.site-nav a[href="/login"]');
     const createAccount = page.locator('.site-nav a[href="/signup"]');
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
