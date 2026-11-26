@@ -76,15 +76,15 @@ export function StudentAccountControl() {
   if (loading) return <span className="text-xs font-semibold text-[#526158]" aria-label="Checking student account">Account</span>;
 
   if (!account) return <div className="flex items-center gap-2">
-    <Link href="/login" className="inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#456052] hover:bg-[#eff5f0]">Sign in</Link>
-    <Link href="/signup" className="inline-flex min-h-11 items-center rounded-xl bg-[#245b3e] px-4 py-2 text-sm font-bold text-white hover:bg-[#194b34]">Create account</Link>
+    <Link href="/login" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="rounded-xl px-3 py-2 text-sm font-semibold text-[#456052] hover:bg-[#eff5f0]">Sign in</Link>
+    <Link href="/signup" style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="rounded-xl bg-[#245b3e] px-4 py-2 text-sm font-bold text-white hover:bg-[#194b34]">Create account</Link>
   </div>;
 
   return <div className="flex items-center gap-2">
     <span className="hidden max-w-44 items-center gap-2 rounded-xl bg-[#edf5ef] px-3 py-2 text-xs font-semibold text-[#315f43] sm:inline-flex" title={`@${account.username} · ${account.program}`}>
       <UserRound size={15}/><span className="max-w-28 truncate">{account.name}</span><span className="text-[#718177]">· @{account.username}</span><span className="text-[#718177]">· {account.program}</span>
     </span>
-    <button type="button" onClick={signOut} disabled={signingOut} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#dce6de] bg-white px-3 py-2 text-xs font-bold text-[#456052] hover:bg-[#f4f8f5] disabled:opacity-60">
+    <button type="button" onClick={signOut} disabled={signingOut} style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="gap-2 rounded-xl border border-[#dce6de] bg-white px-3 py-2 text-xs font-bold text-[#456052] hover:bg-[#f4f8f5] disabled:opacity-60">
       <LogOut size={14}/>{signingOut ? 'Signing out' : 'Sign out'}
     </button>
   </div>;
