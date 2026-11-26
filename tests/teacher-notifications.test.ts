@@ -53,7 +53,7 @@ describe('teacher Notification Center', () => {
   it('re-opens the daily feedback digest only when a new anonymous response arrives', () => {
     expect(digestRefreshMigration).toContain('read_at = null');
     expect(digestRefreshMigration).toContain('dismissed_at = null');
-    expect(digestRefreshMigration).toContain('after insert on public.anonymous_submissions');
+    expect(digestRefreshMigration).toContain('create or replace function private.notify_instructors_of_anonymous_feedback()');
   });
 
   it('renders an unread bell, preview, individual mark-read actions and notification labels', () => {
