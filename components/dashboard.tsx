@@ -1,7 +1,7 @@
 'use client';
 import { ChangeEvent, FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowUp, ArrowDown, Bell, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, IdCard, ImagePlus, LayoutDashboard, LogOut , Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
+import { Activity, ArrowUp, ArrowDown, Bell, History, ArrowDownToLine, BookOpen, ChevronDown, CircleHelp, FileBarChart, FilePlus2, GraduationCap, IdCard, ImagePlus, LayoutDashboard, LogOut, Plus, Pencil, ShieldCheck, Users, X, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { HeadIntelligence } from '@/components/head-intelligence';
 import { NotificationBell, TeacherInbox } from '@/components/teacher-inbox';
