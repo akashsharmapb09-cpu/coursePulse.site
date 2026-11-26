@@ -64,11 +64,11 @@ export function StudentAccountControl() {
     router.refresh();
   }
 
-  if (loading) return <span className="text-xs font-semibold text-[#6d7f73]" aria-label="Checking student account">Account</span>;
+  if (loading) return <span className="text-xs font-semibold text-[#526158]" aria-label="Checking student account">Account</span>;
 
   if (!account) return <div className="flex items-center gap-2">
-    <Link href="/login" className="inline-flex min-h-10 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#456052] hover:bg-[#eff5f0]">Sign in</Link>
-    <Link href="/signup" className="inline-flex min-h-10 items-center rounded-xl bg-[#245b3e] px-4 py-2 text-sm font-bold text-white hover:bg-[#194b34]">Create account</Link>
+    <Link href="/login" className="inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold text-[#456052] hover:bg-[#eff5f0]">Sign in</Link>
+    <Link href="/signup" className="inline-flex min-h-11 items-center rounded-xl bg-[#245b3e] px-4 py-2 text-sm font-bold text-white hover:bg-[#194b34]">Create account</Link>
   </div>;
 
   return <div className="flex items-center gap-2">
