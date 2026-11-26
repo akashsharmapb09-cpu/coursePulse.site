@@ -50,10 +50,13 @@ export async function GET(request: NextRequest) {
     };
     const [aggregate, submissions] = await Promise.all([
       supabase.rpc('get_instructor_aggregates_filtered', args),
-      supabase.from('feedback_submissions').select('id', { count: 'exact', head: true })
-        .eq('course_id', courseId)
-        .gte('created_at', fromDate ? fromDate + 'T00:00:00.000Z' : '1900-01-01T00:00:00.000Z')
-        .lte('created_at', toDate ? toDate + 'T23:59:59.999Z' : '2999-12-31T23:59:59.999Z')
+      supabase.rpc('get_filtered_anonymous_feedback', {
+        p_course_id: courseId,
+        p_semester_id: semesterId,
+        p_from_date: fromDate,
+        p_to_date: toDate,
+        p_search: null
+      })
     ]);
     if (aggregate.error) throw new Error('Course analytics are unavailable.');
     if (submissions.error) throw new Error('Submission counts are unavailable.');
@@ -61,9 +64,12 @@ export async function GET(request: NextRequest) {
     const ratingRows = rows.filter((row: any) => row.avg_numeric_value !== null && row.question_type === 'rating');
     const weight = ratingRows.reduce((sum: number, row: any) => sum + Number(row.response_count), 0);
     const ratingPoints = ratingRows.reduce((sum: number, row: any) => sum + Number(row.avg_numeric_value) * Number(row.response_count), 0);
+    const reportableForms = new Map<string, number>();
+    for (const submission of submissions.data ?? []) reportableForms.set(submission.feedback_id, Number(submission.response_count));
+    const responseCount = [...reportableForms.values()].reduce((sum, value) => sum + value, 0);
     return {
       course_id: courseId,
-      response_count: submissions.count ?? 0,
+      response_count: responseCount,
       average_rating: weight ? ratingPoints / weight : null,
       rows
     };
