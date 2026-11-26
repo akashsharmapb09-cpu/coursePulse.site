@@ -1,29 +1,28 @@
 # CoursePulse
 
-CoursePulse is a college-project demonstration for collecting course feedback and viewing simple results. It is intentionally a single public workspace, not a multi-tenant SaaS product.
+CoursePulse is a college-project demonstration for student registration, course feedback and simple course-level results. New public registrations create Student accounts only; there are no Admin or HOD sign-up options.
 
 ## Current project experience
 
-- No login or signup flow.
-- No Admin, HOD, Super Admin, or other user roles.
-- One public workspace for all visitors.
-- Example courses with ratings for overall experience, teaching clarity, class pace, and learning resources.
-- Optional comments, course-level rating summaries, and CSV export.
-- No visitor name, email, password, or roll number is requested.
+- Students register with full name, email address, password and academic programme.
+- Programme choices include B.Tech, M.Tech, B.E., M.E., BBA, MBA, B.Com, M.Com, BCA, MCA, B.Sc, M.Sc, BA, MA, Pharmacy, Architecture, Diploma and Other/custom.
+- Supabase Auth securely handles sign-up, sign-in and student sessions.
+- The database creates a Student profile and stores the selected programme with the profile. Public signup cannot choose a role or organization.
+- Students can view their name/programme in the site header and sign out.
+- Course feedback is anonymous and separate from the account profile. The current demo workspace stores feedback in browser localStorage, not a central college database.
+- Course-level summaries and CSV export are available for responses saved in the current browser.
 
 ## Important data limitation
 
-This simplified version stores feedback in the browser localStorage. Data stays in the current browser and device. It is not sent to a shared college database, is not synchronised between visitors, and is not visible on another device. Clearing the browser's site data removes the locally saved responses.
+Student account credentials and profile records are stored by the connected Supabase project. Feedback is still stored separately in browser localStorage under the `coursepulse-college-demo-responses-v1` key. It is not linked to the student's account, is not synchronised between browsers/devices, and is not shared with another visitor. Clearing site data removes local feedback but does not delete the Supabase student account.
 
-Use this version for a project demonstration with sample data. Do not submit real confidential student records or personal information. For shared multi-device collection, a separate backend and reviewed anonymous-write/read policy would be required.
-
-The former Supabase/Auth and Admin/HOD modules, API route handlers, and SQL migrations remain in the repository as historical project material. They are not used by the current public workspace: legacy login/admin pages redirect to /dashboard, and legacy /api/* endpoints return HTTP 410. Do not apply the old database migrations as part of running this simplified demo.
+Use this version for an academic project demonstration. Do not submit real confidential student records or private information in feedback comments.
 
 ## Stack
 
-- Next.js App Router
-- React and TypeScript
+- Next.js App Router, React and TypeScript
 - Tailwind CSS
+- Supabase Auth and Postgres for student identities/profile
 - Lucide icons
 
 The project uses the existing pinned dependencies and Node.js 22.x.
@@ -35,9 +34,16 @@ npm ci
 npm run dev
 ~~~
 
-Open http://localhost:3000. No Supabase credentials or environment variables are required for the public demo workflow.
+Create a local `.env.local` with the Supabase project URL and publishable key to enable registration and sign-in:
 
-To validate locally:
+~~~bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-publishable-key
+~~~
+
+Open http://localhost:3000.
+
+## Validate locally
 
 ~~~bash
 npm run typecheck
@@ -45,14 +51,6 @@ npm test
 npm run build
 ~~~
 
-## Edit the example course list
-
-Edit the COURSES constant near the top of components/public-workspace.tsx. The browser stores response data under the coursepulse-college-demo-responses-v1 localStorage key.
-
-## Deploy
-
-The production site is connected to the GitHub repository and Vercel. Merge a reviewed change into main to trigger the Vercel production deployment. The site is configured to use the public origin https://coursepulse-site.vercel.app.
-
 ## Academic project note
 
-This demo illustrates the frontend feedback workflow only. Browser-local storage is not a substitute for a centrally managed database, identity system, or official institutional reporting process.
+This app demonstrates student self-registration and an anonymous browser-local feedback workflow. Browser-local responses are not a substitute for a centrally managed college feedback database or an official institutional reporting process.
