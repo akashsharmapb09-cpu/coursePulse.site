@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     for (const row of enriched as any[]) {
       if (row.question_type !== 'rating' || row.avg_numeric_value == null) continue;
       const key = String(row.question_label).toLowerCase().trim();
-      const entry = questionMap.get(key) ?? {
+      const entry: { question_id: string; question_label: string; question_category: string | null; values: Record<string, { average: number | null; response_count: number }> } = questionMap.get(key) ?? {
         question_id: row.question_id,
         question_label: row.question_label,
         question_category: row.question_category ?? null,
