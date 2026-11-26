@@ -12,7 +12,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coursepulse.netlify.a
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: { default: 'CoursePulse | College course feedback', template: '%s | CoursePulse' },
-  description: 'A simple college project for anonymous course feedback and course-level results. No login or role selection required.',
+  description: 'CoursePulse helps students share course feedback and review course-level results. Learn how student accounts and feedback are handled.',
   applicationName: 'CoursePulse',
   icons: { icon: '/icon.svg', shortcut: '/icon.svg' },
   openGraph: {

@@ -3,7 +3,7 @@ import { PublicPage } from '@/components/public-site';
 
 export const metadata = {
   title: 'Contact and support',
-  description: 'How to request help with the CoursePulse college-project demonstration.',
+  description: 'How to contact CoursePulse for account help and general questions.',
   robots: { index: false, follow: false },
   alternates: { canonical: '/contact' }
 };
@@ -13,15 +13,15 @@ export default function ContactPage() {
     <PublicPage
       eyebrow="Contact and support"
       title="Get help with CoursePulse."
-      description="CoursePulse is an academic project. Use the original project channel for questions or account assistance."
+      description="Use the channel where you received CoursePulse to ask questions or request account assistance."
     >
       <section>
-        <h2>Project contact</h2>
-        <p>A verified public email address, support inbox, telephone number, or postal address has not been provided for this project, so this page does not invent contact details. To ask for help, contact the project owner through the same channel where you received the CoursePulse link or project instructions.</p>
+        <h2>Contact information</h2>
+        <p>A verified public email address, support inbox, telephone number, or postal address has not been provided for CoursePulse, so this page does not invent contact details. To ask for help, contact the CoursePulse maintainer through the same channel where you received the CoursePulse link or instructions.</p>
       </section>
       <section>
         <h2>Account recovery</h2>
-        <p>Student accounts use usernames and passwords; an email address is not collected for self-service reset links. The project owner can advise on available account support. Never share your password, sign-in codes, or private feedback when asking for help.</p>
+        <p>Student accounts use usernames and passwords; an email address is not collected for self-service reset links. Use the same channel where you received CoursePulse to ask about available account support. Never share your password, sign-in codes, or private feedback when asking for help.</p>
       </section>
       <section>
         <h2>What to include in a support request</h2>

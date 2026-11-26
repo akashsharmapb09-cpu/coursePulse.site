@@ -36,8 +36,8 @@ export default function CookiesPage() {
     </section>
     <section>
       <h2>6. Third-party services and updates</h2>
-      <p>CoursePulse is hosted on Netlify and uses Supabase for student authentication. Optional analytics and performance measurements are provided by Vercel services and are enabled only after consent. Hosting and analytics are separate services. This policy may be updated if the project adds other tools or storage technologies.</p>
+      <p>CoursePulse is hosted on Netlify and uses Supabase for student authentication. Optional analytics and performance measurements are provided by Vercel services and are enabled only after consent. Hosting and analytics are separate services. This policy may be updated if CoursePulse adds other tools or storage technologies.</p>
     </section>
-    <p className="public-note">This page describes the current project implementation. Browser behaviour can vary, and this notice is not a legal compliance certification.</p>
+    <p className="public-note">This page describes the current CoursePulse setup. Browser behaviour can vary, and this notice is not a legal compliance certification.</p>
   </PublicPage>;
 }

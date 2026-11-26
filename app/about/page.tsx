@@ -4,15 +4,15 @@ import { PublicPage } from '@/components/public-site';
 
 export const metadata: Metadata = {
   title: 'About CoursePulse',
-  description: 'Learn about CoursePulse, a simple college project for student accounts and course feedback.',
+  description: 'Learn about CoursePulse, a platform for student accounts and course feedback.',
   alternates: { canonical: '/about' }
 };
 
 export default function AboutPage() {
-  return <PublicPage eyebrow="About the project" title="Course feedback, without the extra complexity." description="CoursePulse is a straightforward college project that lets students create an account, choose their programme, and share course feedback.">
+  return <PublicPage eyebrow="About CoursePulse" title="Course feedback, without the extra complexity." description="CoursePulse gives students a simple way to create an account, choose their programme, and share course feedback.">
     <section>
       <h2>Why CoursePulse exists</h2>
-      <p>The project gives students one simple place to create a student profile and share their experience of a course. It demonstrates how structured feedback can be collected and summarised without building a full college-management or SaaS platform.</p>
+      <p>CoursePulse gives students one simple place to create a student profile and share their experience of a course. Its structured feedback workflow helps collect and summarise course experiences.</p>
     </section>
     <section>
       <h2>Create a student account</h2>
@@ -24,9 +24,9 @@ export default function AboutPage() {
     </section>
     <section>
       <h2>About the demo feedback data</h2>
-      <p>Student account details are stored in the connected Supabase project. Feedback in the current demo is stored separately in the current browser only; it is not linked to the student's account or synchronised with visitors on other devices. Course and faculty details are example project data and can be replaced with your college information.</p>
+      <p>Student account details are stored by the connected Supabase service. Feedback in the current version is stored separately in the current browser only; it is not linked to the student's account or synchronised with visitors on other devices. Course and faculty details are sample data and can be replaced with your college information.</p>
     </section>
-    <p className="public-note">CoursePulse is an academic demonstration, not an official college feedback or student-record system. Please do not enter private or confidential information.</p>
+    <p className="public-note">CoursePulse is not an official college feedback or student-record system. Please do not enter private or confidential information.</p>
     <p><Link className="inline-link" href="/signup">Create a student account</Link>, read the <Link className="inline-link" href="/privacy">Privacy Policy</Link>, or <Link className="inline-link" href="/cookies">review cookie and browser-storage information</Link>.</p>
   </PublicPage>;
 }
