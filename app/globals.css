@@ -898,8 +898,8 @@ a[href$="/privacy"] {
 }
 
 
-/* User-selectable dark theme shared by public pages, auth and workspace. */
-html[data-theme="dark"] {
+/* Student dashboard-only dark theme. Public pages and authentication remain light. */
+.app-shell[data-theme="dark"] {
   color-scheme: dark;
   --ink: #e6eee8;
   --muted: #b5c2b9;
@@ -911,168 +911,142 @@ html[data-theme="dark"] {
   --soft: #1e3325;
   --coral: #e09a87;
   --shadow: 0 20px 65px rgba(0,0,0,.32);
-}
-html[data-theme="dark"] body,
-html[data-theme="dark"] .public-shell,
-html[data-theme="dark"] .app-shell,
-html[data-theme="dark"] .main-area,
-html[data-theme="dark"] .auth-shell {
   background: var(--paper) !important;
   color: var(--ink) !important;
 }
-html[data-theme="dark"] [class~="bg-white"],
-html[data-theme="dark"] [class*="bg-[#"] {
+.app-shell[data-theme="dark"] .main-area {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] [class~="bg-white"],
+.app-shell[data-theme="dark"] [class*="bg-[#"] {
   background-color: #1a261e !important;
 }
-html[data-theme="dark"] [class*="bg-[#245b3e]"],
-html[data-theme="dark"] [class*="bg-[#214f37]"] {
+.app-shell[data-theme="dark"] [class*="bg-[#245b3e]"],
+.app-shell[data-theme="dark"] [class*="bg-[#214f37]"] {
   background-color: #285f40 !important;
 }
-html[data-theme="dark"] [class*="bg-[#edf5ef]"],
-html[data-theme="dark"] [class*="bg-[#eaf3ec]"],
-html[data-theme="dark"] [class*="bg-[#f7faf7]"],
-html[data-theme="dark"] [class*="bg-[#f5faf6]"] {
+.app-shell[data-theme="dark"] [class*="bg-[#edf5ef]"],
+.app-shell[data-theme="dark"] [class*="bg-[#eaf3ec]"],
+.app-shell[data-theme="dark"] [class*="bg-[#f7faf7]"],
+.app-shell[data-theme="dark"] [class*="bg-[#f5faf6]"] {
   background-color: #20352a !important;
 }
-html[data-theme="dark"] [class*="text-[#"] {
+.app-shell[data-theme="dark"] [class*="text-[#"] {
   color: var(--muted) !important;
 }
-html[data-theme="dark"] [class*="text-[#20352a]"],
-html[data-theme="dark"] [class*="text-[#253b2e]"],
-html[data-theme="dark"] [class*="text-[#284332]"],
-html[data-theme="dark"] [class*="text-[#304a38]"],
-html[data-theme="dark"] [class*="text-[#445e4c]"] {
+.app-shell[data-theme="dark"] [class*="text-[#20352a]"],
+.app-shell[data-theme="dark"] [class*="text-[#253b2e]"],
+.app-shell[data-theme="dark"] [class*="text-[#284332]"],
+.app-shell[data-theme="dark"] [class*="text-[#304a38]"],
+.app-shell[data-theme="dark"] [class*="text-[#445e4c]"] {
   color: var(--ink) !important;
 }
-html[data-theme="dark"] [class*="text-[#245b3e]"],
-html[data-theme="dark"] [class*="text-[#286640]"],
-html[data-theme="dark"] [class*="text-[#477956]"] {
+.app-shell[data-theme="dark"] [class*="text-[#245b3e]"],
+.app-shell[data-theme="dark"] [class*="text-[#286640]"],
+.app-shell[data-theme="dark"] [class*="text-[#477956]"] {
   color: #9bd0a8 !important;
 }
-html[data-theme="dark"] [class*="border-[#"],
-html[data-theme="dark"] .sidebar,
-html[data-theme="dark"] .topbar,
-html[data-theme="dark"] .public-header,
-html[data-theme="dark"] .public-footer,
-html[data-theme="dark"] .public-document,
-html[data-theme="dark"] .course-card,
-html[data-theme="dark"] .feedback-list,
-html[data-theme="dark"] .metric-card,
-html[data-theme="dark"] .analytics-card,
-html[data-theme="dark"] .cookie-banner,
-html[data-theme="dark"] .cookie-dialog {
+.app-shell[data-theme="dark"] [class*="border-[#"],
+.app-shell[data-theme="dark"] .sidebar,
+.app-shell[data-theme="dark"] .topbar,
+.app-shell[data-theme="dark"] .course-card,
+.app-shell[data-theme="dark"] .feedback-list,
+.app-shell[data-theme="dark"] .metric-card,
+.app-shell[data-theme="dark"] .analytics-card {
   border-color: var(--line) !important;
 }
-html[data-theme="dark"] .sidebar,
-html[data-theme="dark"] .topbar,
-html[data-theme="dark"] .public-header,
-html[data-theme="dark"] .public-footer,
-html[data-theme="dark"] .course-card,
-html[data-theme="dark"] .feedback-list,
-html[data-theme="dark"] .metric-card,
-html[data-theme="dark"] .analytics-card,
-html[data-theme="dark"] .cookie-banner,
-html[data-theme="dark"] .cookie-dialog,
-html[data-theme="dark"] .stack-form input,
-html[data-theme="dark"] .stack-form textarea,
-html[data-theme="dark"] .stack-form select,
-html[data-theme="dark"] .input-wrap,
-html[data-theme="dark"] .auth-panel {
+.app-shell[data-theme="dark"] .sidebar,
+.app-shell[data-theme="dark"] .topbar,
+.app-shell[data-theme="dark"] .course-card,
+.app-shell[data-theme="dark"] .feedback-list,
+.app-shell[data-theme="dark"] .metric-card,
+.app-shell[data-theme="dark"] .analytics-card,
+.app-shell[data-theme="dark"] .stack-form input,
+.app-shell[data-theme="dark"] .stack-form textarea,
+.app-shell[data-theme="dark"] .stack-form select,
+.app-shell[data-theme="dark"] .input-wrap {
   background-color: #1a261e !important;
   color: var(--ink) !important;
 }
-html[data-theme="dark"] input,
-html[data-theme="dark"] textarea,
-html[data-theme="dark"] select {
+.app-shell[data-theme="dark"] input,
+.app-shell[data-theme="dark"] textarea,
+.app-shell[data-theme="dark"] select {
   border-color: var(--line) !important;
   background-color: #142019 !important;
   color: var(--ink) !important;
 }
-html[data-theme="dark"] input::placeholder,
-html[data-theme="dark"] textarea::placeholder {
+.app-shell[data-theme="dark"] input::placeholder,
+.app-shell[data-theme="dark"] textarea::placeholder {
   color: #9aaca0 !important;
 }
-html[data-theme="dark"] .side-nav button,
-html[data-theme="dark"] .icon-button,
-html[data-theme="dark"] .button.subtle,
-html[data-theme="dark"] .theme-toggle {
+.app-shell[data-theme="dark"] .side-nav button,
+.app-shell[data-theme="dark"] .icon-button,
+.app-shell[data-theme="dark"] .button.subtle,
+.app-shell[data-theme="dark"] .theme-toggle {
   color: var(--ink);
   border-color: var(--line);
   background: #20352a;
 }
-html[data-theme="dark"] .side-nav button.active {
+.app-shell[data-theme="dark"] .side-nav button.active {
   color: #b5e0bf !important;
   background: #294532 !important;
 }
-html[data-theme="dark"] .side-nav button span,
-html[data-theme="dark"] .role-chip,
-html[data-theme="dark"] .course-art-mark {
+.app-shell[data-theme="dark"] .side-nav button span,
+.app-shell[data-theme="dark"] .role-chip,
+.app-shell[data-theme="dark"] .course-art-mark {
   background: #283d2f !important;
   color: #b5d9be !important;
 }
-html[data-theme="dark"] .course-art,
-html[data-theme="dark"] .course-card:nth-child(3n+2) .course-art,
-html[data-theme="dark"] .course-card:nth-child(3n) .course-art {
+.app-shell[data-theme="dark"] .course-art,
+.app-shell[data-theme="dark"] .course-card:nth-child(3n+2) .course-art,
+.app-shell[data-theme="dark"] .course-card:nth-child(3n) .course-art {
   background: linear-gradient(125deg,#243b2c,#1a2b20 65%,#304937) !important;
 }
-html[data-theme="dark"] .feedback-row,
-html[data-theme="dark"] .course-footer,
-html[data-theme="dark"] .user-profile,
-html[data-theme="dark"] .section-heading {
+.app-shell[data-theme="dark"] .feedback-row,
+.app-shell[data-theme="dark"] .course-footer,
+.app-shell[data-theme="dark"] .user-profile,
+.app-shell[data-theme="dark"] .section-heading {
   border-color: var(--line) !important;
 }
-html[data-theme="dark"] .feedback-row:hover {
+.app-shell[data-theme="dark"] .feedback-row:hover {
   background: #22382a !important;
 }
-html[data-theme="dark"] .security-note,
-html[data-theme="dark"] .privacy-banner,
-html[data-theme="dark"] .empty-state,
-html[data-theme="dark"] .loading-panel {
+.app-shell[data-theme="dark"] .security-note,
+.app-shell[data-theme="dark"] .privacy-banner,
+.app-shell[data-theme="dark"] .empty-state,
+.app-shell[data-theme="dark"] .loading-panel {
   border-color: var(--line) !important;
   background: #20352a !important;
   color: var(--ink) !important;
 }
-html[data-theme="dark"] .auth-art {
-  background: radial-gradient(ellipse at 22% 22%,rgba(108,155,120,.22),transparent 32%),linear-gradient(145deg,#10251c,#183a2b 65%,#10231b);
-}
-html[data-theme="dark"] .cookie-banner-copy b,
-html[data-theme="dark"] .cookie-dialog h2,
-html[data-theme="dark"] .cookie-preference-row b {
-  color: var(--ink) !important;
-}
-html[data-theme="dark"] .alert.success {
+.app-shell[data-theme="dark"] .alert.success {
   background: #1d3828;
   border-color: #315b3c;
   color: #bce2c4;
 }
-html[data-theme="dark"] .alert.error {
+.app-shell[data-theme="dark"] .alert.error {
   background: #3b2421;
   border-color: #704139;
   color: #f3b8aa;
 }
 .theme-toggle {
-  position: fixed;
-  z-index: 60;
-  right: 17px;
-  bottom: 16px;
   display: inline-grid;
-  width: 44px;
-  height: 44px;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
   place-items: center;
   border: 1px solid #dfe9e1;
-  border-radius: 50%;
+  border-radius: 10px;
   background: #fff;
   color: #315b43;
-  box-shadow: 0 6px 22px rgba(26,54,36,.14);
+  box-shadow: 0 3px 12px rgba(26,54,36,.08);
 }
 .theme-toggle:focus-visible {
   outline: 3px solid #80b993;
   outline-offset: 3px;
 }
-.theme-toggle:hover { transform: translateY(-2px); }
-@media (max-width: 480px) {
-  .theme-toggle { right: 14px; bottom: 14px; }
-}
+.theme-toggle:hover { transform: translateY(-1px); }
 
 /* Teacher notifications and course-wise report summary */
 .notification-bell-wrap{position:relative;z-index:6}
