@@ -1,5 +1,4 @@
 import { CookieSettingsLink } from '@/components/cookie-consent';
-import { StudentAccountControl } from '@/components/student-account-control';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -15,7 +14,7 @@ export function PublicHeader() {
   return <header className="public-header">
     <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="brand" href="/" aria-label="CoursePulse home"><span className="brand-mark">◉</span><span>CoursePulse</span></Link>
     <nav className="public-nav" aria-label="Main navigation">{links.map(link => <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="px-2" key={link.href} href={link.href}>{link.label}</Link>)}</nav>
-    <div className="public-header-actions flex flex-wrap items-center gap-2"><StudentAccountControl/><Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button primary" href="/dashboard">Open workspace</Link></div>
+    <div className="public-header-actions flex flex-wrap items-center gap-2"><Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="text-sm font-semibold text-[#456052]" href="/login">Student sign in</Link><Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button primary" href="/signup">Create account</Link><Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button subtle" href="/dashboard">Open workspace</Link></div>
   </header>;
 }
 
