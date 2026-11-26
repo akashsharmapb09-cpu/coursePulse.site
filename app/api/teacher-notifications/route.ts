@@ -38,7 +38,14 @@ async function createAutomaticReminders(
   const dueSoon = forms.filter(form => form.due_at && new Date(form.due_at).getTime() >= nowTime && new Date(form.due_at).getTime() <= nextWeek);
   const overdue = forms.filter(form => form.due_at && new Date(form.due_at).getTime() < nowTime);
 
-  const reminders = [];
+  const reminders: {
+    recipient_id: string;
+    created_by: string;
+    category: 'PENDING_FEEDBACK' | 'DEADLINE_ALERT';
+    period_start: string;
+    title: string;
+    body: string;
+  }[] = [];
   if (forms.length) {
     reminders.push({
       recipient_id: instructorId,
