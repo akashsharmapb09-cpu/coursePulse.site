@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
-const migration = readFileSync(resolve(root, 'supabase/migrations/20261126180641_coursepulse_single_college_workspace.sql'), 'utf8');
+const migration = readFileSync(resolve(root, 'supabase/migrations/20261126183102_coursepulse_single_college_workspace.sql'), 'utf8');
 const dashboard = readFileSync(resolve(root, 'components/dashboard.tsx'), 'utf8');
 const loginPage = readFileSync(resolve(root, 'app/login/page.tsx'), 'utf8');
 const authForm = readFileSync(resolve(root, 'components/student-auth-form.tsx'), 'utf8');
