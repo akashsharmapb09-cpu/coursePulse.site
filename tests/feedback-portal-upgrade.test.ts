@@ -10,6 +10,7 @@ const questionSync = read('supabase/migrations/20261126160539_coursepulse_sync_q
 const filteredRpc = read('supabase/migrations/20261126160927_coursepulse_filtered_anonymous_comment_rpc_and_read_hardening.sql');
 const denyProjection = read('supabase/migrations/20261126161143_coursepulse_deny_direct_feedback_projection_reads.sql');
 const finalHardening = read('supabase/migrations/20261126161259_coursepulse_question_catalog_trigger_and_comment_pii_redaction.sql');
+const batchSync = read('supabase/migrations/20261126161742_coursepulse_guard_form_question_batch_sync.sql');
 
 describe('CoursePulse authenticated feedback portal', () => {
   it('keeps the existing users table canonical while exposing a limited profile view', () => {
@@ -29,6 +30,8 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(finalHardening).toMatch(/create trigger questions_refresh_feedback_forms[\s\S]*?after insert or update or delete on public\.questions/i);
     const questionRoute = read('app/api/questions/route.ts');
     expect(questionRoute).toMatch(/export async function (GET|POST|PATCH|DELETE)/);
+    expect(batchSync).toMatch(/set_config\\('coursepulse\\.sync_questions', 'off', true\\)/i);
+    expect(batchSync).toMatch(/current_setting\\('coursepulse\\.sync_questions', true\\) = 'off'/i);
   });
 
   it('keeps course-level duplicate tracking separate from anonymous answer rows', () => {
