@@ -176,7 +176,7 @@ test.describe('public-page browser smoke', () => {
   test('public-facing pages no longer describe CoursePulse as a project', async ({ page }) => {
     for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/terms', '/cookies', '/support', '/refunds', '/dashboard', '/feedback/thank-you']) {
       await page.goto(route);
-      await expect(page.locator('body')).not.toContainText(/\\bproject\\b/i);
+      await expect(page.locator('body')).not.toContainText(/\bproject\b/i);
     }
   });
 
