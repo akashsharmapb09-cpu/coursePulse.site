@@ -17,7 +17,7 @@ test.describe('public-page browser smoke', () => {
   }
 
   test('legacy login and role routes redirect to the public workspace', async ({ page, request }) => {
-    for (const route of ['/login', '/signup', '/auth/reset', '/admin', '/super-admin', '/verify']) {
+    for (const route of ['/auth/reset', '/admin', '/super-admin', '/verify']) {
       await page.goto(route);
       await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -42,24 +42,38 @@ test.describe('public-page browser smoke', () => {
     expect(dimensions.every((item) => item.height >= 44), JSON.stringify(dimensions)).toBe(true);
   });
 
-  test('legacy authentication pages do not render sign-in or signup forms', async ({ page }) => {
-    for (const route of ['/login', '/signup', '/auth/reset']) {
-      await page.goto(route);
-      await expect(page).toHaveURL(/\/dashboard$/);
-      await expect(page.getByLabel('Email address')).toHaveCount(0);
-      await expect(page.getByLabel('Password')).toHaveCount(0);
-    }
+  test('students can open the registration and sign-in forms', async ({ page }) => {
+    await page.goto('/signup');
+    await expect(page.getByRole('heading', { name: 'Create your student account' })).toBeVisible();
+    await expect(page.getByLabel('Full name')).toBeVisible();
+    await expect(page.getByLabel('Programme / Course')).toBeVisible();
+    await expect(page.getByLabel('Email address')).toBeVisible();
+    await expect(page.getByLabel('Confirm password')).toBeVisible();
+    const programmes = await page.locator('select option').allTextContents();
+    for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'Other']) expect(programmes).toContain(item);
+    expect(programmes.join(' ')).not.toMatch(/admin|hod/i);
+
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByLabel('Email address')).toBeVisible();
+    await expect(page.getByLabel('Password')).toBeVisible();
   });
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
+    const signin = page.getByRole('link', { name: 'Sign in' });
+    const createAccount = page.getByRole('link', { name: 'Create account' }).first();
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
     await page.keyboard.press('Tab');
     await expect(brand).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(howItWorks).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(signin).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(createAccount).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(workspace).toBeFocused();
     await expect.poll(() => workspace.evaluate((el) => getComputedStyle(el).outlineStyle)).not.toBe('none');
@@ -120,11 +134,11 @@ test.describe('public-page browser smoke', () => {
     expect(rootSecurityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
   });
 
-  test('homepage and public content pages no longer advertise login or signup', async ({ page }) => {
-    for (const route of ['/', '/about', '/features', '/contact', '/privacy', '/cookies', '/terms', '/support']) {
+  test('homepage and public information pages advertise student accounts', async ({ page }) => {
+    for (const route of ['/', '/about', '/privacy', '/cookies', '/terms']) {
       await page.goto(route);
-      await expect(page.locator('a[href="/login"]')).toHaveCount(0);
-      await expect(page.locator('a[href="/signup"]')).toHaveCount(0);
+      await expect(page.locator('a[href="/login"]').first()).toBeVisible();
+      await expect(page.locator('a[href="/signup"]').first()).toBeVisible();
       await expect(page.getByRole('link', { name: /Open workspace/ }).first()).toBeVisible();
     }
     await page.goto('/');
