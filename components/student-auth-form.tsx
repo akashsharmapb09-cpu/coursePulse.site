@@ -68,7 +68,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
 
       if (functionError) {
         const context = (functionError as typeof functionError & { context?: Response }).context;
-        if (context) {
+        if (context && typeof context.clone === 'function') {
           try {
             const payload = await context.clone().json() as { error?: string };
             throw new Error(payload.error || functionError.message);
