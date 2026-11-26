@@ -139,13 +139,13 @@ test.describe('public-page browser smoke', () => {
     expect(securityResponse.headers()['content-type']).toContain('text/plain');
     const securityText = await securityResponse.text();
     expect(securityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
-    expect(securityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(securityText).toContain('Canonical: https://coursepulse.netlify.app/.well-known/security.txt');
     const rootSecurityResponse = await request.get('/security.txt');
     expect(rootSecurityResponse.status()).toBe(200);
     expect(rootSecurityResponse.headers()['content-type']).toContain('text/plain');
     const rootSecurityText = await rootSecurityResponse.text();
     expect(rootSecurityText).toContain('Contact: https://github.com/akashsharmapb09-cpu/coursePulse.site/security/advisories/new');
-    expect(rootSecurityText).toContain('Canonical: https://coursepulse-site.vercel.app/.well-known/security.txt');
+    expect(rootSecurityText).toContain('Canonical: https://coursepulse.netlify.app/.well-known/security.txt');
   });
 
   test('homepage and public information pages advertise student accounts', async ({ page }) => {
