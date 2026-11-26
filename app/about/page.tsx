@@ -16,7 +16,7 @@ export default function AboutPage() {
     </section>
     <section>
       <h2>Create a student account</h2>
-      <p>Students enter their name and email, choose their programme—such as B.Tech, M.Tech, BBA, B.Com, BCA, MBA, or another course—and create a password. New self-registrations receive Student access only. There are no Admin or HOD sign-up options.</p>
+      <p>Students enter their name, choose a unique username, select their programme—such as B.Tech, M.Tech, BBA, B.Com, BCA, MBA, or another course—and create a password. No email address or verification message is used. New self-registrations receive Student access only. There are no Admin or HOD sign-up options.</p>
     </section>
     <section>
       <h2>What you can do</h2>
