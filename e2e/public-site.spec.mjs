@@ -29,9 +29,9 @@ test.describe('public-page browser smoke', () => {
   test('visible homepage navigation links have a 44px tap area', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/');
-    await expect(page.locator('.site-nav a[href="/login"]')).toBeVisible();
-    await expect(page.locator('.site-nav a[href="/signup"]')).toBeVisible();
-    const dimensions = await page.locator('.site-nav a:visible').evaluateAll((links) =>
+    await expect(page.locator('.public-header-actions a[href="/login"]')).toBeVisible();
+    await expect(page.locator('.public-header-actions a[href="/signup"]')).toBeVisible();
+    const dimensions = await page.locator('.public-nav a:visible').evaluateAll((links) =>
       links.map((link) => ({
         text: link.textContent?.trim(),
         width: link.getBoundingClientRect().width,
@@ -65,14 +65,14 @@ test.describe('public-page browser smoke', () => {
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
-    await page.locator('.site-nav a[href="/login"]').waitFor();
+    await page.locator('.public-header-actions a[href="/login"]').waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
-    const about = page.locator('.site-nav a[href="/about"]');
-    const privacy = page.locator('.site-nav a[href="/privacy"]');
-    const cookies = page.locator('.site-nav a[href="/cookies"]');
-    const signin = page.locator('.site-nav a[href="/login"]');
-    const createAccount = page.locator('.site-nav a[href="/signup"]');
+    const about = page.locator('.public-nav a[href="/about"]');
+    const privacy = page.locator('.public-nav a[href="/privacy"]');
+    const cookies = page.locator('.public-nav a[href="/cookies"]');
+    const signin = page.locator('.public-header-actions a[href="/login"]');
+    const createAccount = page.locator('.public-header-actions a[href="/signup"]');
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
     await page.keyboard.press('Tab');
     await expect(brand).toBeFocused();
