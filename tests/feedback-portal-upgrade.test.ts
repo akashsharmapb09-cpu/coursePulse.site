@@ -12,13 +12,18 @@ const denyProjection = read('supabase/migrations/20261126161143_coursepulse_deny
 const finalHardening = read('supabase/migrations/20261126161259_coursepulse_question_catalog_trigger_and_comment_pii_redaction.sql');
 const batchSync = read('supabase/migrations/20261126161742_coursepulse_guard_form_question_batch_sync.sql');
 const trackerBackfill = read('supabase/migrations/20261126162559_coursepulse_backfill_course_submission_tracker.sql');
+const profiles = read('supabase/migrations/20261126162730_coursepulse_public_profiles_table_with_sync_trigger.sql');
 
 describe('CoursePulse authenticated feedback portal', () => {
-  it('keeps the existing users table canonical while exposing a limited profile view', () => {
-    expect(schema).toMatch(/create or replace view public\.profiles with \(security_invoker\s*=\s*true\)/i);
-    expect(schema).toMatch(/program as programme/i);
-    expect(schema).toMatch(/revoke all on public\.profiles from public, anon/i);
-    expect(schema).toMatch(/grant select on public\.profiles to authenticated/i);
+  it('creates a physical Student/Instructor profiles table with self-only RLS', () => {
+    expect(profiles).toMatch(/create table if not exists public\.profiles/i);
+    expect(profiles).toMatch(/programme text/i);
+    expect(profiles).toMatch(/role text not null check \(role in \('student','instructor'\)\)/i);
+    expect(profiles).toMatch(/alter table public\.profiles enable row level security/i);
+    expect(profiles).toMatch(/alter table public\.profiles force row level security/i);
+    expect(profiles).toMatch(/create policy profiles_select_self[\s\S]*?id = \(select auth\.uid\(\)\)/i);
+    expect(profiles).toMatch(/create trigger users_sync_student_instructor_profile/i);
+    expect(profiles).toMatch(/on conflict\(id\) do update/i);
   });
 
   it('stores normalized questions and enforces instructor ownership with RLS', () => {
