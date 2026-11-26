@@ -43,7 +43,7 @@ export default function PrivacyPage() {
     </section>
     <section>
       <h2>8. Hosting and third-party services</h2>
-      <p>The website is hosted on Vercel. Supabase provides authentication and student-profile storage. Optional Vercel Analytics and Speed Insights process public-page measurement events only after opt-in. These providers process data under their own service terms and privacy information.</p>
+      <p>The website is hosted on Netlify. Supabase provides authentication and student-profile storage. Optional Vercel Analytics and Speed Insights process public-page measurement events only after opt-in. These providers process data under their own service terms and privacy information.</p>
     </section>
     <section>
       <h2>9. Changes and contact</h2>
