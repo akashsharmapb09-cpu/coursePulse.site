@@ -72,6 +72,7 @@ test.describe('public-page browser smoke', () => {
     const about = page.locator('.public-nav a[href="/about"]');
     const privacy = page.locator('.public-nav a[href="/privacy"]');
     const cookies = page.locator('.public-nav a[href="/cookies"]');
+    const contact = page.locator('.public-nav a[href="/contact"]');
     const signin = page.locator('.public-header-actions a[href="/login"]');
     const createAccount = page.locator('.public-header-actions a[href="/signup"]');
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
@@ -87,6 +88,8 @@ test.describe('public-page browser smoke', () => {
     await expect(privacy).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(cookies).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(contact).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(signin).toBeFocused();
     await page.keyboard.press('Tab');
