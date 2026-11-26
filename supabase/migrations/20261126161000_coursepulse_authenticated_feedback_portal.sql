@@ -80,11 +80,11 @@ with check (
 );
 drop policy if exists questions_update_instructor on public.questions;
 create policy questions_update_instructor on public.questions for update to authenticated
-using (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id))))
-with check (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id))));
+using (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id)))))
+with check (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id)))));
 drop policy if exists questions_delete_instructor on public.questions;
 create policy questions_delete_instructor on public.questions for delete to authenticated
-using (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id))));
+using (organization_id = private.current_organization_id() and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id)))));
 
 insert into public.questions (
   organization_id, course_id, feedback_id, answer_key, label, type,
