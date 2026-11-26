@@ -86,6 +86,7 @@ describe('CoursePulse feature scope', () => {
     expect(removalMigration).toContain('IF v_rows > 0 THEN');
     expect(removalMigration).toContain('DROP TABLE public.student_suggestions');
     expect(removalMigration).not.toContain('DROP TABLE public.teacher_notifications');
+    expect(removalMigration).toContain('DROP FUNCTION IF EXISTS private.guard_student_suggestion_update()');
   });
 
   it('keeps the independent private teacher-notification table and recipient policies', () => {
