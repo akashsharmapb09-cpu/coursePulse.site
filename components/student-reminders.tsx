@@ -48,7 +48,7 @@ export function StudentReminders({courses}:{courses:Course[]}) {
     } catch {setError('Saved reminders could not be read from this browser.');}
     setPermission('Notification' in window?Notification.permission:'unsupported');
     const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);tomorrow.setHours(9,0,0,0);
-    setReminderAt(formatLocalDateTimeInput(tomorrow));
+    setRemindAt(formatLocalDateTimeInput(tomorrow));
     setLoaded(true);
   },[courses,courseIds,loaded]);
   useEffect(()=>{
