@@ -29,6 +29,8 @@ test.describe('public-page browser smoke', () => {
   test('visible homepage navigation links have a 44px tap area', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/');
+    await expect(page.locator('.site-nav a[href="/login"]')).toBeVisible();
+    await expect(page.locator('.site-nav a[href="/signup"]')).toBeVisible();
     const dimensions = await page.locator('.site-nav a:visible').evaluateAll((links) =>
       links.map((link) => ({
         text: link.textContent?.trim(),
@@ -61,14 +63,14 @@ test.describe('public-page browser smoke', () => {
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Sign in' }).waitFor();
+    await page.locator('.site-nav a[href="/login"]').waitFor();
     const brand = page.locator('header a').first();
     const howItWorks = page.getByRole('link', { name: 'How it works' });
     const about = page.getByRole('link', { name: 'About' });
     const privacy = page.getByRole('link', { name: 'Privacy' });
     const cookies = page.getByRole('link', { name: 'Cookies' });
-    const signin = page.getByRole('link', { name: 'Sign in' });
-    const createAccount = page.getByRole('link', { name: 'Create account' }).first();
+    const signin = page.locator('.site-nav a[href="/login"]');
+    const createAccount = page.locator('.site-nav a[href="/signup"]');
     const workspace = page.getByRole('link', { name: /Open workspace/ }).first();
     await page.keyboard.press('Tab');
     await expect(brand).toBeFocused();
