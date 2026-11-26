@@ -49,7 +49,8 @@ test.describe('public-page browser smoke', () => {
     await expect(page.getByRole('heading', { name: 'Create your student account' })).toBeVisible();
     await expect(page.getByLabel('Full name')).toBeVisible();
     await expect(page.getByLabel('Programme / Course')).toBeVisible();
-    await expect(page.getByLabel('Email address')).toBeVisible();
+    await expect(page.getByLabel('Username')).toBeVisible();
+    await expect(page.getByLabel('Email address')).toHaveCount(0);
     await expect(page.getByLabel('Confirm password')).toBeVisible();
     const programmes = await page.locator('select option').allTextContents();
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'Other']) expect(programmes).toContain(item);
@@ -57,8 +58,9 @@ test.describe('public-page browser smoke', () => {
 
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-    await expect(page.getByLabel('Email address')).toBeVisible();
-    await expect(page.getByLabel('Password')).toBeVisible();
+    await expect(page.getByLabel('Username')).toBeVisible();
+    await expect(page.getByLabel('Email address')).toHaveCount(0);
+    await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
   });
 
   test('the homepage workspace link is reachable in a visible keyboard focus order', async ({ page }) => {
