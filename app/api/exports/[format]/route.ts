@@ -160,7 +160,7 @@ function renderProfessionalPdf(
         x += column.width;
       });
       y += rowHeight;
-    }
+    });
     doc.y = y + 15;
 
     const ratingCounts = new Map<string, number[]>();
