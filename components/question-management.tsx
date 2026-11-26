@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowDown, ArrowUp, Pencil, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 
 type Course = { id:string; title:string; course_code?:string|null };
@@ -55,7 +55,7 @@ export function QuestionManagement({ courses }:{courses:Course[]}) {
     finally { setBusy(false); }
   }
 
-  async function add(event:React.FormEvent<HTMLFormElement>) {
+  async function add(event:FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
     const needsOptions=['single_choice','multiple_choice','multiple_select'].includes(type);
     const parsedOptions=needsOptions?options.split(',').map(x=>x.trim()).filter(Boolean):[];
