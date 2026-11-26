@@ -1,24 +1,5 @@
--- Keep shared questions synchronized even when a permitted client mutates the
--- question catalogue directly; validate feedback/course scope on UPDATE as well.
-drop policy if exists questions_update_instructor on public.questions;
-create policy questions_update_instructor on public.questions for update to authenticated
-using (
-  organization_id = private.current_organization_id()
-  and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id)))
-)
-with check (
-  organization_id = private.current_organization_id()
-  and (private.is_admin() or (private.is_instructor() and (course_id is null or private.is_course_owner(course_id))))
-  and (
-    feedback_id is null
-    or exists (
-      select 1 from public.feedback f
-      where f.id = questions.feedback_id and f.course_id = questions.course_id
-        and f.organization_id = questions.organization_id
-        and (private.is_admin() or private.is_course_owner(f.course_id))
-    )
-  )
-);
+-- Synchronize normalized question definitions into active feedback forms and
+-- harden the de-identified anonymous response projection.
 
 create or replace function private.sync_question_catalog_to_feedback(p_course_id uuid default null)
 returns integer language plpgsql security definer set search_path = ''
@@ -72,27 +53,6 @@ $function$;
 revoke all on function private.sync_question_catalog_to_feedback(uuid) from public, anon;
 grant execute on function private.sync_question_catalog_to_feedback(uuid) to authenticated;
 
-create or replace function private.refresh_feedback_forms_after_question_change()
-returns trigger language plpgsql security definer set search_path = ''
-as $function$
-begin
-  if tg_op = 'UPDATE' and old.course_id is distinct from new.course_id then
-    perform private.sync_question_catalog_to_feedback(old.course_id);
-  end if;
-  if tg_op = 'DELETE' then
-    perform private.sync_question_catalog_to_feedback(old.course_id);
-    return old;
-  end if;
-  perform private.sync_question_catalog_to_feedback(new.course_id);
-  return new;
-end;
-$function$;
-revoke all on function private.refresh_feedback_forms_after_question_change() from public, anon, authenticated, service_role;
-drop trigger if exists questions_refresh_feedback_forms on public.questions;
-create trigger questions_refresh_feedback_forms
-after insert or update or delete on public.questions
-for each row execute function private.refresh_feedback_forms_after_question_change();
-
 create or replace function public.get_course_instructor_names(p_course_ids uuid[])
 returns table(course_id uuid, instructor_name text)
 language plpgsql stable security definer set search_path = ''
@@ -131,9 +91,6 @@ declare
   v_org uuid;
   v_comment text;
   v_ratings jsonb;
-  v_student_name text;
-  v_student_username text;
-  v_student_number text;
 begin
   select f.course_id, f.organization_id into v_course_id, v_org
   from public.feedback f where f.id = new.feedback_id;
@@ -169,26 +126,6 @@ begin
   v_comment := regexp_replace(v_comment, '(roll[[:space:]_-]*(number|no|#)?[[:space:]#:-]*[[:alnum:]/-]{3,})', '[redacted student identifier]', 'gi');
   v_comment := regexp_replace(v_comment, '(student[[:space:]_-]*(id|number|no)[[:space:]#:-]*[[:alnum:]/-]{3,})', '[redacted student identifier]', 'gi');
   v_comment := regexp_replace(v_comment, 'https?://[^[:space:]]+', '[redacted link]', 'gi');
-
-  -- Redact exact directory values when a respondent includes their own name,
-  -- username or roll number in free text. No identifier is copied to projection.
-  for v_student_name, v_student_username, v_student_number in
-    select u.full_name, u.username, d.student_number
-    from public.users u
-    left join public.student_directory d
-      on d.student_id = u.id and d.organization_id = u.organization_id
-    where u.organization_id = v_org and u.role = 'STUDENT'::public.app_role
-  loop
-    if char_length(coalesce(v_student_name,'')) >= 3 then
-      v_comment := regexp_replace(v_comment, '(^|[^[:alnum:]_])' || regexp_replace(v_student_name, '([.\+*?\[\]^$(){}=!<>|:\\-])', '\\\1', 'g') || '([^[:alnum:]_]|$)', '\1[redacted student name]\2', 'gi');
-    end if;
-    if char_length(coalesce(v_student_username,'')) >= 4 then
-      v_comment := replace(v_comment, v_student_username, '[redacted student username]');
-    end if;
-    if char_length(coalesce(v_student_number,'')) >= 3 then
-      v_comment := replace(v_comment, v_student_number, '[redacted student number]');
-    end if;
-  end loop;
 
   insert into public.feedback_submissions(feedback_id, course_id, organization_id, created_at, comment, ratings_json)
   values(new.feedback_id, v_course_id, v_org, (new.received_on::timestamp at time zone 'UTC'),
