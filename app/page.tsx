@@ -1,33 +1,105 @@
 import Link from 'next/link';
 import { PublicFooter, PublicHeader } from '@/components/public-site';
-import { ArrowRight, BarChart3, BookOpen, CheckCircle2, MessageSquareText, Star } from 'lucide-react';
+import { Activity, ArrowRight, ArrowUpRight, BarChart3, BookOpen, CheckCircle2, Gauge, MessageSquareText, ShieldCheck } from 'lucide-react';
 
 export const metadata = {
   title: 'CoursePulse | College course feedback',
-  description: 'Create a student account with your name, username and programme, then share anonymous course feedback. No email required. No Admin or HOD roles.',
+  description: 'Create a student account with your name, username and programme, then share course feedback. No email address is needed. No Admin or HOD roles.',
   alternates: { canonical: '/' }
 };
 
+const dimensions = [
+  { number: '01', title: 'Teaching clarity', detail: 'How clearly ideas come through', icon: BookOpen },
+  { number: '02', title: 'Class pace', detail: 'How the learning rhythm feels', icon: Gauge },
+  { number: '03', title: 'Learning resources', detail: 'What supports your understanding', icon: MessageSquareText },
+  { number: '04', title: 'Overall experience', detail: 'Your view of the course as a whole', icon: BarChart3 }
+];
+
 export default function Home() {
-  return <main className="min-h-screen overflow-hidden bg-[#f6f3eb] text-[#20352a]">
-    <PublicHeader />
-    <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-16">
-      <div><span className="inline-flex items-center gap-2 rounded-full border border-[#d9e8dc] bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-[#477456]"><span className="h-2 w-2 rounded-full bg-[#63a879]"/>COLLEGE PROJECT</span>
-        <h1 className="mt-7 max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-.055em] sm:text-6xl">Better courses begin with <span className="text-[#43805a]">honest feedback.</span></h1>
-        <p className="mt-6 max-w-xl text-lg leading-8 text-[#526158]">Students can create an account using their name, a username and their programme—B.Tech, M.Tech, BBA, B.Com and more. No email address or verification is needed. No Admin or HOD roles.</p>
-        <div className="mt-9 flex flex-wrap gap-3"><Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white">Create student account <ArrowRight size={17}/></Link><Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Student sign in</Link><Link href="/dashboard" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Explore workspace</Link></div>
-        <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-[#526158]"><span className="inline-flex items-center gap-2"><CheckCircle2 size={15}/>Student accounts</span><span className="inline-flex items-center gap-2"><MessageSquareText size={15}/>Anonymous feedback</span><span className="inline-flex items-center gap-2"><BarChart3 size={15}/>Simple results</span></div>
+  return (
+    <main id="main-content" className="cp-home">
+      <PublicHeader />
+      <div className="cp-shell">
+        <section className="cp-hero">
+          <div className="cp-hero-copy">
+            <span className="cp-eyebrow">Student course feedback project</span>
+            <h1>Give every course a <em>clearer conversation.</em></h1>
+            <p>CoursePulse gives students one simple place to create an account, share their learning experience and review course-level results.</p>
+            <div className="cp-actions">
+              <Link href="/signup" className="button primary">Create student account <ArrowRight size={16} /></Link>
+              <Link href="/login" className="button subtle">Student sign in</Link>
+              <Link href="/dashboard" className="cp-text-link">Open workspace <ArrowUpRight size={15} /></Link>
+            </div>
+            <div className="cp-proof">
+              <span><CheckCircle2 size={15} /> Student-only accounts</span>
+              <span><ShieldCheck size={15} /> Clear data boundaries</span>
+            </div>
+          </div>
+
+          <aside className="cp-hero-visual" aria-label="Four dimensions of course feedback">
+            <div className="cp-visual-inner">
+              <div className="cp-visual-top"><span>COURSEPULSE / FEEDBACK LENS</span><Activity size={17} /></div>
+              <div className="cp-visual-heading">
+                <p>Make space for the whole learning experience.</p>
+                <h2>What makes a course work?</h2>
+              </div>
+              <div className="cp-signal-list">
+                {dimensions.map(({ number, title, detail, icon: Icon }) => (
+                  <div className="cp-signal" key={number}>
+                    <span className="cp-signal-index">{number}</span>
+                    <span className="cp-signal-copy"><b>{title}</b><small>{detail}</small></span>
+                    <span className="cp-signal-icon"><Icon size={16} /></span>
+                  </div>
+                ))}
+              </div>
+              <div className="cp-visual-foot"><span>Four feedback dimensions</span><span>Student perspective</span></div>
+            </div>
+          </aside>
+        </section>
+
+        <aside className="cp-disclosure">
+          <div className="cp-disclosure-copy">
+            <span className="cp-disclosure-icon"><ShieldCheck size={18} /></span>
+            <span><b>A student project demonstration, with clear data boundaries.</b><small>Student accounts use Supabase. Course feedback and reminders stay in the browser you use.</small></span>
+          </div>
+          <Link href="/about">About this project <ArrowUpRight size={14} /></Link>
+        </aside>
+
+        <section id="how-it-works" className="cp-how">
+          <div className="cp-section-intro">
+            <span className="cp-section-kicker">How it works</span>
+            <h2>A short path from sign-in to useful feedback.</h2>
+            <p>Choose your programme, open the workspace and share what the learning experience feels like.</p>
+          </div>
+          <div className="cp-steps">
+            <article className="cp-step"><span className="cp-step-number">01 / ACCOUNT</span><h3>Create your student account</h3><p>Use your name, a unique username, your programme and a password. No email address is needed.</p></article>
+            <article className="cp-step"><span className="cp-step-number">02 / FEEDBACK</span><h3>Share your experience</h3><p>Rate teaching clarity, class pace, learning resources and your overall course experience.</p></article>
+            <article className="cp-step"><span className="cp-step-number">03 / RESULTS</span><h3>Review course summaries</h3><p>See course-level summaries and export the demo responses saved in your current browser.</p></article>
+          </div>
+        </section>
+
+        <section className="cp-benefits">
+          <div className="cp-benefit-heading">
+            <span className="cp-section-kicker">What you can do</span>
+            <h2>Keep the focus on the course experience.</h2>
+          </div>
+          <div className="cp-benefit-list">
+            <article className="cp-benefit">
+              <span className="cp-benefit-icon"><BookOpen size={19} /></span>
+              <div><h3>One student account</h3><p>Register with your name, username, password and programme. Public registration is for students only.</p></div>
+            </article>
+            <article className="cp-benefit">
+              <span className="cp-benefit-icon"><MessageSquareText size={19} /></span>
+              <div><h3>Feedback without extra steps</h3><p>Share your view of the course through a focused set of ratings and an optional comment.</p></div>
+            </article>
+            <article className="cp-benefit">
+              <span className="cp-benefit-icon"><BarChart3 size={19} /></span>
+              <div><h3>Results you can review</h3><p>See summaries based on responses saved in the browser you are using. They are demonstration results, not live college-wide statistics.</p></div>
+            </article>
+          </div>
+        </section>
       </div>
-      <div className="relative mx-auto w-full max-w-xl"><div className="absolute -inset-8 rounded-[3rem] bg-[#e4f0e6] blur-2xl"/><div className="relative rounded-[2rem] border border-[#e0e9e1] bg-white p-6 shadow-[0_30px_90px_-35px_rgba(31,76,49,.25)] sm:p-8">
-        <div className="flex items-center justify-between border-b border-[#edf1ed] pb-5"><div><p className="text-xs font-bold uppercase tracking-widest text-[#526158]">Student workspace</p><h2 className="mt-1 text-xl font-extrabold">Your course profile</h2></div><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#edf5ef] text-[#477956]"><BookOpen size={21}/></span></div>
-        <div className="mt-6 space-y-4"><div className="rounded-2xl bg-[#f7faf7] p-4"><p className="text-xs font-bold text-[#477956]">EXAMPLE PROGRAMMES</p><div aria-label="Example programmes shown in this static preview" className="pointer-events-none mt-3 grid grid-cols-2 select-none gap-2 text-sm font-bold"><span className="rounded-xl bg-white px-3 py-2">B.Tech</span><span className="rounded-xl bg-white px-3 py-2">M.Tech</span><span className="rounded-xl bg-white px-3 py-2">BBA</span><span className="rounded-xl bg-white px-3 py-2">B.Com</span></div><p className="mt-3 text-xs text-[#526158]">Other programmes are available in the registration form.</p></div>
-          <div aria-label="Example workspace features" className="pointer-events-none grid grid-cols-2 select-none gap-3"><div className="rounded-2xl border border-[#edf1ed] p-4"><MessageSquareText size={19} className="text-[#477956]"/><p className="mt-3 text-sm font-extrabold">Share feedback</p><p className="mt-1 text-xs leading-5 text-[#526158]">Give anonymous course ratings.</p></div><div className="rounded-2xl border border-[#edf1ed] p-4"><BarChart3 size={19} className="text-[#477956]"/><p className="mt-3 text-sm font-extrabold">View results</p><p className="mt-1 text-xs leading-5 text-[#526158]">See local course summaries.</p></div></div></div>
-        <p className="mt-5 text-center text-xs text-[#526158]">Your programme is saved with your student account.</p>
-      </div></div>
-    </section>
-    <section id="how-it-works" className="border-y border-[#e6eee7] bg-white py-20"><div className="mx-auto max-w-7xl px-6 lg:px-10"><div className="max-w-2xl"><span className="text-xs font-extrabold tracking-[.18em] text-[#3f6b4b]">HOW IT WORKS</span><h2 className="mt-4 text-3xl font-extrabold sm:text-4xl">A simple student journey.</h2><p className="mt-4 leading-7 text-[#526158]">Choose the programme you study, create your account, and share course feedback.</p></div>
-      <div className="mt-12 grid gap-8 md:grid-cols-3"><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">01</span><h3 className="mt-4 text-lg font-extrabold">Create your account</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">Enter your name, choose a username and select B.Tech, M.Tech, BBA, B.Com or another programme.</p></article><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">02</span><h3 className="mt-4 text-lg font-extrabold">Share feedback</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">Sign in and rate teaching clarity, class pace, and learning resources anonymously.</p></article><article className="border-t-2 border-[#75a982] pt-5"><span className="text-xs font-extrabold text-[#477956]">03</span><h3 className="mt-4 text-lg font-extrabold">Review results</h3><p className="mt-2 text-sm leading-6 text-[#64756a]">Review the course summaries and export the demo responses saved in your browser.</p></article></div>
-    </div></section>
-    <PublicFooter />
-  </main>;
+      <PublicFooter />
+    </main>
+  );
 }
