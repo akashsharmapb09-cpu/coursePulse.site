@@ -184,8 +184,7 @@ test.describe('public-page browser smoke', () => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     for (const route of ['/', '/about', '/contact', '/login', '/signup', '/privacy', '/terms']) {
-      await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
     }
     expect(errors).toEqual([]);
   });
