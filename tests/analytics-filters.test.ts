@@ -35,6 +35,6 @@ describe('filtered aggregate analytics',()=>{
     expect(dashboard).toMatch(/analyticsToDate/);
     expect(dashboard).toMatch(/analyticsSemesterId/);
     expect(dashboard).toMatch(/Semester<select/);
-    expect(dashboard).toMatch(/analyticsQuery\(\)/);
+    expect(dashboard).toMatch(/analyticsQuery\(analyticsCourseId\|\|undefined\)/);
   });
 });

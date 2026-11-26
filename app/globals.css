@@ -898,6 +898,204 @@ a[href$="/privacy"] {
 }
 
 
+/* Student dashboard-only dark theme. Public pages and authentication remain light. */
+.app-shell[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e6eee8;
+  --muted: #b5c2b9;
+  --line: #34483b;
+  --paper: #111a14;
+  --white: #1a261e;
+  --green: #397a53;
+  --mint: #203a2a;
+  --soft: #1e3325;
+  --coral: #e09a87;
+  --shadow: 0 20px 65px rgba(0,0,0,.32);
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] .main-area {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] [class~="bg-white"],
+.app-shell[data-theme="dark"] [class*="bg-[#"] {
+  background-color: #1a261e !important;
+}
+.app-shell[data-theme="dark"] [class*="bg-[#245b3e]"],
+.app-shell[data-theme="dark"] [class*="bg-[#214f37]"] {
+  background-color: #285f40 !important;
+}
+.app-shell[data-theme="dark"] [class*="bg-[#edf5ef]"],
+.app-shell[data-theme="dark"] [class*="bg-[#eaf3ec]"],
+.app-shell[data-theme="dark"] [class*="bg-[#f7faf7]"],
+.app-shell[data-theme="dark"] [class*="bg-[#f5faf6]"] {
+  background-color: #20352a !important;
+}
+.app-shell[data-theme="dark"] [class*="text-[#"] {
+  color: var(--muted) !important;
+}
+.app-shell[data-theme="dark"] [class*="text-[#20352a]"],
+.app-shell[data-theme="dark"] [class*="text-[#253b2e]"],
+.app-shell[data-theme="dark"] [class*="text-[#284332]"],
+.app-shell[data-theme="dark"] [class*="text-[#304a38]"],
+.app-shell[data-theme="dark"] [class*="text-[#445e4c]"] {
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] [class*="text-[#245b3e]"],
+.app-shell[data-theme="dark"] [class*="text-[#286640]"],
+.app-shell[data-theme="dark"] [class*="text-[#477956]"] {
+  color: #9bd0a8 !important;
+}
+.app-shell[data-theme="dark"] [class*="border-[#"],
+.app-shell[data-theme="dark"] .sidebar,
+.app-shell[data-theme="dark"] .topbar,
+.app-shell[data-theme="dark"] .course-card,
+.app-shell[data-theme="dark"] .feedback-list,
+.app-shell[data-theme="dark"] .metric-card,
+.app-shell[data-theme="dark"] .analytics-card {
+  border-color: var(--line) !important;
+}
+.app-shell[data-theme="dark"] .sidebar,
+.app-shell[data-theme="dark"] .topbar,
+.app-shell[data-theme="dark"] .course-card,
+.app-shell[data-theme="dark"] .feedback-list,
+.app-shell[data-theme="dark"] .metric-card,
+.app-shell[data-theme="dark"] .analytics-card,
+.app-shell[data-theme="dark"] .stack-form input,
+.app-shell[data-theme="dark"] .stack-form textarea,
+.app-shell[data-theme="dark"] .stack-form select,
+.app-shell[data-theme="dark"] .input-wrap {
+  background-color: #1a261e !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] input,
+.app-shell[data-theme="dark"] textarea,
+.app-shell[data-theme="dark"] select {
+  border-color: var(--line) !important;
+  background-color: #142019 !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] input::placeholder,
+.app-shell[data-theme="dark"] textarea::placeholder {
+  color: #9aaca0 !important;
+}
+.app-shell[data-theme="dark"] .side-nav button,
+.app-shell[data-theme="dark"] .icon-button,
+.app-shell[data-theme="dark"] .button.subtle,
+.app-shell[data-theme="dark"] .theme-toggle {
+  color: var(--ink);
+  border-color: var(--line);
+  background: #20352a;
+}
+.app-shell[data-theme="dark"] .side-nav button.active {
+  color: #b5e0bf !important;
+  background: #294532 !important;
+}
+.app-shell[data-theme="dark"] .side-nav button span,
+.app-shell[data-theme="dark"] .role-chip,
+.app-shell[data-theme="dark"] .course-art-mark {
+  background: #283d2f !important;
+  color: #b5d9be !important;
+}
+.app-shell[data-theme="dark"] .course-art,
+.app-shell[data-theme="dark"] .course-card:nth-child(3n+2) .course-art,
+.app-shell[data-theme="dark"] .course-card:nth-child(3n) .course-art {
+  background: linear-gradient(125deg,#243b2c,#1a2b20 65%,#304937) !important;
+}
+.app-shell[data-theme="dark"] .feedback-row,
+.app-shell[data-theme="dark"] .course-footer,
+.app-shell[data-theme="dark"] .user-profile,
+.app-shell[data-theme="dark"] .section-heading {
+  border-color: var(--line) !important;
+}
+.app-shell[data-theme="dark"] .feedback-row:hover {
+  background: #22382a !important;
+}
+.app-shell[data-theme="dark"] .security-note,
+.app-shell[data-theme="dark"] .privacy-banner,
+.app-shell[data-theme="dark"] .empty-state,
+.app-shell[data-theme="dark"] .loading-panel {
+  border-color: var(--line) !important;
+  background: #20352a !important;
+  color: var(--ink) !important;
+}
+.app-shell[data-theme="dark"] .alert.success {
+  background: #1d3828;
+  border-color: #315b3c;
+  color: #bce2c4;
+}
+.app-shell[data-theme="dark"] .alert.error {
+  background: #3b2421;
+  border-color: #704139;
+  color: #f3b8aa;
+}
+.theme-toggle {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #dfe9e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #315b43;
+  box-shadow: 0 3px 12px rgba(26,54,36,.08);
+}
+.theme-toggle:focus-visible {
+  outline: 3px solid #80b993;
+  outline-offset: 3px;
+}
+.theme-toggle:hover { transform: translateY(-1px); }
+
+/* Teacher notifications and course-wise report summary */
+.notification-bell-wrap{position:relative;z-index:6}
+.notification-bell-button{position:relative;display:grid;place-items:center;width:39px;height:39px;border:1px solid var(--line);border-radius:11px;background:var(--white);color:var(--green);transition:background .18s,border-color .18s}
+.notification-bell-button:hover{background:var(--soft);border-color:#cbded0}
+.notification-count{position:absolute;right:-5px;top:-5px;display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--white);border-radius:20px;background:var(--coral);color:#fff;font-size:9px;font-weight:800}
+.notification-popover{position:absolute;right:0;top:calc(100% + 10px);width:min(390px,calc(100vw - 32px));overflow:hidden;border:1px solid var(--line);border-radius:15px;background:var(--white);box-shadow:0 20px 60px rgba(21,48,36,.16)}
+.notification-popover-head{display:flex;align-items:center;justify-content:space-between;padding:15px 17px;border-bottom:1px solid var(--line)}
+.notification-popover-head>div{display:grid;gap:3px}.notification-popover-head b{font:800 13px Manrope,sans-serif;color:var(--ink)}.notification-popover-head small{font-size:10px;color:var(--muted)}
+.notification-preview-list{max-height:360px;overflow:auto}
+.notification-preview-item,.notification-center-item{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;border-bottom:1px solid var(--line);background:var(--white)}
+.notification-preview-item:last-child,.notification-center-item:last-child{border-bottom:0}
+.notification-preview-item.unread,.notification-center-item.unread{background:var(--soft)}
+.notification-kind-icon{flex:0 0 31px;width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:var(--mint);color:var(--green)}
+.notification-preview-copy,.notification-center-copy{min-width:0;flex:1}
+.notification-preview-title{display:flex;align-items:center;gap:8px}.notification-preview-title b,.notification-center-title b{font-size:11px;color:var(--ink)}
+.notification-preview-title i{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.notification-preview-copy>small,.notification-center-copy>small{display:block;margin-top:4px;font-size:9px;color:var(--muted)}
+.notification-preview-copy p,.notification-center-copy p{margin:7px 0 0;font-size:11px;line-height:1.55;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.notification-popover-actions{display:flex;justify-content:space-between;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--paper)}
+.notification-popover-actions .button{font-size:10px}
+.notification-empty{margin:0;padding:23px 18px;text-align:center;font-size:11px;line-height:1.5;color:var(--muted)}
+.notification-inline-error{margin:10px}
+.teacher-notification-center{display:grid;gap:12px}
+.teacher-notification-center .section-heading{margin-top:0}
+.notification-center-toolbar{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.notification-center-list{overflow:hidden;border:1px solid var(--line);border-radius:13px;background:var(--white)}
+.notification-center-item{padding:16px;gap:13px}
+.notification-center-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notification-center-title>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.notification-type-chip{display:inline-flex;padding:4px 7px;border:1px solid var(--line);border-radius:20px;font-size:9px;font-weight:700;color:var(--muted)}
+.notification-unread-label{font-size:9px;font-weight:800;color:var(--green)}
+.notification-mark-read{flex:0 0 auto}
+.notification-empty-state{display:grid;justify-items:center;gap:8px;padding:42px 20px;border:1px dashed var(--line);border-radius:14px;background:var(--white);text-align:center;color:var(--muted)}
+.notification-empty-state>span{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:var(--soft);color:var(--green)}
+.notification-empty-state>b{font:800 14px Manrope,sans-serif;color:var(--ink)}
+.notification-empty-state p{max-width:42ch;margin:0;font-size:11px;line-height:1.6}
+.course-report-summary{margin:0 0 26px}
+.course-report-summary .section-heading{margin-top:20px}
+.course-report-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.course-report-summary-card{display:grid;gap:5px;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--white)}
+.course-report-summary-card .eyebrow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course-report-summary-card>strong{margin-top:9px;font:800 24px Manrope,sans-serif;color:var(--green)}
+.course-report-summary-card>small{font-size:10px;color:var(--muted)}
+.course-report-summary-card>div{display:grid;gap:4px;padding-top:10px;margin-top:7px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+@media(max-width:760px){.notification-popover{position:fixed;top:75px;right:12px}.notification-bell-wrap{position:static}.notification-bell-button{width:35px;height:35px}.notification-center-item{flex-wrap:wrap}.notification-mark-read{margin-left:43px}}
+@media(prefers-reduced-motion:reduce){.notification-bell-button{transition:none}}
+
+
 /* CoursePulse dashboard dark theme */
 html[data-coursepulse-theme="dark"] body{background:#101812;color:#e5eee7}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace{background:#101812!important;color:#e5eee7!important}
