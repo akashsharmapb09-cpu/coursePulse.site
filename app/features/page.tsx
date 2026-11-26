@@ -6,14 +6,14 @@ import { PublicPage } from '@/components/public-site';
 export const metadata: Metadata = {
   alternates: { canonical: '/features' },
   title: 'Features',
-  description: 'Student accounts, anonymous course feedback and simple course-level results for a college project.'
+  description: 'Student accounts, anonymous course feedback and simple course-level results in one focused platform.'
 };
 
 const features = [
   {
     icon: MessageSquareText,
     title: 'Anonymous feedback',
-    text: 'Students can rate teaching clarity, course pace, learning resources, and their overall course experience without attaching account identity to a local demo response.'
+    text: 'Students can rate teaching clarity, course pace, learning resources, and their overall course experience without attaching account identity to a browser-stored response.'
   },
   {
     icon: BarChart3,
@@ -30,7 +30,7 @@ const features = [
 export default function FeaturesPage() {
   return (
     <PublicPage
-      eyebrow="Project features"
+      eyebrow="Platform features"
       title="The essentials for course feedback."
       description="CoursePulse keeps the student journey focused on registration, feedback, reminders and results, without extra college-management steps."
     >
@@ -45,7 +45,7 @@ export default function FeaturesPage() {
           </article>
         ))}
       </div>
-      <p><Link href="/signup" className="inline-link">Create a student account</Link> or <Link href="/dashboard" className="inline-link">explore the workspace demo</Link>.</p>
+      <p><Link href="/signup" className="inline-link">Create a student account</Link> or <Link href="/dashboard" className="inline-link">open the workspace</Link>.</p>
     </PublicPage>
   );
 }
