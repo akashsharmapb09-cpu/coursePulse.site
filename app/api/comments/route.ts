@@ -24,11 +24,23 @@ export async function GET(request: NextRequest) {
     return jsonError('Invalid comment filters.');
   }
 
+  let semesterCourseIds: string[] | null = null;
+  if (semesterId) {
+    const { data: semesterCourses, error: semesterError } = await supabase
+      .from('courses').select('id').eq('semester_id', semesterId);
+    if (semesterError) return jsonError('Semester filter could not be applied.', 403);
+    semesterCourseIds = (semesterCourses ?? []).map(course => course.id);
+    if (!semesterCourseIds.length || (courseId && !semesterCourseIds.includes(courseId))) {
+      return NextResponse.json({ comments: [], minimum_group_size: 5 }, { headers: { 'Cache-Control': 'no-store' } });
+    }
+  }
+
   let query = supabase.from('feedback_submissions')
     .select('id,feedback_id,course_id,created_at,comment,ratings_json')
     .order('created_at', { ascending: false })
     .limit(500);
   if (courseId) query = query.eq('course_id', courseId);
+  else if (semesterCourseIds) query = query.in('course_id', semesterCourseIds);
   if (fromDate) query = query.gte('created_at', fromDate + 'T00:00:00.000Z');
   if (toDate) query = query.lte('created_at', toDate + 'T23:59:59.999Z');
   if (search) query = query.ilike('comment', '%' + search.replace(/[,%]/g, '') + '%');
@@ -45,7 +57,7 @@ export async function GET(request: NextRequest) {
   if (coursesResult.error || feedbackResult.error) return jsonError('Comment context could not be loaded.', 500);
   const courses = new Map((coursesResult.data ?? []).map(course => [course.id, course]));
   const forms = new Map((feedbackResult.data ?? []).map(form => [form.id, form]));
-  const comments = rows.filter(row => !semesterId || courses.get(row.course_id)?.semester_id === semesterId).map(row => ({
+  const comments = rows.map(row => ({
     ...row,
     course: courses.get(row.course_id) ?? null,
     feedback: forms.get(row.feedback_id) ?? null
