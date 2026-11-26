@@ -49,6 +49,7 @@ describe('CoursePulse student account experience', () => {
     expect(authForm).toContain('password !== confirmPassword');
     expect(authForm).toContain('At least 10 characters');
     expect(authForm).toContain("profile?.role !== 'STUDENT'");
+    expect(authForm).toContain('The sign-up email could not be sent');
     expect(authForm).not.toContain('requested_role');
     expect(authForm).not.toContain('ADMIN');
     expect(authForm).toContain('does not offer Admin or HOD sign-up');
