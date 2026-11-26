@@ -11,49 +11,57 @@ type Account = { name: string; username: string; program: string };
 export function StudentAccountControl() {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     let alive = true;
 
-    async function refreshAccount() {
-      const { data: { user } } = await supabase.auth.getUser();
+    // Use the single INITIAL_SESSION event as the source of truth. Calling getUser()
+    // here as well races the subscription's own session read in WebKit.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
       if (!user) {
-        if (alive) { setAccount(null); setLoading(false); }
+        if (alive) {
+          setAccount(null);
+          setLoading(false);
+        }
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('users')
-        .select('full_name,username,program,role,is_active')
-        .eq('id', user.id)
-        .maybeSingle();
+      window.setTimeout(() => {
+        void (async () => {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('full_name,username,program,role,is_active')
+            .eq('id', user.id)
+            .maybeSingle();
 
-      if (!profile || profile.role !== 'STUDENT' || !profile.is_active) {
-        await supabase.auth.signOut();
-        if (alive) { setAccount(null); setLoading(false); }
-        return;
-      }
+          if (!alive) return;
+          if (!profile || profile.role !== 'STUDENT' || !profile.is_active) {
+            await supabase.auth.signOut();
+            if (alive) {
+              setAccount(null);
+              setLoading(false);
+            }
+            return;
+          }
 
-      if (alive) {
-        setAccount({
-          name: profile.full_name || String(user.user_metadata?.full_name || 'Student'),
-          username: profile.username || String(user.user_metadata?.username || 'student'),
-          program: profile.program || String(user.user_metadata?.program || 'Student')
-        });
-        setLoading(false);
-      }
-    }
-
-    void refreshAccount();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      // Do Supabase reads after the auth callback stack has completed.
-      window.setTimeout(() => { void refreshAccount(); }, 0);
+          setAccount({
+            name: profile.full_name || String(user.user_metadata?.full_name || 'Student'),
+            username: profile.username || String(user.user_metadata?.username || 'student'),
+            program: profile.program || String(user.user_metadata?.program || 'Student')
+          });
+          setLoading(false);
+        })();
+      }, 0);
     });
 
-    return () => { alive = false; subscription.unsubscribe(); };
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function signOut() {
