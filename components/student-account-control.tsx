@@ -48,7 +48,8 @@ export function StudentAccountControl() {
 
     void refreshAccount();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      void refreshAccount();
+      // Do Supabase reads after the auth callback stack has completed.
+      window.setTimeout(() => { void refreshAccount(); }, 0);
     });
 
     return () => { alive = false; subscription.unsubscribe(); };
