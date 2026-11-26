@@ -116,6 +116,8 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         setError('Email or password is incorrect. Please check your details and try again.');
       } else if (/email not confirmed/i.test(message)) {
         setError('Please confirm your email from the message we sent before signing in.');
+      } else if (/email_address_not_authorized|email address not authorized|over_email_send_rate_limit|email rate limit exceeded/i.test(message)) {
+        setError('The sign-up email could not be sent. The project owner needs to configure a custom email provider in Supabase Authentication settings before students can receive verification links.');
       } else if (/already registered|user already exists/i.test(message)) {
         setError('An account may already exist for this email. Try signing in instead.');
       } else {
