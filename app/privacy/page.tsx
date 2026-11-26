@@ -11,8 +11,8 @@ export default function PrivacyPage() {
   return <PublicPage eyebrow="Privacy" title="Privacy Policy" description="This policy explains what information is used when students create a CoursePulse account and submit course feedback.">
     <p className="policy-updated">Last reviewed: 26 November 2026</p>
     <section>
-      <h2>1. About this project</h2>
-      <p>CoursePulse is a college-project demonstration with student-only accounts. There are no self-service Admin or HOD roles. It is not an official college record system. Do not use it for confidential institutional records.</p>
+      <h2>1. About CoursePulse</h2>
+      <p>CoursePulse provides a course-feedback workspace with student-only accounts. There are no self-service Admin or HOD roles. It is not an official college record system. Do not use it for confidential institutional records.</p>
     </section>
     <section>
       <h2>2. Student account information</h2>
@@ -35,11 +35,11 @@ export default function PrivacyPage() {
     <section>
       <h2>6. Optional analytics and performance data</h2>
       <p>Optional Vercel Analytics and Speed Insights are loaded only after you choose to allow optional analytics. When enabled, page-view and performance events are sent to Vercel for configured public website pages. The student workspace and authentication pages are excluded from the configured analytics routes.</p>
-      <p>The project does not intentionally include account profile fields, feedback comments, or rating answers in those analytics events. You can reject optional analytics or change your choice later using Cookie settings.</p>
+      <p>CoursePulse does not intentionally include account profile fields, feedback comments, or rating answers in those analytics events. You can reject optional analytics or change your choice later using Cookie settings.</p>
     </section>
     <section>
       <h2>7. Export, deletion and account security</h2>
-      <p>The Results page can export the demo responses saved in this browser as a CSV file. The Clear demo data option removes local feedback after confirmation. To request help with a student account or its deletion, use the support channel provided by your college or project team. There is no email-based password recovery in this version; keep your username and password safe and contact the project team if you lose access.</p>
+      <p>The Results page can export the demo responses saved in this browser as a CSV file. The Clear demo data option removes local feedback after confirmation. To request help with a student account or its deletion, use the channel through which you received the CoursePulse link. There is no email-based password recovery in this version; keep your username and password safe and use the same channel if you lose access.</p>
     </section>
     <section>
       <h2>8. Hosting and third-party services</h2>
@@ -47,8 +47,8 @@ export default function PrivacyPage() {
     </section>
     <section>
       <h2>9. Changes and contact</h2>
-      <p>This notice may be updated as the academic project changes. No institutional privacy contact has been supplied for this demonstration. For project questions, use the college or course contact channel provided by the project team.</p>
+      <p>This notice may be updated as CoursePulse changes. No institutional privacy contact has been supplied. For questions about CoursePulse, use the college or course contact channel through which you received the link.</p>
     </section>
-    <p className="public-note">This is an informational notice for a student project. It is not a legal compliance certification or an institution-approved privacy policy.</p>
+    <p className="public-note">This is an informational privacy notice, not a legal compliance certification or an institution-approved privacy policy.</p>
   </PublicPage>;
 }
