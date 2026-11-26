@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const dashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 const config = readFileSync(resolve(process.cwd(), 'supabase/config.toml'), 'utf8');
-const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126174000_coursepulse_remove_digital_student_id.sql'), 'utf8');
+const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261126173925_coursepulse_remove_digital_student_id.sql'), 'utf8');
 const foundation = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108163318_coursepulse_multi_college_tenant_foundation.sql'), 'utf8');
 
 describe('CoursePulse Digital Student ID retirement', () => {
