@@ -18,12 +18,6 @@ export async function middleware(request: NextRequest) {
     redirect.headers.set('Content-Security-Policy', csp);
     return redirect;
   }
-  if (/^\/api(?:\/|$)/.test(pathname)) {
-    const blocked = NextResponse.json({ error: 'The public college demo does not use authenticated API routes.' }, { status: 410 });
-    blocked.headers.set('Content-Security-Policy', csp);
-    return blocked;
-  }
-
   let response = NextResponse.next({ request: { headers: requestHeaders } });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -42,7 +36,16 @@ export async function middleware(request: NextRequest) {
     });
 
     // Validates the user and refreshes the session cookie when needed.
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (/^\/dashboard(?:\/|$)/.test(pathname) && !user) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = '/login';
+      destination.searchParams.set('next', pathname);
+      const redirect = NextResponse.redirect(destination);
+      response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+      redirect.headers.set('Content-Security-Policy', csp);
+      return redirect;
+    }
   }
 
   response.headers.set('Content-Security-Policy', csp);
