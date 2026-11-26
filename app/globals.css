@@ -1098,7 +1098,6 @@ a[href$="/privacy"] {
 
 
 /* CoursePulse dashboard dark theme */
-html[data-coursepulse-theme="dark"] body{background:#101812;color:#e5eee7}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace{background:#101812!important;color:#e5eee7!important}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace header{background:#142019!important;border-color:#2d4034!important}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-white"]{background-color:#19261f!important}
@@ -1113,3 +1112,78 @@ html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-amber-8
 html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="bg-red-50"]{background:#3b2422!important;color:#f0b7ae!important}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="text-red-700"]{color:#f0b7ae!important}
 html[data-coursepulse-theme="dark"] .coursepulse-workspace [class*="divide-[#"]>*+*{border-color:#304638!important}
+
+/* Student-facing polish from the live route audit. */
+body.cookie-consent-visible { padding-bottom: 230px; }
+@media (max-width: 760px) {
+  body.cookie-consent-visible { padding-bottom: 310px; }
+}
+.cookie-settings-trigger { left: auto; right: 17px; }
+.input-wrap { position: relative; overflow: visible; }
+.input-wrap:focus-within {
+  outline: 2px solid rgba(87,145,108,.48);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.password-input-wrap input { flex: 1; min-width: 0; }
+.password-visibility-toggle {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  min-height: 40px;
+  margin-right: 3px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #708478;
+}
+.password-visibility-toggle:hover { background: #f1f6f2; color: #285d42; }
+.password-visibility-toggle:focus-visible {
+  outline: 2px solid #6b9d80;
+  outline-offset: 1px;
+}
+.auth-home-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-bottom: 18px;
+  color: #477956;
+  font-size: 11px;
+  font-weight: 800;
+}
+.auth-home-link:hover, .auth-support-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-support-link { color: #286640; font-weight: 800; }
+html[data-coursepulse-theme="dark"] .cookie-banner {
+  border-color: #344a3b;
+  background: rgba(25,38,31,.98);
+  color: #e5eee7;
+}
+html[data-coursepulse-theme="dark"] .cookie-banner-copy b { color: #e5eee7; }
+html[data-coursepulse-theme="dark"] .cookie-banner-copy p { color: #bdcbbf; }
+html[data-coursepulse-theme="dark"] .cookie-banner .button.subtle {
+  border-color: #405746;
+  background: #223329;
+  color: #dce9df;
+}
+html[data-coursepulse-theme="dark"] .cookie-settings-trigger {
+  border-color: #344a3b;
+  background: #19261f;
+  color: #dce9df;
+}
+html[data-coursepulse-theme="dark"] .cookie-dialog {
+  border-color: #344a3b;
+  background: #19261f;
+  color: #e5eee7;
+}
+html[data-coursepulse-theme="dark"] .cookie-dialog h2,
+html[data-coursepulse-theme="dark"] .cookie-preference-row b { color: #e5eee7; }
+html[data-coursepulse-theme="dark"] .cookie-dialog>p,
+html[data-coursepulse-theme="dark"] .cookie-preference-row small,
+html[data-coursepulse-theme="dark"] .cookie-preference-row em { color: #bdcbbf; }
+html[data-coursepulse-theme="dark"] .cookie-preference-row { border-color: #344a3b; }
+html[data-coursepulse-theme="dark"] .cookie-dialog .button.subtle {
+  border-color: #405746;
+  background: #223329;
+  color: #dce9df;
+}
