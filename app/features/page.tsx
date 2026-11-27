@@ -5,25 +5,25 @@ import { PublicPage } from '@/components/public-site';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/features' },
-  title: 'Features',
-  description: 'Student accounts, anonymous course feedback and simple course-level results in one focused platform.'
+  title: 'Student and Teacher Features',
+  description: 'Student and Teacher accounts, anonymous course feedback and protected course-level analytics in one focused platform.'
 };
 
 const features = [
   {
     icon: MessageSquareText,
     title: 'Anonymous feedback',
-    text: 'Students can rate teaching clarity, course pace, learning resources, and their overall course experience without attaching account identity to a browser-stored response.'
+    text: 'Students can rate teaching clarity, course pace, learning resources, and their overall course experience without attaching account identity to submitted answers.'
   },
   {
     icon: BarChart3,
     title: 'Easy-to-read results',
-    text: 'Course-level averages and response counts turn feedback saved in the current browser into a simple summary.'
+    text: 'Course-level averages, response counts, rating distributions and trends turn eligible feedback into privacy-protected reports.'
   },
   {
     icon: ShieldCheck,
-    title: 'Student-only accounts',
-    text: 'Students create an account with their name, username, password and programme, such as B.Tech, M.Tech, BBA or B.Com. Public registration is for students only.'
+    title: 'Student and Teacher accounts',
+    text: 'Students create an account with a username, password and programme. Teachers create an account with their college email and password. The two roles have separate workspaces.'
   }
 ];
 
