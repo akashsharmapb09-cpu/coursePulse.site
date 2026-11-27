@@ -25,13 +25,19 @@ export function BrandLogo({ light = false }: { light?: boolean }) {
 
 export function PublicHeader() {
   return <header className="public-header">
-    <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} href="/" aria-label="CoursePulse home">
+    <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} href="/" aria-label="CoursePulse home" className="shrink-0">
       <BrandLogo />
     </Link>
     <nav className="public-nav" aria-label="Main navigation">{links.map(link => <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="px-2 whitespace-nowrap" key={link.href} href={link.href}>{link.label}</Link>)}</nav>
-    <div className="public-header-actions flex items-center gap-3">
-      <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="text-sm font-semibold text-[#456052] whitespace-nowrap" href="/login">Student / Teacher sign in</Link>
-      <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button primary whitespace-nowrap" href="/signup">Create account</Link>
+    <div className="public-header-actions flex items-center gap-2 sm:gap-3 shrink-0">
+      <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="text-xs sm:text-sm font-semibold text-[#456052] whitespace-nowrap" href="/login">
+        <span className="hidden sm:inline">Student / Teacher sign in</span>
+        <span className="sm:hidden">Sign in</span>
+      </Link>
+      <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button primary text-xs sm:text-sm whitespace-nowrap" href="/signup">
+        <span className="hidden sm:inline">Create account</span>
+        <span className="sm:hidden">Sign up</span>
+      </Link>
     </div>
   </header>;
 }
