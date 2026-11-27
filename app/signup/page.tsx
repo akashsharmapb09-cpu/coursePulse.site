@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Create student account',
-  description: 'Register for CoursePulse using your name, username and college programme. No email address is needed.',
+  title: 'Create Student or Teacher account',
+  description: 'Students register with a username and Teachers register with their college email.',
   robots: { index: false, follow: false }
 };
 
@@ -19,8 +19,8 @@ export default async function SignupPage() {
   return <main className="auth-shell">
     <section className="auth-art auth-art-signup">
       <a className="brand brand-light" href="/"><span className="brand-mark"><Activity size={19}/></span> CoursePulse</a>
-      <div className="art-copy"><span className="eyebrow">YOUR STUDENT ACCOUNT</span><h1>Your course. Your voice.</h1><p>Choose your programme, create a student account, and return to CoursePulse whenever you need it.</p></div>
-      <div className="art-footer"><span>Student registration only.</span><span>Teachers are invited by the HOD.</span></div>
+      <div className="art-copy"><span className="eyebrow">STUDENT & TEACHER ACCOUNTS</span><h1>Your course. Your voice.</h1><p>Students create an account with a username. Teachers create an account with their college email.</p></div>
+      <div className="art-footer"><span>Student access.</span><span>Teacher access.</span></div>
     </section>
     <section className="auth-panel auth-panel-signup"><StudentAuthForm mode="signup"/></section>
   </main>;
