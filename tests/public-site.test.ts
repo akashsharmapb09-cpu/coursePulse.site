@@ -60,7 +60,9 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).not.toContain('type="email"');
     expect(authForm).not.toContain('supabase.auth.signUp');
     expect(authForm).toContain('signInWithPassword');
-    expect(authForm).toContain('instructorEmailSignIn');
+    expect(authForm).toContain('teacherEmailSignIn');
+    expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
+    expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(authForm).not.toMatch(/requested_role|role:\s*['"](?:INSTRUCTOR|ADMIN)/);
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'BCA', 'MBA', 'Other']) expect(authForm).toContain(item);
     expect(authForm).not.toContain('HOD sign-up');
