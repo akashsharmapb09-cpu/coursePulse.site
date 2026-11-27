@@ -178,6 +178,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
 
   const isSignup = mode === 'signup';
   const isTeacherSignup = isSignup && signupRole === 'teacher';
+  const instructorEmailSignIn = mode === 'signin' && EMAIL_PATTERN.test(username.trim().toLowerCase());
 
   return <div className="auth-card">
     <Link className="auth-home-link" href="/">← Back to CoursePulse</Link>
