@@ -13,11 +13,7 @@ const restoreSchema = z.object({ restore_version: z.number().int().min(1) }).str
 async function requireFormManager(supabase: Awaited<ReturnType<typeof createClient>>) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return { error: jsonError('Unauthorized', 401) };
-  if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return { error: jsonError('Only instructors and administrators can manage feedback forms.', 403) };
-  if (auth.profile.role === 'ADMIN') {
-    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (error || data?.currentLevel !== 'aal2') return { error: jsonError('Complete administrator MFA before managing feedback forms.', 403) };
-  }
+  if (auth.profile.role !== 'INSTRUCTOR') return { error: jsonError('Only Teachers can manage feedback forms.', 403) };
   return { auth };
 }
 
@@ -58,9 +54,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .select('id,course_id,title,description,form_schema,is_open,created_at,retention_days,due_at,version').maybeSingle();
   if (error) return jsonError('Feedback form could not be updated. Check ownership and question values.', 403);
   if (!data) return jsonError('Feedback form not found or not accessible.', 404);
-  if (access.auth!.profile.role === 'ADMIN') {
-    await supabase.rpc('admin_record_audit', { p_action: 'feedback.form_updated', p_target_type: 'feedback', p_target_id: data.id, p_details: { version: data.version } });
-  }
   return NextResponse.json({ feedback: data }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -76,8 +69,5 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   if (!parsed.success) return jsonError('Choose a valid form version.');
   const { data, error } = await supabase.rpc('restore_feedback_version', { p_feedback_id: id, p_version: parsed.data.restore_version });
   if (error) return jsonError('The selected form version could not be restored. Check ownership and version history.', 409);
-  if (access.auth!.profile.role === 'ADMIN') {
-    await supabase.rpc('admin_record_audit', { p_action: 'feedback.version_restored', p_target_type: 'feedback', p_target_id: id, p_details: { restored_from_version: parsed.data.restore_version, new_version: data } });
-  }
   return NextResponse.json({ success: true, version: data }, { headers: { 'Cache-Control': 'no-store' } });
 }

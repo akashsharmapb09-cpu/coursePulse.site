@@ -107,29 +107,15 @@ Deno.serve(async (request: Request) => {
     return json({ error: "A valid signed-in account is required." }, 401, cors);
   }
 
-  // The gateway verifies the JWT before this function runs; getUser verifies its
-  // signature again before the claims are used for the College Head AAL2 gate.
-  let claims: Record<string, unknown>;
-  try {
-    const payload = accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "=")));
-  } catch {
-    return json({ error: "The session could not be verified." }, 401, cors);
-  }
-  if (claims.sub !== identity.user.id) {
-    return json({ error: "The session could not be verified." }, 401, cors);
-  }
-
   const { data: profile, error: profileError } = await admin.from("users")
     .select("id,role,is_active,organization_id,department_id")
     .eq("id", identity.user.id).maybeSingle();
   if (profileError || !profile || !profile.is_active || !profile.organization_id) {
     return json({ error: "An active college staff account is required." }, 403, cors);
   }
-  const isHead = profile.role === "ADMIN" && claims.aal === "aal2";
   const isTeacher = profile.role === "INSTRUCTOR";
-  if (!isHead && !isTeacher) {
-    return json({ error: "College Head or assigned teacher access is required." }, 403, cors);
+  if (!isTeacher) {
+    return json({ error: "Teacher access is required." }, 403, cors);
   }
   const { data: organization, error: orgError } = await admin.from("organizations")
     .select("id,status,name").eq("id", profile.organization_id).maybeSingle();

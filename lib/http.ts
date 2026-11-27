@@ -7,7 +7,6 @@ export async function getCurrentUser(supabase: Awaited<ReturnType<typeof import(
   if (error || !user) return null;
   const { data: profile, error: profileError } = await supabase.from('users').select('id,email,full_name,role,is_active,organization_id,department_id').eq('id', user.id).single();
   if (profileError || !profile || !profile.is_active) return null;
-  if (profile.role === 'ADMIN') { const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(); if (assuranceError || assurance?.currentLevel !== 'aal2') return null; }
   return { user, profile };
 }
 

@@ -14,6 +14,7 @@ const finalHardening = read('supabase/migrations/20261126161259_coursepulse_ques
 const batchSync = read('supabase/migrations/20261126161742_coursepulse_guard_form_question_batch_sync.sql');
 const trackerBackfill = read('supabase/migrations/20261126162559_coursepulse_backfill_course_submission_tracker.sql');
 const profiles = read('supabase/migrations/20261126162730_coursepulse_public_profiles_table_with_sync_trigger.sql');
+const twoRoleMigration = read('supabase/migrations/20261127190000_coursepulse_two_role_student_teacher_only.sql');
 
 describe('CoursePulse authenticated feedback portal', () => {
   it('creates a physical Student/Instructor profiles table with self-only RLS', () => {
@@ -78,10 +79,14 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(filteredRpc).toMatch(/create or replace function public\.get_filtered_anonymous_feedback[\s\S]*?security invoker/i);
   });
 
-  it('restricts non-student Auth creation to an active college invitation', () => {
+  it('uses the Student and Teacher roles only, including direct Teacher self-registration', () => {
     expect(authMigration).toMatch(/v_is_internal_username boolean[\s\S]*students\.coursepulse\.invalid/i);
     expect(authMigration).toMatch(/invitation\.status in \('PENDING','INVITED'\)/i);
     expect(authMigration).toMatch(/v_invitation\.invited_role::public\.app_role/i);
+    expect(twoRoleMigration).toMatch(/UPDATE public\.users[\s\S]*?role = 'INSTRUCTOR'::public\.app_role[\s\S]*?WHERE role = 'ADMIN'::public\.app_role/i);
+    expect(twoRoleMigration).toMatch(/users_two_role_only_check[\s\S]*?role IN \('STUDENT'::public\.app_role, 'INSTRUCTOR'::public\.app_role\)/i);
+    expect(twoRoleMigration).toMatch(/CREATE OR REPLACE FUNCTION private\.is_admin\(\)[\s\S]*?SELECT false/i);
+    expect(twoRoleMigration).toMatch(/v_requested_role = 'INSTRUCTOR'[\s\S]*?'INSTRUCTOR'::public\.app_role/i);
     expect(authMigration).toMatch(/instructor_course_assignments/i);
     expect(authMigration).toMatch(/An active college invitation is required/i);
     expect(invitationFunction).toContain('https://coursepulse.netlify.app');
@@ -89,7 +94,7 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(invitationFunction).toContain('inviteUserByEmail');
   });
 
-  it('authenticates the dashboard and keeps public signup Student-only', () => {
+  it('authenticates the dashboard and exposes only Student and Teacher signup', () => {
     const dashboard = read('app/dashboard/page.tsx');
     const middleware = read('middleware.ts');
     const authForm = read('components/student-auth-form.tsx');
@@ -99,7 +104,10 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(middleware).toMatch(/destination\.pathname = '\/login'/);
     expect(middleware).toMatch(/dashboard/);
     expect(authForm).toMatch(/mode === 'signup'/);
-    expect(authForm).toMatch(/role !== 'STUDENT'/);
+    expect(authForm).toMatch(/requested_role: 'INSTRUCTOR'/);
+    expect(authForm).toContain('Student');
+    expect(authForm).toContain('Teacher');
+    expect(dashboard).not.toContain('HOD console');
     expect(authForm).toMatch(/signInWithPassword/);
   });
 

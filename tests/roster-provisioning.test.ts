@@ -3,19 +3,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/invite-college-users/index.ts'), 'utf8');
-const route = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/invitations/route.ts'), 'utf8');
-const headRoster = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/route.ts'), 'utf8');
 const teacherRoster = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/route.ts'), 'utf8');
 const teacherInvite = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/invitations/route.ts'), 'utf8');
 const teacherUi = readFileSync(resolve(process.cwd(), 'components/teacher-roster.tsx'), 'utf8');
 const functionSql = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261108165944_coursepulse_existing_account_roster_linking.sql'), 'utf8');
 
 describe('secure student/teacher roster provisioning', () => {
-  it('requires a verified signed-in Head with AAL2 and active organization scope', () => {
+  it('requires a verified signed-in Teacher and active organization scope', () => {
     expect(edge).toContain('admin.auth.getUser(accessToken)');
-    expect(edge).toContain('const isHead = profile.role === "ADMIN" && claims.aal === "aal2"');
     expect(edge).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
-    expect(edge).toContain('if (!isHead && !isTeacher)');
+    expect(edge).toContain('if (!isTeacher)');
+    expect(edge).not.toContain('const isHead');
     expect(edge).toContain('organization.status !== "ACTIVE"');
     expect(edge).toContain('.eq("organization_id", profile.organization_id)');
   });
@@ -41,10 +39,10 @@ describe('secure student/teacher roster provisioning', () => {
     expect(teacherRoster).not.toContain('answers');
   });
 
-  it('keeps Head-only roster reads behind a database MFA gate', () => {
-    expect(headRoster).toContain("rpc('get_head_student_roster'");
-    expect(route).toContain('getCurrentUser');
-    expect(route).toContain('admin:user-update');
+  it('does not expose a HOD roster workflow in the Teacher invitation service', () => {
+    expect(edge).not.toContain('College Head');
+    expect(edge).toContain('Teacher access is required.');
+    expect(teacherInvite).toContain("auth.profile.role !== 'INSTRUCTOR'");
   });
 
   it('lets instructors bulk-import students only to assigned classes, never create teacher accounts', () => {

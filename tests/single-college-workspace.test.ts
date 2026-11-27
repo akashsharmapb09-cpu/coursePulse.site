@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
 const migration = readFileSync(resolve(root, 'supabase/migrations/20261126183102_coursepulse_single_college_workspace.sql'), 'utf8');
+const twoRoleMigration = readFileSync(resolve(root, 'supabase/migrations/20261127190000_coursepulse_two_role_student_teacher_only.sql'), 'utf8');
 const dashboard = readFileSync(resolve(root, 'components/dashboard.tsx'), 'utf8');
 const loginPage = readFileSync(resolve(root, 'app/login/page.tsx'), 'utf8');
 const authForm = readFileSync(resolve(root, 'components/student-auth-form.tsx'), 'utf8');
@@ -70,14 +71,19 @@ describe('single-college CoursePulse deployment', () => {
 
   it('preserves Student signup and makes Teacher college-email sign-in visible', () => {
     expect(authForm).toContain('instructorEmailSignIn');
-    expect(authForm).toContain("['INSTRUCTOR','ADMIN'].includes(instructorProfile.role)");
+    expect(authForm).toContain("instructorProfile.role !== 'INSTRUCTOR'");
+    expect(authForm).toContain("requested_role: 'INSTRUCTOR'");
+    expect(twoRoleMigration).toContain("role IN ('STUDENT'::public.app_role, 'INSTRUCTOR'::public.app_role)");
+    expect(twoRoleMigration).toContain('SELECT false');
     expect(loginPage).toContain('Student & Teacher sign in');
     expect(publicHeader).toContain('Student / Teacher sign in');
   });
 
-  it('preserves HOD-managed Student/Teacher invites and Teacher workspace tools', () => {
+  it('allows Teachers to invite Students only and exposes Teacher workspace tools', () => {
     expect(teacherInviteRoute).toContain("role: z.enum(['STUDENT', 'INSTRUCTOR'])");
     expect(teacherInviteFunction).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
+    expect(teacherInviteFunction).not.toContain('const isHead');
+    expect(teacherInviteFunction).toContain('Teacher access is required.');
     expect(teacherInviteFunction).toContain('Teachers can invite students only.');
     expect(dashboard).toContain('TeacherInbox');
     expect(dashboard).toContain('TeacherRoster');

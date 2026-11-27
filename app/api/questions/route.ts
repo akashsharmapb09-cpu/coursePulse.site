@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  if (!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors can manage questions.', 403);
+  if (auth.profile.role!=='INSTRUCTOR') return jsonError('Only instructors can manage questions.', 403);
   const protection = await protectMutation(request, supabase, 'feedback:create', 30, 3600);
   if (protection) return protection;
 
@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  if (!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors can manage questions.', 403);
+  if (auth.profile.role!=='INSTRUCTOR') return jsonError('Only instructors can manage questions.', 403);
   const protection = await protectMutation(request, supabase, 'feedback:create', 30, 3600);
   if (protection) return protection;
 
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  if (!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors can manage questions.', 403);
+  if (auth.profile.role!=='INSTRUCTOR') return jsonError('Only instructors can manage questions.', 403);
   const protection = await protectMutation(request, supabase, 'feedback:create', 30, 3600);
   if (protection) return protection;
 

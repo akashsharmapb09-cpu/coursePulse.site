@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   if (!auth) return jsonError('Unauthorized', 401);
   const protection = await protectMutation(request, supabase, 'courses:create', 10, 3600);
   if (protection) return protection;
-  if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors and admins can create courses.', 403);
+  if (auth.profile.role !== 'INSTRUCTOR') return jsonError('Only Teachers can create courses.', 403);
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError('Invalid JSON body.'); }
   const parsed = courseInput.safeParse(body);
@@ -63,7 +63,7 @@ export async function PATCH(request:NextRequest) {
   const supabase=await createClient();
   const auth=await getCurrentUser(supabase);
   if(!auth) return jsonError('Unauthorized',401);
-  if(!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Only instructors and admins can manage courses.',403);
+  if(auth.profile.role!=='INSTRUCTOR') return jsonError('Only Teachers can manage courses.',403);
   const protection=await protectMutation(request,supabase,'courses:create',10,3600);
   if(protection) return protection;
   let body:unknown;

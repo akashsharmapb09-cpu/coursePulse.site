@@ -207,11 +207,7 @@ export async function GET(request: NextRequest, context: Context) {
   const supabase = await createClient();
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
-  if (!['ADMIN', 'INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Exports are available to instructors and admins only.', 403);
-  if (auth.profile.role === 'ADMIN') {
-    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (assuranceError || assurance?.currentLevel !== 'aal2') return jsonError('Complete administrator multi-factor authentication before using this report.', 403);
-  }
+  if (auth.profile.role !== 'INSTRUCTOR') return jsonError('Exports are available to Teachers only.', 403);
   const rateLimit = await checkReadRateLimit(supabase, 'exports:download', 20, 3600);
   if (rateLimit) return rateLimit;
   const { format } = await context.params;
