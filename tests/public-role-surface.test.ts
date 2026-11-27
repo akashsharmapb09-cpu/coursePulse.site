@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const apiAuth = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'app/dashboard/page.tsx'), 'utf8');
+const workspaceDashboard = readFileSync(resolve(process.cwd(), 'components/dashboard.tsx'), 'utf8');
 const authForm = readFileSync(resolve(process.cwd(), 'components/student-auth-form.tsx'), 'utf8');
 const signup = readFileSync(resolve(process.cwd(), 'app/signup/page.tsx'), 'utf8');
 const about = readFileSync(resolve(process.cwd(), 'app/about/page.tsx'), 'utf8');
@@ -34,6 +35,12 @@ describe('public CoursePulse role model', () => {
     expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
     expect(authForm).toContain("teacherProfile?.is_active");
     expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
+  });
+
+  it('hides the Class rosters navigation option from the Teacher workspace', () => {
+    expect(workspaceDashboard).not.toContain('Class rosters');
+    expect(workspaceDashboard).not.toContain('Assigned student rosters');
+    expect(workspaceDashboard).not.toContain("tab==='roster'");
   });
 
   it('keeps public signup and information pages on the Student / Teacher role model', () => {
