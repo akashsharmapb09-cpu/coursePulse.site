@@ -12,13 +12,13 @@ async function authorize(){
   const supabase=await createClient();
   const auth=await getCurrentUser(supabase);
   if(!auth)return {supabase,auth:null};
-  if(!['ADMIN','INSTRUCTOR'].includes(auth.profile.role))return {supabase,auth:null};
+  if(auth.profile.role!=='INSTRUCTOR')return {supabase,auth:null};
   return {supabase,auth};
 }
 
 export async function GET(_request:NextRequest,context:Context){
   const {supabase,auth}=await authorize();
-  if(!auth)return jsonError('Instructor or administrator authentication is required.',401);
+  if(!auth)return jsonError('Teacher authentication is required.',401);
   const params=await context.params;
   const parsedId=idSchema.safeParse(params.id);
   if(!parsedId.success)return jsonError('Invalid feedback form ID.',400);
