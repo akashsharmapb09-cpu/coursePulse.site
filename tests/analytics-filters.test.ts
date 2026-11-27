@@ -5,11 +5,17 @@ import { describe, expect, it } from 'vitest';
 const migration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261031210207_coursepulse_filtered_analytics.sql'),'utf8');
 const analytics=readFileSync(resolve(process.cwd(),'app/api/analytics/route.ts'),'utf8');
 const exportsRoute=readFileSync(resolve(process.cwd(),'app/api/exports/[format]/route.ts'),'utf8');
+const compareRoute=readFileSync(resolve(process.cwd(),'app/api/analytics/compare/route.ts'),'utf8');
 const dashboard=readFileSync(resolve(process.cwd(),'components/dashboard.tsx'),'utf8');
 const http=readFileSync(resolve(process.cwd(),'lib/http.ts'),'utf8');
 const readRateMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/20261102051456_coursepulse_report_rate_limits.sql'),'utf8');
 
 describe('filtered aggregate analytics',()=>{
+  it('uses the explicit tenant-safe semester relationship in the course comparison query',()=>{
+    expect(compareRoute).toContain('semester:semesters!courses_semester_id_fkey(name)');
+    expect(compareRoute).not.toContain('semester:semesters(name)');
+  });
+
   it('uses a separate timestamped aggregate RPC with course, date and semester filters',()=>{
     expect(migration).toMatch(/get_instructor_aggregates_filtered/);
     expect(migration).toMatch(/submitted_at::date as submitted_on/);
