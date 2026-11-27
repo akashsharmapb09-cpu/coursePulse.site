@@ -17,7 +17,7 @@ export default function PrivacyPage() {
     <section>
       <h2>2. Student account information</h2>
       <p>When you register, CoursePulse collects your full name, username, selected programme (for example B.Tech, M.Tech, BBA or B.Com), and the password needed to authenticate your account. No email address or phone number is requested, and no verification or password-recovery email is sent. Supabase Authentication handles the password; CoursePulse does not receive or store it in readable form. A reserved, non-deliverable internal identifier is used behind the scenes for authentication and is not shown as your email address or used to send messages.</p>
-      <p>New public registrations are assigned the Student role by the database. The sign-up form does not accept a role, organization, or administrative access request.</p>
+      <p>New public registrations are assigned the Student role by the database. The sign-up form creates Student accounts only; users cannot choose their own role or workspace membership.</p>
     </section>
     <section>
       <h2>3. Feedback information</h2>
