@@ -113,7 +113,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         .eq('id', result.user.id)
         .maybeSingle();
 
-      if (profileError || profile?.role !== expectedRole || !profile.is_active || !['STUDENT', 'INSTRUCTOR'].includes(profile.role)) {
+      if (profileError || !profile || profile.role !== expectedRole || !profile.is_active || !['STUDENT', 'INSTRUCTOR'].includes(profile.role)) {
         await supabase.auth.signOut();
         throw new Error('Your Student or Teacher profile is not active. Please contact support.');
       }
