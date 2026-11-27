@@ -22,8 +22,14 @@ const publicSite = read('components/public-site.tsx');
 const consent = read('components/cookie-consent.tsx');
 const terms = read('app/terms/page.tsx');
 const prisma = read('prisma/schema.prisma');
+const thankYou = read('app/feedback/thank-you/page.tsx');
 
 describe('CoursePulse email-free student account experience', () => {
+  it('confirms server-side anonymous feedback storage on the thank-you page', () => {
+    expect(thankYou).toContain('Your anonymous response has been securely saved.');
+    expect(thankYou).toContain('stored separately from your student account');
+    expect(thankYou).not.toContain('in this browser');
+  });
   it('offers student registration and sign-in from the homepage', () => {
     expect(home).toContain('href="/signup"');
     expect(home).toContain('href="/login"');
