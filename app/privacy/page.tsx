@@ -12,7 +12,7 @@ export default function PrivacyPage() {
     <p className="policy-updated">Last reviewed: 26 November 2026</p>
     <section>
       <h2>1. About CoursePulse</h2>
-      <p>CoursePulse provides a course-feedback workspace with student-only accounts. There are no self-service Admin or HOD roles. It is not an official college record system. Do not use it for confidential institutional records.</p>
+      <p>CoursePulse provides a course-feedback workspace for Students and Teachers. Students can register themselves, while Teacher access is provided by invitation. It is not an official college record system. Do not use it for confidential institutional records.</p>
     </section>
     <section>
       <h2>2. Student account information</h2>
