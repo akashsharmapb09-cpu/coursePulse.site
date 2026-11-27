@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const edge = readFileSync(resolve(process.cwd(), 'supabase/functions/invite-college-users/index.ts'), 'utf8');
-const route = readFileSync(resolve(process.cwd(), 'app/api/admin/roster/invitations/route.ts'), 'utf8');
 const teacherRoster = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/route.ts'), 'utf8');
 const teacherInvite = readFileSync(resolve(process.cwd(), 'app/api/teacher/roster/invitations/route.ts'), 'utf8');
 const teacherUi = readFileSync(resolve(process.cwd(), 'components/teacher-roster.tsx'), 'utf8');
