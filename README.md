@@ -1,60 +1,61 @@
 # CoursePulse
 
-CoursePulse is a college-project demonstration for student registration, course feedback and simple course-level results. New public registrations create Student accounts only; there are no Admin or HOD sign-up options.
+CoursePulse is a single-college course feedback and learning analytics portal with exactly two account roles: **Student** and **Teacher**. There is no HOD, Admin or Super Admin account, signup path or dashboard.
 
-## Student account experience
+## Student accounts
 
 - Students register with their full name, a unique username, password and academic programme.
 - Programme choices include B.Tech, M.Tech, B.E., M.E., BBA, MBA, B.Com, M.Com, BCA, MCA, B.Sc, M.Sc, BA, MA, Pharmacy, Architecture, Diploma and Other/custom.
-- Students sign in using username and password. No email address, phone number, verification message or email recovery is used.
-- A server-side Supabase Edge Function creates immediately confirmed Auth accounts and returns a session; passwords remain managed by Supabase Auth.
-- The Auth provider uses a reserved, non-deliverable internal identifier ending in `.invalid` only to support username/password authentication. It is not shown to students and no messages are sent to it.
-- Student profiles store the name, username and programme. New profiles do not store an email address.
-- Registration and login attempts are rate-limited server-side. Password reset or account recovery must be handled by the project team.
-- Students can view their name, username and programme in the site header and sign out.
+- Students sign in with their username and password. The username maps to a private, non-deliverable Supabase Auth identity; it is not shown as an email address to the student.
+- Student registration is rate-limited server-side. Student account recovery must be handled by the project team.
 
-## Feedback and data
+## Teacher accounts
 
-Course feedback is anonymous and separate from the student account profile. The current demo workspace stores feedback in browser localStorage under `coursepulse-college-demo-responses-v1`, not a central college database. Feedback is not linked to the student's account, is not synchronised between browsers/devices, and is not shared with another visitor. Clearing site data removes local feedback but does not delete the Supabase student account.
+- Teachers register with their full name, college email and password. Supabase email confirmation is required before first sign-in.
+- Teachers sign in with their college email and password.
+- A Teacher can create and manage their own courses, create and edit feedback forms, manage questions, view privacy-protected analytics, compare courses and download aggregate reports.
+- Course ownership is enforced by server-side role checks and Supabase Row Level Security. A Teacher cannot manage another Teacher's course unless it is explicitly assigned.
+- There is no administrator role or privileged account-management interface.
 
-Use this version for an academic project demonstration. Do not submit real confidential student records or private information in feedback comments.
+## Feedback and privacy
+
+- Students can only access eligible feedback forms for courses in which they are enrolled.
+- Feedback answers are stored separately from student identity and eligibility records. The one-time submission/duplicate-prevention record lives in a private table; anonymous answer rows do not include a student ID.
+- Teachers see only privacy-protected reports. Groups with fewer than five submissions are suppressed, and raw student answers are not exposed in analytics or exports.
+- Do not submit real confidential student records or sensitive personal information in free-text comments during a classroom demonstration.
 
 ## Stack
 
 - Next.js App Router, React and TypeScript
 - Tailwind CSS
-- Supabase Auth and Postgres for student identities/profile
-- Supabase Edge Function for username-based registration and sign-in
+- Supabase Auth and Postgres with Row Level Security
+- Supabase Edge Functions for username-based Student auth and secure roster invitations
 - Lucide icons
 
 The project uses the existing pinned dependencies and Node.js 22.x.
 
 ## Run locally
 
-~~~bash
+```bash
 npm ci
 npm run dev
-~~~
+```
 
 Create a local `.env.local` with the Supabase project URL and publishable key:
 
-~~~bash
+```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-publishable-key
-~~~
+```
 
-The Edge Function `student-username-auth` must also be deployed in the connected Supabase project. Supabase supplies its server-side Auth keys to the Edge Function environment; never place service/secret keys in browser code or commit them to this repository.
+The `student-username-auth` Edge Function must be deployed for Student registration and sign-in. Teacher registration uses Supabase Auth email confirmation. Server-side Auth keys must remain in Supabase Edge Function secrets and must never be exposed in browser code.
 
 Open http://localhost:3000.
 
 ## Validate locally
 
-~~~bash
+```bash
 npm run typecheck
 npm test
 npm run build
-~~~
-
-## Academic project note
-
-This app demonstrates student self-registration and an anonymous browser-local feedback workflow. Browser-local responses are not a substitute for a centrally managed college feedback database or an official institutional reporting process.
+```
