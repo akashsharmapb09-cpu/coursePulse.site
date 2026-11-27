@@ -8,6 +8,9 @@ const authForm = readFileSync(resolve(process.cwd(), 'components/student-auth-fo
 const signup = readFileSync(resolve(process.cwd(), 'app/signup/page.tsx'), 'utf8');
 const about = readFileSync(resolve(process.cwd(), 'app/about/page.tsx'), 'utf8');
 const contact = readFileSync(resolve(process.cwd(), 'app/contact/page.tsx'), 'utf8');
+const privacy = readFileSync(resolve(process.cwd(), 'app/privacy/page.tsx'), 'utf8');
+const support = readFileSync(resolve(process.cwd(), 'app/support/page.tsx'), 'utf8');
+const terms = readFileSync(resolve(process.cwd(), 'app/terms/page.tsx'), 'utf8');
 
 describe('public CoursePulse role model', () => {
   it('allows application API sessions only for Students and Teachers', () => {
@@ -34,5 +37,11 @@ describe('public CoursePulse role model', () => {
     expect(about).not.toMatch(/HOD|Admin/i);
     expect(contact).toContain('your assigned Teacher or department office');
     expect(contact).not.toMatch(/HOD|Admin/i);
+    expect(privacy).toContain('for Students and Teachers');
+    expect(privacy).not.toMatch(/HOD|Admin/i);
+    expect(support).toContain('your enrollment');
+    expect(support).not.toMatch(/HOD|Admin/i);
+    expect(terms).toContain('CoursePulse provides Student and Teacher access.');
+    expect(terms).not.toMatch(/HOD|Admin/i);
   });
 });
