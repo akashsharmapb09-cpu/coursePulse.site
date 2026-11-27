@@ -43,7 +43,7 @@ describe('public CoursePulse role model', () => {
     expect(about).not.toMatch(/HOD|Admin/i);
     expect(contact).toContain('your assigned Teacher or department office');
     expect(contact).not.toMatch(/HOD|Admin/i);
-    expect(contact).not.toMatch(/\\bproject\\b/i);
+    expect(contact).not.toMatch(/\bproject\b/i);
     expect(privacy).toContain('for Students and Teachers');
     expect(privacy).not.toMatch(/HOD|Admin/i);
     expect(support).toContain('your enrollment');
