@@ -48,7 +48,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(login).toContain('<StudentAuthForm mode="signin"/>');
     expect(signup).toContain("title: 'Create student account'");
     expect(login).toContain("title: 'Student & Teacher sign in'");
-    expect(login).toContain('Teachers sign in with their college email and password.');
+    expect(login).toContain('Teachers can use a demo username or college email and password.');
   });
 
   it('collects name, programme, username and a confirmed strong password only', () => {
@@ -67,6 +67,8 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).not.toContain('supabase.auth.signUp');
     expect(authForm).toContain('signInWithPassword');
     expect(authForm).toContain('teacherEmailSignIn');
+    expect(authForm).toContain("['STUDENT', 'INSTRUCTOR'].includes(expectedRole)");
+    expect(authForm).toContain('demo username or college email');
     expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
     expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(authForm).not.toMatch(/requested_role|role:\s*['"](?:INSTRUCTOR|ADMIN)/);
@@ -89,6 +91,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authFunction).toContain('admin.auth.admin.deleteUser');
     expect(authFunction).toContain('authClient.auth.signInWithPassword');
     expect(authFunction).toContain('login:user:');
+    expect(authFunction).toContain('["STUDENT", "INSTRUCTOR"].includes(profile.role)');
     expect(authFunction).toContain('trustedCloudflareIp');
     expect(authRestrictionMigration).toContain('if not v_is_internal_username then');
     expect(authRestrictionMigration).toContain('values (\n    new.id,\n    null,');
