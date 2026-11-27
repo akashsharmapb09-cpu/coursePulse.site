@@ -68,7 +68,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).toContain('signInWithPassword');
     expect(authForm).toContain('teacherEmailSignIn');
     expect(authForm).toContain("['STUDENT', 'INSTRUCTOR'].includes(expectedRole)");
-    expect(authForm).toContain('demo username or college email');
+    expect(authForm).toContain('demo username or their college email');
     expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
     expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(authForm).not.toMatch(/requested_role|role:\s*['"](?:INSTRUCTOR|ADMIN)/);
