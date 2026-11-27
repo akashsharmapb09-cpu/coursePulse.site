@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   if (!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Instructor access is required.', 403);
-  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 30, 3600);
+  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 60, 3600);
   if (rateLimit) return rateLimit;
 
   const params = request.nextUrl.searchParams;
