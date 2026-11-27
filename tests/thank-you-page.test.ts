@@ -9,6 +9,8 @@ describe('public feedback confirmation page',()=>{
  });
  it('does not show identity or individual feedback content',()=>{
   expect(page).not.toContain('roll number');expect(page).not.toContain('answers');
-  expect(page).toContain('saved in this browser');
+  expect(page).toContain('Your anonymous response has been securely saved.');
+  expect(page).toContain('stored separately from your student account');
+  expect(page).not.toContain('in this browser');
  });
 });
