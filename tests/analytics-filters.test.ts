@@ -30,11 +30,15 @@ describe('filtered aggregate analytics',()=>{
     expect(exportsRoute).toMatch(/get_instructor_aggregates_filtered/);
   });
   it('applies per-user hourly budgets before analytics and export queries',()=>{
-    expect(analytics).toContain("checkReadRateLimit(supabase, 'analytics:query', 30, 3600)");
+    expect(analytics).toContain("checkReadRateLimit(supabase, 'analytics:query', 60, 3600)");
+    expect(compareRoute).toContain("checkReadRateLimit(supabase, 'analytics:query', 60, 3600)");
     expect(exportsRoute).toContain("checkReadRateLimit(supabase, 'exports:download', 20, 3600)");
     expect(http).toContain("'Retry-After': String(windowSeconds)");
     expect(readRateMigration).toContain("'analytics:query','exports:download'");
     expect(readRateMigration).toContain('private.consume_api_rate_limit');
+  });
+  it('clears stale dashboard errors when navigating between tabs',()=>{
+    expect(dashboard).toMatch(/async function changeTab\\(next: typeof tab\\) \\{ setError\\(''\\); setTab\\(next\\);/);
   });
   it('exposes semester and date filters and passes them to export links',()=>{
     expect(dashboard).toMatch(/analyticsFromDate/);
