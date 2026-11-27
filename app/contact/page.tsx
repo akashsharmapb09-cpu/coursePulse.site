@@ -43,7 +43,7 @@ export default function ContactPage() {
         <h2>Student & Teacher Account Support</h2>
         <p>Students sign in with their academic username, and Teachers sign in using their registered college email credentials. If you experience difficulty signing in, need a password reset, or request account updates:</p>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#506257]">
-          <li>Reach out to your assigned course instructor or department HOD.</li>
+          <li>Reach out to your assigned Teacher or department office.</li>
           <li>For technical support, submit an inquiry via the <a className="inline-link" href="https://github.com/akashsharmapb09-cpu/coursePulse.site/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a> with non-sensitive reproduction steps.</li>
           <li>Never share your password, secret codes, or sensitive feedback submissions when submitting an inquiry.</li>
         </ul>
