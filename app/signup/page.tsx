@@ -17,11 +17,11 @@ export default async function SignupPage() {
   if (user) redirect('/dashboard');
 
   return <main className="auth-shell">
-    <section className="auth-art">
+    <section className="auth-art auth-art-signup">
       <a className="brand brand-light" href="/"><span className="brand-mark"><Activity size={19}/></span> CoursePulse</a>
       <div className="art-copy"><span className="eyebrow">YOUR STUDENT ACCOUNT</span><h1>Your course. Your voice.</h1><p>Choose your programme, create a student account, and return to CoursePulse whenever you need it.</p></div>
       <div className="art-footer"><span>Student registration only.</span><span>Teachers are invited by the HOD.</span></div>
     </section>
-    <section className="auth-panel"><StudentAuthForm mode="signup"/></section>
+    <section className="auth-panel auth-panel-signup"><StudentAuthForm mode="signup"/></section>
   </main>;
 }

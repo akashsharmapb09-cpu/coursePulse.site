@@ -15,7 +15,14 @@ export default function Home() {
       <div>
         <h1 className="mt-7 max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-.055em] sm:text-6xl">Better courses begin with <span className="text-[#43805a]">honest feedback.</span></h1>
         <p className="mt-6 max-w-xl text-lg leading-8 text-[#526158]">Students create accounts with a username and programme. Teachers sign in with their college email to manage assigned courses, view protected feedback analytics and improve teaching. Student responses stay anonymous.</p>
-        <div className="mt-9 flex flex-wrap gap-3"><Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white">Create student account <ArrowRight size={17}/></Link><Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Student / Teacher sign in</Link><Link href="/dashboard" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052]">Explore workspace</Link></div>
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-[#245b3e] px-6 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-[#1a442e] transition-colors">
+            Create student account <ArrowRight size={17}/>
+          </Link>
+          <Link href="/login" className="rounded-xl border border-[#d8e4da] bg-white px-6 py-3.5 text-sm font-semibold text-[#456052] hover:bg-[#f3f7f4] transition-colors">
+            Student / Teacher sign in
+          </Link>
+        </div>
         <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-xs font-semibold text-[#526158]"><span className="inline-flex items-center gap-2"><CheckCircle2 size={15}/>Student accounts</span><span className="inline-flex items-center gap-2"><MessageSquareText size={15}/>Anonymous feedback</span><span className="inline-flex items-center gap-2"><BarChart3 size={15}/>Simple results</span></div>
       </div>
       <div className="relative mx-auto w-full max-w-xl"><div className="absolute -inset-8 rounded-[3rem] bg-[#e4f0e6] blur-2xl"/><div className="relative rounded-[2rem] border border-[#e0e9e1] bg-white p-6 shadow-[0_30px_90px_-35px_rgba(31,76,49,.25)] sm:p-8">
