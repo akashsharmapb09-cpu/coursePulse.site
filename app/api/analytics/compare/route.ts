@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   if (semesterId && !/^[0-9a-f-]{36}$/i.test(semesterId)) return jsonError('Invalid semester ID.');
 
   const { data: courses, error: coursesError } = await supabase.from('courses')
-    .select('id,course_code,title,semester_id,semester:semesters(name)')
+    .select('id,course_code,title,semester_id,semester:semesters!courses_semester_id_fkey(name)')
     .in('id', courseIds)
     .order('title');
   if (coursesError || (courses?.length ?? 0) !== courseIds.length) return jsonError('One or more courses are unavailable to this instructor.', 403);
