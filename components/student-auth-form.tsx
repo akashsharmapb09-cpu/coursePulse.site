@@ -32,11 +32,11 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     setError('');
 
     const normalizedUsername = username.trim().toLowerCase();
-    const instructorEmailSignIn = mode === 'signin' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedUsername);
-    if (!instructorEmailSignIn && !/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
+    const teacherEmailSignIn = mode === 'signin' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedUsername);
+    if (!teacherEmailSignIn && !/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
       setError(mode === 'signup'
         ? 'Username must be 3–24 characters using lowercase letters, numbers or underscores.'
-        : 'Enter your Student username or Instructor college email.');
+        : 'Enter your Student username or Teacher college email.');
       return;
     }
 
@@ -62,16 +62,16 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     setBusy(true);
     try {
       const supabase = createClient();
-      if (instructorEmailSignIn) {
+      if (teacherEmailSignIn) {
         const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email: normalizedUsername, password });
         if (signInError || !signIn.user) throw new Error('Email or password is incorrect.');
         const { data: instructorProfile, error: instructorProfileError } = await supabase
           .from('users').select('role,is_active').eq('id', signIn.user.id).maybeSingle();
-        if (instructorProfileError || !instructorProfile?.is_active || !['INSTRUCTOR','ADMIN'].includes(instructorProfile.role)) {
+        if (instructorProfileError || !instructorProfile?.is_active || !instructorProfile.role === 'INSTRUCTOR') {
           await supabase.auth.signOut();
-          throw new Error('This email is not linked to an active Instructor account. Students should sign in with their username.');
+          throw new Error('This email is not linked to an active Teacher account. Students should sign in with their username.');
         }
-        // The protected dashboard presents the existing AdminMfaGate for AAL2.
+        // Teacher access is restricted to active Teacher profiles.
         router.replace('/dashboard');
         router.refresh();
         return;
@@ -145,7 +145,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     <h2>{isSignup ? 'Create your student account' : 'Welcome back'}</h2>
     <p className="muted">{isSignup
       ? 'Enter your name, choose your programme and create a username and password. No email address is needed.'
-      : 'Students sign in with their username. Instructors sign in with their college email and password.'}</p>
+      : 'Students sign in with their username. Teachers sign in with their college email and password.'}</p>
 
     <form onSubmit={submit} className="stack-form">
       {isSignup && <>
@@ -162,7 +162,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         </label>}
       </>}
       <label>Username
-        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student username or instructor@college.edu"}/></span>
+        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student username or teacher@college.edu"}/></span>
       </label>
       {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
       <label>Password
