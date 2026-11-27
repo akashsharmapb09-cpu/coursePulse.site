@@ -31,7 +31,7 @@ export async function GET(_request:NextRequest,context:Context){
 
 export async function POST(request:NextRequest,context:Context){
   const {supabase,auth}=await authorize();
-  if(!auth)return jsonError('Instructor or administrator authentication is required.',401);
+  if(!auth)return jsonError('Teacher authentication is required.',401);
   const protection=await protectMutation(request,supabase,'feedback:create',10,3600);
   if(protection)return protection;
   const params=await context.params;
