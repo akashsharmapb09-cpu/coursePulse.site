@@ -369,7 +369,7 @@ export function Dashboard({ profile }: { profile: Profile }) {
       setAnalytics(a.rows??[]);setCompareAnalytics(b.rows??[]);setRatingDistributions(a.rating_distributions??[]);setResponseTrends(a.trends??[]);
     } catch(e){setError(e instanceof Error?e.message:'Course comparison failed.');}
   }
-  async function changeTab(next: typeof tab) { setTab(next); if(next==='security') { void loadMyDeletionRequests(); } if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
+  async function changeTab(next: typeof tab) { setError(''); setTab(next); if(next==='security') { void loadMyDeletionRequests(); } if(next==='analytics') { try { await fetchAnalytics(); } catch(e) { setError(e instanceof Error?e.message:'Analytics unavailable.'); } } if(next==='admin') { try { await loadAdmin(); } catch(e) { setError(e instanceof Error?e.message:'Admin workspace unavailable.'); } } }
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="/dashboard"><span className="brand-mark"><Activity size={19}/></span><span>CoursePulse</span></a>
