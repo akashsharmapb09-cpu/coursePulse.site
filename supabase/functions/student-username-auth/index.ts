@@ -179,12 +179,12 @@ async function signInStudent(body: Record<string, unknown>, request: Request, or
     .maybeSingle();
 
   if (profileError) throw profileError;
-  if (!profile || profile.role !== "STUDENT" || !profile.is_active) {
+  if (!profile || !["STUDENT", "INSTRUCTOR"].includes(profile.role) || !profile.is_active) {
     return jsonResponse({ error: "Username or password is incorrect." }, 401, origin);
   }
 
-  // Legacy students retain their existing private Auth email; new username-only
-  // students use a non-deliverable .invalid identifier that is never shown to them.
+  // Legacy accounts retain their existing private Auth email; username-only
+  // accounts use a non-deliverable .invalid identifier that is never shown publicly.
   const email = profile.email || internalEmail(username);
   const { data: signedIn, error: signInError } = await authClient.auth.signInWithPassword({ email, password });
   if (signInError || !signedIn.session || signedIn.user.id !== profile.id) {
