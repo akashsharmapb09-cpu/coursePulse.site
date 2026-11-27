@@ -107,19 +107,6 @@ Deno.serve(async (request: Request) => {
     return json({ error: "A valid signed-in account is required." }, 401, cors);
   }
 
-  // The gateway verifies the JWT before this function runs; getUser verifies its
-  // signature again before the claims are used for the College Head AAL2 gate.
-  let claims: Record<string, unknown>;
-  try {
-    const payload = accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "=")));
-  } catch {
-    return json({ error: "The session could not be verified." }, 401, cors);
-  }
-  if (claims.sub !== identity.user.id) {
-    return json({ error: "The session could not be verified." }, 401, cors);
-  }
-
   const { data: profile, error: profileError } = await admin.from("users")
     .select("id,role,is_active,organization_id,department_id")
     .eq("id", identity.user.id).maybeSingle();
