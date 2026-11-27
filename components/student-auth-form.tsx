@@ -36,7 +36,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     if (!teacherEmailSignIn && !/^[a-z0-9_]{3,24}$/.test(normalizedUsername)) {
       setError(mode === 'signup'
         ? 'Username must be 3–24 characters using lowercase letters, numbers or underscores.'
-        : 'Enter your Student username or Teacher college email.');
+        : 'Enter a Student or Teacher username, or a Teacher college email.');
       return;
     }
 
@@ -96,8 +96,9 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         throw functionError;
       }
 
-      if (!result?.session?.access_token || !result?.session?.refresh_token || result?.user?.role !== 'STUDENT') {
-        throw new Error(result?.error || 'Student account could not be started. Please try again.');
+      const expectedRole = result?.user?.role;
+      if (!result?.session?.access_token || !result?.session?.refresh_token || !['STUDENT', 'INSTRUCTOR'].includes(expectedRole)) {
+        throw new Error(result?.error || 'Account sign-in could not be completed. Please try again.');
       }
 
       const { error: sessionError } = await supabase.auth.setSession({
@@ -112,9 +113,9 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         .eq('id', result.user.id)
         .maybeSingle();
 
-      if (profileError || profile?.role !== 'STUDENT' || !profile.is_active) {
+      if (profileError || profile?.role !== expectedRole || !profile.is_active || !['STUDENT', 'INSTRUCTOR'].includes(profile.role)) {
         await supabase.auth.signOut();
-        throw new Error('Student profile setup is not ready. Please try again.');
+        throw new Error('Your Student or Teacher profile is not active. Please contact support.');
       }
 
       router.replace('/dashboard');
@@ -145,7 +146,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
     <h2>{isSignup ? 'Create your student account' : 'Welcome back'}</h2>
     <p className="muted">{isSignup
       ? 'Enter your name, choose your programme and create a username and password. No email address is needed.'
-      : 'Students sign in with their username. Teachers sign in with their college email and password.'}</p>
+      : 'Students sign in with their username. Teachers can use a demo username or their college email and password.'}</p>
 
     <form onSubmit={submit} className="stack-form">
       {isSignup && <>
@@ -162,7 +163,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
         </label>}
       </>}
       <label>Username
-        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student username or teacher@college.edu"}/></span>
+        <span className="input-wrap"><AtSign size={17}/><input name="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} minLength={3} maxLength={254} pattern={isSignup ? '[a-zA-Z0-9_]{3,24}' : undefined} required placeholder={isSignup ? "Choose a username" : "Student / Teacher username or teacher@college.edu"}/></span>
       </label>
       {isSignup && <p className="fine-print">Use 3–24 letters, numbers or underscores. Your username must be unique.</p>}
       <label>Password
@@ -183,7 +184,7 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       <Link href={isSignup ? '/login' : '/signup'} style={{ minHeight: 44, display: "inline-flex", alignItems: "center", paddingInline: 8 }}>{isSignup ? 'Sign in' : 'Create account'}</Link>
     </p>
     <p className="fine-print">
-      {isSignup ? <>Student accounts use a username and password; email-based password recovery is not available. Keep your sign-in details somewhere secure.</> : <>Students sign in with a username; Teachers sign in with their college email. For account assistance, see <Link className="auth-support-link" href="/contact">Contact &amp; support</Link>. Never share your password or sign-in codes.</>}
+      {isSignup ? <>Student accounts use a username and password; email-based password recovery is not available. Keep your sign-in details somewhere secure.</> : <>Students sign in with a username; Teachers can sign in with a demo username or college email. For account assistance, see <Link className="auth-support-link" href="/contact">Contact &amp; support</Link>. Never share your password or sign-in codes.</>}
     </p>
   </div>;
 }
