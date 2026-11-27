@@ -65,9 +65,9 @@ export function StudentAuthForm({ mode }: { mode: Mode }) {
       if (teacherEmailSignIn) {
         const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email: normalizedUsername, password });
         if (signInError || !signIn.user) throw new Error('Email or password is incorrect.');
-        const { data: instructorProfile, error: instructorProfileError } = await supabase
+        const { data: teacherProfile, error: teacherProfileError } = await supabase
           .from('users').select('role,is_active').eq('id', signIn.user.id).maybeSingle();
-        if (instructorProfileError || !instructorProfile?.is_active || !instructorProfile.role === 'INSTRUCTOR') {
+        if (teacherProfileError || !teacherProfile?.is_active || teacherProfile.role !== 'INSTRUCTOR') {
           await supabase.auth.signOut();
           throw new Error('This email is not linked to an active Teacher account. Students should sign in with their username.');
         }
