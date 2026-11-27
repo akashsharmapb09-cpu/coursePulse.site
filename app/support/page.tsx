@@ -17,7 +17,7 @@ export default function SupportPage() {
     >
       <section>
         <h2>Where are my courses?</h2>
-        <p>The workspace currently includes example college courses for demonstration. Course availability is not controlled by institution enrollment or HOD approval. If the example course list does not match the courses you need, use the contact route shared with you when you received CoursePulse.</p>
+        <p>The workspace currently includes example college courses for demonstration. Course availability depends on the courses published to your workspace and your enrollment. If the example course list does not match the courses you need, use the contact route shared with you when you received CoursePulse.</p>
       </section>
       <section>
         <h2>Why are my results empty?</h2>
