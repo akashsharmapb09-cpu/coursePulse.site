@@ -11,8 +11,14 @@ const contact = readFileSync(resolve(process.cwd(), 'app/contact/page.tsx'), 'ut
 const privacy = readFileSync(resolve(process.cwd(), 'app/privacy/page.tsx'), 'utf8');
 const support = readFileSync(resolve(process.cwd(), 'app/support/page.tsx'), 'utf8');
 const terms = readFileSync(resolve(process.cwd(), 'app/terms/page.tsx'), 'utf8');
+const publicSite = readFileSync(resolve(process.cwd(), 'components/public-site.tsx'), 'utf8');
 
 describe('public CoursePulse role model', () => {
+  it('provides a keyboard-accessible workspace shortcut in public navigation', () => {
+    expect(publicSite).toContain('href="/dashboard"');
+    expect(publicSite).toContain('aria-label="Open workspace"');
+  });
+
   it('allows application API sessions only for Students and Teachers', () => {
     expect(apiAuth).toContain("profile.role !== 'STUDENT' && profile.role !== 'INSTRUCTOR'");
     expect(apiAuth).not.toContain("profile.role === 'ADMIN'");
@@ -37,6 +43,7 @@ describe('public CoursePulse role model', () => {
     expect(about).not.toMatch(/HOD|Admin/i);
     expect(contact).toContain('your assigned Teacher or department office');
     expect(contact).not.toMatch(/HOD|Admin/i);
+    expect(contact).not.toMatch(/\\bproject\\b/i);
     expect(privacy).toContain('for Students and Teachers');
     expect(privacy).not.toMatch(/HOD|Admin/i);
     expect(support).toContain('your enrollment');
