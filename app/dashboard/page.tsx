@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Dashboard } from '@/components/dashboard';
-import { AdminMfaGate } from '@/components/admin-mfa-gate';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'CoursePulse Workspace',
-  description: 'Authenticated student and instructor course feedback workspace.',
+  description: 'Authenticated Student and Teacher course feedback workspace.',
   robots: { index: false, follow: false }
 };
 
@@ -26,18 +25,15 @@ export default async function DashboardPage() {
     await supabase.auth.signOut();
     redirect('/login?reason=account-unavailable');
   }
-  if (!['STUDENT','INSTRUCTOR','ADMIN'].includes(profile.role)) redirect('/login');
-
-  if (profile.role === 'ADMIN') {
-    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (assuranceError) redirect('/login?reason=mfa-error');
-    if (assurance?.currentLevel !== 'aal2') return <AdminMfaGate />;
+  if (profile.role !== 'STUDENT' && profile.role !== 'INSTRUCTOR') {
+    await supabase.auth.signOut();
+    redirect('/login?reason=role-unavailable');
   }
 
   return <Dashboard profile={{
     id: profile.id,
     email: profile.email ?? user.email ?? null,
     full_name: profile.full_name ?? 'CoursePulse User',
-    role: profile.role as 'ADMIN' | 'INSTRUCTOR' | 'STUDENT'
+    role: profile.role as 'INSTRUCTOR' | 'STUDENT'
   }} />;
 }
