@@ -38,7 +38,7 @@ describe('filtered aggregate analytics',()=>{
     expect(readRateMigration).toContain('private.consume_api_rate_limit');
   });
   it('clears stale dashboard errors when navigating between tabs',()=>{
-    expect(dashboard).toMatch(/async function changeTab\\(next: typeof tab\\) \\{ setError\\(''\\); setTab\\(next\\);/);
+    expect(dashboard).toMatch(/async function changeTab\(next: typeof tab\) \{ setError\(''\); setTab\(next\);/);
   });
   it('exposes semester and date filters and passes them to export links',()=>{
     expect(dashboard).toMatch(/analyticsFromDate/);
