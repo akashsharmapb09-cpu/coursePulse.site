@@ -17,8 +17,8 @@ export default function ContactPage() {
       description="Need assistance with your account, have feedback, or want to report a technical issue? Here is how to reach out."
     >
       <section>
-        <h2>Project Repository & Issue Tracker</h2>
-        <p>CoursePulse is developed as an open academic course feedback initiative. You can view project updates, report technical issues, or suggest improvements directly on GitHub:</p>
+        <h2>Source Repository & Issue Tracker</h2>
+        <p>CoursePulse is an open academic course feedback portal. You can follow CoursePulse updates, report technical issues, or suggest improvements directly on GitHub:</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a
             href="https://github.com/akashsharmapb09-cpu/coursePulse.site/issues"
