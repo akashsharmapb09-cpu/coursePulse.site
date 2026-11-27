@@ -69,8 +69,9 @@ describe('single-college CoursePulse deployment', () => {
   });
 
   it('preserves Student signup and makes Teacher college-email sign-in visible', () => {
-    expect(authForm).toContain('instructorEmailSignIn');
-    expect(authForm).toContain("['INSTRUCTOR','ADMIN'].includes(instructorProfile.role)");
+    expect(authForm).toContain('teacherEmailSignIn');
+    expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
+    expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(loginPage).toContain('Student & Teacher sign in');
     expect(publicHeader).toContain('Student / Teacher sign in');
   });
