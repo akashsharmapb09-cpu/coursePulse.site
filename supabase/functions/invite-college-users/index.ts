@@ -126,10 +126,9 @@ Deno.serve(async (request: Request) => {
   if (profileError || !profile || !profile.is_active || !profile.organization_id) {
     return json({ error: "An active college staff account is required." }, 403, cors);
   }
-  const isHead = profile.role === "ADMIN" && claims.aal === "aal2";
   const isTeacher = profile.role === "INSTRUCTOR";
-  if (!isHead && !isTeacher) {
-    return json({ error: "College Head or assigned teacher access is required." }, 403, cors);
+  if (!isTeacher) {
+    return json({ error: "Teacher access is required." }, 403, cors);
   }
   const { data: organization, error: orgError } = await admin.from("organizations")
     .select("id,status,name").eq("id", profile.organization_id).maybeSingle();
