@@ -8,3 +8,6 @@ out/
 coverage/
 *.log
 .DS_Store
+
+# Netlify
+.netlify
