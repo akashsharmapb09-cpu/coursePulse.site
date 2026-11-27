@@ -6,6 +6,8 @@ const apiAuth = readFileSync(resolve(process.cwd(), 'lib/http.ts'), 'utf8');
 const dashboard = readFileSync(resolve(process.cwd(), 'app/dashboard/page.tsx'), 'utf8');
 const authForm = readFileSync(resolve(process.cwd(), 'components/student-auth-form.tsx'), 'utf8');
 const signup = readFileSync(resolve(process.cwd(), 'app/signup/page.tsx'), 'utf8');
+const about = readFileSync(resolve(process.cwd(), 'app/about/page.tsx'), 'utf8');
+const contact = readFileSync(resolve(process.cwd(), 'app/contact/page.tsx'), 'utf8');
 
 describe('public CoursePulse role model', () => {
   it('allows application API sessions only for Students and Teachers', () => {
@@ -25,8 +27,12 @@ describe('public CoursePulse role model', () => {
     expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
   });
 
-  it('does not expose HOD/Admin as a public signup role', () => {
+  it('keeps public signup and information pages on the Student / Teacher role model', () => {
     expect(signup).toContain('Teacher access is provided by invitation.');
     expect(signup).not.toMatch(/HOD|Admin/i);
+    expect(about).toContain('Teacher access is provided through invitation.');
+    expect(about).not.toMatch(/HOD|Admin/i);
+    expect(contact).toContain('your assigned Teacher or department office');
+    expect(contact).not.toMatch(/HOD|Admin/i);
   });
 });
