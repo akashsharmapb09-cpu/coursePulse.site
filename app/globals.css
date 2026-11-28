@@ -1188,3 +1188,25 @@ html[data-coursepulse-theme="dark"] .cookie-dialog .button.subtle {
   background: #223329;
   color: #dce9df;
 }
+
+
+/* Filter-aware course graphs in the Analytics workspace. */
+.course-analytics-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 18px}
+.course-analytics-chart-card{min-width:0;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--white)}
+.course-analytics-chart-card>h4{margin:6px 0;font:800 14px Manrope,sans-serif;color:var(--ink)}
+.course-analytics-chart-card>p{margin:0 0 17px;font-size:10px;line-height:1.55;color:var(--muted)}
+.course-analytics-bars{display:grid;gap:15px}
+.course-analytics-bar-row{display:grid;gap:6px;min-width:0}
+.course-analytics-bar-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:10px;color:var(--ink)}
+.course-analytics-bar-heading span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course-analytics-bar-heading b{flex:0 0 auto;font-size:11px;font-variant-numeric:tabular-nums;color:var(--green)}
+.course-analytics-track{height:11px;overflow:hidden;border-radius:20px;background:#edf2ee}
+.course-analytics-fill{height:100%;min-width:0;border-radius:20px;transition:width .25s ease}
+.course-analytics-fill.rating{background:linear-gradient(90deg,#83b995,#397b56)}
+.course-analytics-fill.volume{background:linear-gradient(90deg,#a5c9d2,#4e8995)}
+.course-analytics-bar-row>small{font-size:9px;color:var(--muted)}
+.course-analytics-empty{padding:12px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);font-size:10px}
+html[data-coursepulse-theme="dark"] .course-analytics-chart-card{background:#19261f;border-color:#344a3b}
+html[data-coursepulse-theme="dark"] .course-analytics-track{background:#2b4033}
+@media(max-width:760px){.course-analytics-chart-grid{grid-template-columns:1fr}.course-analytics-chart-card{padding:15px}}
+@media(prefers-reduced-motion:reduce){.course-analytics-fill{transition:none}}

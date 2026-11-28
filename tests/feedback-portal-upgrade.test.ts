@@ -99,7 +99,9 @@ describe('CoursePulse authenticated feedback portal', () => {
     expect(middleware).toMatch(/destination\.pathname = '\/login'/);
     expect(middleware).toMatch(/dashboard/);
     expect(authForm).toMatch(/mode === 'signup'/);
-    expect(authForm).toMatch(/role !== 'STUDENT'/);
+    expect(authForm).toContain("['STUDENT', 'INSTRUCTOR'].includes(expectedRole)");
+    const usernameAuth = read('supabase/functions/student-username-auth/index.ts');
+    expect(usernameAuth).toContain('profile.role !== "STUDENT"');
     expect(authForm).toMatch(/signInWithPassword/);
   });
 

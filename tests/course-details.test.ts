@@ -20,7 +20,7 @@ describe('institution course details', () => {
     expect(route).toContain("semester:semesters");
     expect(route).toContain('department:departments');
     expect(route).toContain('semester:semesters');
-    expect(route).toContain("select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)')");
+    expect(route).toContain("select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters!courses_semester_id_fkey(id,name),department:departments!courses_department_id_fkey(id,name,code)')");
   });
 
   it('does not return internal instructor account IDs to student clients', () => {

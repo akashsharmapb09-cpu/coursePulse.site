@@ -22,8 +22,15 @@ const publicSite = read('components/public-site.tsx');
 const consent = read('components/cookie-consent.tsx');
 const terms = read('app/terms/page.tsx');
 const prisma = read('prisma/schema.prisma');
+const thankYou = read('app/feedback/thank-you/page.tsx');
+const responseRoute = read('app/api/responses/route.ts');
 
 describe('CoursePulse email-free student account experience', () => {
+  it('confirms server-side anonymous feedback storage on the thank-you page', () => {
+    expect(thankYou).toContain('Your anonymous response has been securely saved.');
+    expect(thankYou).toContain('stored separately from your student account');
+    expect(thankYou).not.toContain('in this browser');
+  });
   it('offers student registration and sign-in from the homepage', () => {
     expect(home).toContain('href="/signup"');
     expect(home).toContain('href="/login"');
@@ -42,7 +49,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(login).toContain('<StudentAuthForm mode="signin"/>');
     expect(signup).toContain("title: 'Create student account'");
     expect(login).toContain("title: 'Student & Teacher sign in'");
-    expect(login).toContain('Teachers sign in with their college email and password.');
+    expect(login).toContain('Teachers can use a demo username or college email and password.');
   });
 
   it('collects name, programme, username and a confirmed strong password only', () => {
@@ -60,7 +67,11 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authForm).not.toContain('type="email"');
     expect(authForm).not.toContain('supabase.auth.signUp');
     expect(authForm).toContain('signInWithPassword');
-    expect(authForm).toContain('instructorEmailSignIn');
+    expect(authForm).toContain('teacherEmailSignIn');
+    expect(authForm).toContain("['STUDENT', 'INSTRUCTOR'].includes(expectedRole)");
+    expect(authForm).toContain('demo username or their college email');
+    expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
+    expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(authForm).not.toMatch(/requested_role|role:\s*['"](?:INSTRUCTOR|ADMIN)/);
     for (const item of ['B.Tech', 'M.Tech', 'BBA', 'B.Com', 'BCA', 'MBA', 'Other']) expect(authForm).toContain(item);
     expect(authForm).not.toContain('HOD sign-up');
@@ -81,6 +92,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(authFunction).toContain('admin.auth.admin.deleteUser');
     expect(authFunction).toContain('authClient.auth.signInWithPassword');
     expect(authFunction).toContain('login:user:');
+    expect(authFunction).toContain('["STUDENT", "INSTRUCTOR"].includes(profile.role)');
     expect(authFunction).toContain('trustedCloudflareIp');
     expect(authRestrictionMigration).toContain('if not v_is_internal_username then');
     expect(authRestrictionMigration).toContain('values (\n    new.id,\n    null,');
@@ -113,7 +125,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(workspace).toContain('<StudentAccountControl />');
   });
 
-  it('keeps feedback anonymous and separate from the student account profile', () => {
+  it('keeps the legacy browser demo separate from authenticated feedback submissions', () => {
     expect(workspace).toContain('coursepulse-college-demo-responses-v1');
     expect(workspace).toContain('window.localStorage');
     expect(workspace).toContain('Submit feedback');
@@ -123,6 +135,11 @@ describe('CoursePulse email-free student account experience', () => {
     expect(dashboard).toContain('supabase.auth.getUser()');
     expect(dashboard).not.toContain('<PublicWorkspace />');
     expect(workspace).not.toContain('supabase.from');
+    expect(responseRoute).toContain("auth.profile.role !== 'STUDENT'");
+    expect(responseRoute).toContain("supabase.rpc('submit_anonymous_feedback'");
+    expect(privacy).toContain('answer record does not contain the Student\'s user ID, username or email');
+    expect(privacy).toContain('not a guarantee of absolute or cryptographic anonymity');
+    expect(privacy).not.toContain('coursepulse-college-demo-responses-v1');
   });
 
   it('updates project, features, privacy, cookie and terms information', () => {
@@ -134,12 +151,15 @@ describe('CoursePulse email-free student account experience', () => {
     expect(privacy).toContain('non-deliverable internal identifier');
     expect(privacy).toContain('There is no email-based password recovery');
     expect(cookies).toContain('Essential sign-in cookies');
-    expect(cookies).toContain('student sign-in session');
+    expect(cookies).toContain('sign-in session');
     expect(terms).toContain('username, password and programme');
     expect(terms).toContain('No email address or verification message is needed');
     expect(publicSite).toContain('Create account');
     expect(publicSite).toContain('Student / Teacher sign in');
     expect(consent).toContain('essential first-party session cookies');
     expect(consent).toContain('only after you opt in');
+    expect(consent).not.toContain('saves demo feedback');
+    expect(cookies).toContain('It is not a feedback-answer store');
+    expect(terms).toContain('Groups with fewer than five responses');
   });
 });

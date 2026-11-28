@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   if (!['ADMIN','INSTRUCTOR'].includes(auth.profile.role)) return jsonError('Instructor access is required.', 403);
-  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 30, 3600);
+  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 60, 3600);
   if (rateLimit) return rateLimit;
 
   const params = request.nextUrl.searchParams;
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   if (semesterId && !/^[0-9a-f-]{36}$/i.test(semesterId)) return jsonError('Invalid semester ID.');
 
   const { data: courses, error: coursesError } = await supabase.from('courses')
-    .select('id,course_code,title,semester_id,semester:semesters(name)')
+    .select('id,course_code,title,semester_id,semester:semesters!courses_semester_id_fkey(name)')
     .in('id', courseIds)
     .order('title');
   if (coursesError || (courses?.length ?? 0) !== courseIds.length) return jsonError('One or more courses are unavailable to this instructor.', 403);

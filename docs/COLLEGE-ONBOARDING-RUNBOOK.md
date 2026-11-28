@@ -1,112 +1,103 @@
-# College Pilot Onboarding Runbook
+# CoursePulse College Demonstration and Pilot Onboarding Runbook
 
 **Project:** CoursePulse `.site`  
-**Public URL:** https://coursepulse.netlify.app  
+**Canonical production URL:** https://coursepulse-site.vercel.app  
+**Repository:** https://github.com/akashsharmapb09-cpu/coursePulse.site  
 **Supabase project ref:** `fwmovyitmtpnwhqmvrgh`  
-**Supabase region:** `us-east-1`  
-**Snapshot date:** 2 November 2026
+**Supabase region:** `us-east-1` (United States)  
+**Reviewed:** 28 November 2026
 
-This runbook is for the college's authorized administrator. It is not a substitute for institution approval. Do not enter real student information until the approval record in [INSTITUTIONAL-PILOT-APPROVAL.md](./INSTITUTIONAL-PILOT-APPROVAL.md) is signed and the college has accepted the data-residency, privacy and operational risks.
+This runbook describes the current Student/Teacher workspace and the controls required before an institution uses it with real student data. It is not an institution approval, legal opinion or security certification. Do not enter real student information until the institution has completed and signed [INSTITUTIONAL-PILOT-APPROVAL.md](./INSTITUTIONAL-PILOT-APPROVAL.md), accepted the data-location and privacy risks, and assigned accountable contacts.
 
-## 1. Current live baseline
+## 1. Current product and production baseline
 
-The production database currently has:
+CoursePulse is a single-college workspace. Its public account model is **Student and Teacher**:
+- New public self-registrations create Student accounts only.
+- Students register with full name, unique username, programme and password. Student self-registration does not request an email address or send an email-confirmation message.
+- Teacher access is provisioned separately through an approved invitation/account-provisioning process. Teachers sign in with the credential assigned to their account; the login form accepts a provisioned demo username or registered college email.
+- Admin/HOD is not a public sign-up or public Student/Teacher role choice. Privileged administrative operations require an authorized account and MFA assurance; they are not available through public self-registration.
 
-- 1 active ADMIN profile and 1 STUDENT profile; no INSTRUCTOR profile.
-- 1 course (`cse111`), currently ARCHIVED.
-- 1 feedback form, currently closed.
-- 0 departments, 0 semesters, 0 student-course enrollments and 0 instructor-course assignments.
-- 0 legacy responses and 0 anonymous submissions.
+The production environment is an active demonstration environment, not an empty test database. It contains demo Student/Teacher identities, four sample courses and feedback records. Do not reset it, bulk-import over it, delete its accounts/courses or add synthetic responses without a separate, explicit owner-approved change plan. Always inspect the current live state before making academic-record changes; an old database snapshot must not be treated as current.
 
-No real college roster has been loaded. No synthetic student response data should be added to this production database.
+The current demo course set includes:
+- CSE111 — Introduction to Programming
+- CSE202 — Data Structures & Algorithms
+- CSE203 — Database Management Systems
+- CSE204 — Web Technologies & UI Development
 
-## 2. Supabase Auth URL configuration
+The demo includes feedback forms and a small number of genuine demonstration submissions. Analytics suppress question groups and rating bins with fewer than five responses. Do not fabricate or bulk-insert feedback to cross this privacy threshold.
 
-The code sends both signup confirmation and password-recovery links to `/auth/confirm`. Password recovery then continues to `/auth/reset`. The confirmation handler exchanges the PKCE code or verifies the token hash before redirecting.
+## 2. Identity and account provisioning
 
-Open the **.site** project only:
-https://supabase.com/dashboard/project/fwmovyitmtpnwhqmvrgh/auth/url-configuration
+### Student accounts
+1. Open https://coursepulse-site.vercel.app/signup.
+2. Enter the Student's full name, choose a unique username, select the programme and create a password.
+3. Sign in at /login with the username and password.
+4. The Student sees courses and forms only when the course is published, the Student is enrolled and the form is available/eligible.
 
-Set:
+Student username-based accounts do not use email-based self-service password recovery. A signed-in user can change their password through account security controls. A user who has lost access must contact the Teacher/department or the support channel that provided access. Do not promise an email reset flow.
 
-| Supabase setting | Exact value |
-|---|---|
-| Site URL | `https://coursepulse.netlify.app` |
-| Additional Redirect URL | `https://coursepulse.netlify.app/auth/confirm` |
-| Local development only | `http://localhost:3000/auth/confirm` |
+### Teacher accounts
+Teacher accounts are not created through the public Student signup form. Verify the person's institutional identity and obtain approval from the institution's designated account owner before provisioning access. The approved provisioning path must assign the Teacher role server-side and leave the account active. The login form accepts the provisioned demo username or registered college email and password.
 
-Do not add a broad wildcard for all Vercel deployments. Preview and production currently share the same Supabase project, so preview writes must be treated as production writes.
+Do not promote a Student, create an Auth identity by direct SQL, insert into `auth.users`, bypass the invitation guard, or delete/replace an existing Teacher as a workaround. Course ownership and instructor assignments must be transferred and verified before any account replacement. If the authorized Teacher-invitation path is unavailable (for example, no active authorized AAL2 administrator is available), stop and ask the project owner to restore the approved provisioning path; do not improvise a service-role bypass.
 
-The Vercel `.site` project already has `NEXT_PUBLIC_APP_URL=https://coursepulse.netlify.app` for Production, Preview and Development. Keep this setting on the CoursePulse single-college production URL.
+## 3. Feedback storage, anonymity and reports
 
-Also inspect **Authentication → Sign In / Providers → Email**:
-- Keep email confirmation enabled for real users.
-- Do not enable auto-confirm for a college pilot.
-- Set the Supabase password minimum to at least 10 characters (the application signup form also enforces 10).
-- Leaked-password protection is reported disabled. Supabase currently makes this feature available on Pro and above; the connected organization is Free. Record the risk or have the project owner decide whether to upgrade before real student accounts are used.
+Student feedback submission uses the authenticated application and a server-side Supabase RPC. New answer records are stored in `public.anonymous_submissions` with the feedback-form reference, answer payload and date-level receipt; they do not contain the Student's user ID, username or email. A separate private eligibility record controls course/form access and duplicate-submission prevention.
 
-After saving the settings, verify both flows with a controlled test account:
-1. Sign up on the production URL using an approved test mailbox; open the email and confirm that the browser returns to `https://coursepulse.netlify.app/auth/confirm`, then reaches the dashboard after login.
-2. Sign out, request password recovery, open the email, verify the callback reaches `/auth/confirm?next=/auth/reset`, set a new password, and sign in with it.
-3. Confirm an unapproved host/redirect is not accepted.
-4. Save the test date, account type (test only), result and screenshot in the college's private acceptance record. Do not put email addresses, tokens or screenshots containing personal data in Git.
+This is an identity-separation design, not a guarantee of absolute or cryptographic anonymity. Course/form context, submission timing and free-text comments may still create re-identification risks. Students must not include names, roll numbers, email addresses, phone numbers or other identifying/private information in comments.
 
-**Important:** The connected project tools available for this review could inspect project/database state but could not read or patch the hosted Supabase Auth URL configuration. Until the owner has saved and verified the settings above, Auth redirect configuration is **NOT VERIFIED**.
+Teacher Analytics and exports use aggregate reporting functions rather than raw answer rows. Question groups/rating bins with fewer than five responses are suppressed, and free-text answers are excluded from ordinary Analytics and exports. Available filters include course, semester, department, date range and question category; the Teacher workspace also provides course comparison and CSV/XLS/XLSX/PDF aggregate exports. Empty graphs may mean the selected group is below the privacy threshold or that the active filters have removed reportable data.
 
-## 3. College records needed before provisioning
+Feedback forms have a configurable retention period within the supported 30–730-day range. A scheduled cleanup process removes expired response records and old rate-limit buckets. Account/data-deletion requests can be submitted in the workspace and reviewed; submitting or marking a request does not itself delete a Supabase Authentication account. The authorized project owner must separately perform and verify Auth-user deletion before reporting that an account has been deleted.
 
-Use [college-roster-template.csv](./college-roster-template.csv) as a working sheet only. It is not an automated import file. Keep the completed roster outside GitHub and send it only through a transfer method approved by the college.
+## 4. Configure academic data after approval
 
-Required authoritative inputs:
-- Official department names and unique department codes.
-- Semester name, start date and end date.
-- Course code, official title and short description for each course.
-- Each instructor's verified institutional email address and full name.
-- Each student's verified institutional email address and full name.
-- The exact student-to-course enrollment mapping.
-- Written confirmation of the person authorized to approve the pilot and provision accounts.
+Collect authoritative information from the institution before changing the production catalogue:
+- Official department names and unique codes.
+- Semester name and approved start/end dates.
+- Course codes, official titles and short descriptions.
+- Each instructor's verified institutional identity.
+- Each student's verified identity and exact student-to-course enrollment mapping.
+- Written approval from the person authorized to operate the pilot.
 
-Do not invent course names, instructor identities, student identities, institutional emails or semester dates.
+Use the authorized workspace controls to configure departments, semesters, courses, course publication, enrollments and instructor assignments. RLS and server-side role checks enforce course visibility and ownership. Students should be enrolled only in the courses listed on the approved roster, not all courses by default.
 
-## 4. Provision instructors, students and courses
+Before opening a feedback form:
+1. Verify the course is linked to the correct department and semester.
+2. Verify the correct Teacher owns or is assigned to the course.
+3. Verify the intended Student cohort is enrolled.
+4. Review every question, category, required setting and due date.
+5. Confirm the retention period and student-facing notice with the institution.
+6. Open the form only for the approved cohort.
 
-All account holders first create their own Auth account through the public signup screen and confirm their email. New accounts receive the STUDENT role by default. An administrator must verify each instructor's institutional identity and promote the account to INSTRUCTOR through the protected admin workspace. Never change roles by inserting a row into `public.users` or by trusting user-editable metadata.
+Do not invent course names, student/instructor identities, emails or academic dates. Keep completed rosters outside Git and transfer them only through an institution-approved channel.
 
-Recommended order after institutional sign-off:
+## 5. Environments, testing and operations
 
-1. Confirm the existing administrator can sign in and has verified TOTP MFA (AAL2).
-2. Create the approved departments and the active academic semester.
-3. Ask each named instructor to register with their institutional mailbox and confirm the email.
-4. Verify each instructor against the college-approved roster; promote to INSTRUCTOR in the admin workspace.
-5. Create each course with the official course code/title, department and semester; set the correct instructor/owner and publish only when approved.
-6. Ask each student to register and confirm their institutional email.
-7. Enroll each student into exactly the courses listed on the approved roster. Do not enroll every student into every course by default.
-8. Create the course feedback form, review every question and the student-facing privacy notice, set the approved deadline and retention period, then open it only for the intended cohort.
-9. Before the real cohort begins, run student/instructor/admin browser acceptance with synthetic accounts in a separate QA Supabase project.
+- Production and Vercel Preview currently use the production Supabase project. Treat Preview writes as production writes.
+- Do not run write-based browser E2E, synthetic registration, fake submissions, destructive tests or seed scripts against Production or Preview.
+- Use a separate disposable Supabase QA project for synthetic `example.test` identities, browser E2E, role-matrix tests and destructive testing.
+- Before a production schema change, inspect the project ref, review the migration, take an approved backup and verify rollback/restore procedures. Never run a database reset against the production project.
+- Supabase Admin/MFA features require AAL2 for privileged operations. Verify the authorized owner's TOTP enrollment and recovery process before a pilot.
+- The Supabase region is `us-east-1` in the United States. The institution must explicitly review and accept the jurisdiction/data-residency implications before using real student records.
+- The earlier security review flagged Supabase Auth leaked-password protection as disabled. The project owner must verify its current status in the Auth security settings and resolve or explicitly document the risk before real student data is used.
+- Never commit passwords, invitations, recovery codes, API secrets, service-role keys, student rosters or feedback contents.
+- Pause the pilot and notify the institution's designated owner if a user is assigned to the wrong role/course, data appears outside its intended scope or a privacy/security incident is suspected.
 
-Use the app's admin workspace for roles, departments, semesters, courses, enrollments and instructor assignments. The database enforces role/ownership checks and admin actions require AAL2. The app does not provide a verified bulk CSV import; this roster template is a planning worksheet, not an upload control.
+## 6. Go-live acceptance checklist
 
-## 5. Environment and data safety
+- [ ] Institutional approval record signed and accountable owner/support contacts identified.
+- [ ] US `us-east-1` data location reviewed and accepted by the institution.
+- [ ] Student username registration and sign-in tested with a synthetic account in isolated QA.
+- [ ] Teacher invitation/provisioning and active Teacher sign-in tested with an approved synthetic identity in isolated QA.
+- [ ] Student course/form eligibility and one-time submission verified in isolated QA.
+- [ ] Teacher course scope, Analytics filters, minimum-five suppression and exports tested in isolated QA.
+- [ ] Admin/privileged operations verified with MFA AAL2 where institution operations require them.
+- [ ] Privacy notice, Terms, retention period, account-deletion process and support channel approved by the institution.
+- [ ] Security, backup/restore, accessibility and browser acceptance gates completed and documented.
+- [ ] Production catalogue, courses, instructors and enrollments independently checked against the approved roster.
+- [ ] Institution owner explicitly authorizes the first real Student cohort.
 
-- This is the `.site` college demo. Do not touch the separate SaaS `.com` project.
-- Vercel Preview and Production currently share this production Supabase project. Do not run write-based E2E or create fake students on Preview.
-- Do not use production to test form submissions. Use an isolated QA Supabase project with synthetic `example.test` identities.
-- The database region is `us-east-1` (United States). The college must explicitly decide whether this hosting/data-residency arrangement is acceptable before any real student data is entered.
-- No administrator passwords, invitation tokens, recovery codes, service-role keys or student data belong in this repository.
-- Pause the pilot and contact the institution's designated owner if an account is misassigned, data appears in the wrong course, or a privacy/security incident is suspected.
-
-## 6. Go-live checklist
-
-- [ ] Supabase Site URL and redirect allow-list saved and verified.
-- [ ] Signup confirmation and password reset tested on the production URL.
-- [ ] Leaked-password protection risk accepted or resolved by the project owner.
-- [ ] Institution approval record signed.
-- [ ] US `us-east-1` data location reviewed and accepted.
-- [ ] College departments, semester and official courses configured.
-- [ ] Named instructors verified, registered and promoted.
-- [ ] Students registered and enrolled only in approved courses.
-- [ ] Course feedback forms and retention schedule approved.
-- [ ] Isolated QA role/browser test completed.
-- [ ] College owner authorizes the first real student cohort.
-
-Until these gates are complete, treat the site as a supervised demonstration, not an approved student-data service.
+Until all applicable gates have been completed, use CoursePulse as a supervised demonstration only, not as an approved student-data service.

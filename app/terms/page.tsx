@@ -1,11 +1,16 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
-export const metadata:Metadata={alternates:{canonical:'/terms'},title:'Terms of Use',description:'Terms for using CoursePulse.'};
-export default function TermsPage(){return <PublicPage eyebrow="Terms" title="Terms of use" description="A simple guide to using CoursePulse.">
- <section><h2>1. Purpose and limits</h2><p>CoursePulse provides student registration, course feedback collection and basic result summaries. It is not an official college record system or a production student-management service.</p></section>
- <section><h2>2. Student accounts</h2><p>Students may create an account with their name, username, password and programme. No email address or verification message is needed. New public registrations are assigned Student access. There are no public Admin or HOD account options. Keep your username and password private.</p></section>
- <section><h2>3. Feedback submissions</h2><p>Submit honest and respectful feedback about the course. The current demo stores feedback in the browser being used and does not attach your account name or email to the local response. Do not include passwords, names, roll numbers, contact details, confidential information, or content that you are not authorised to share.</p></section>
- <section><h2>4. Demo data and results</h2><p>Student account data is stored separately by the connected authentication service. Feedback and results are saved only in the browser being used. Results reflect local demo responses and are not official college statistics. Responses are not shared or synchronised between visitors or devices.</p></section>
- <section><h2>5. Availability and changes</h2><p>CoursePulse may be updated, reset, or temporarily unavailable. No guarantee is made that locally stored feedback will remain available if browser data is cleared or the app changes.</p></section>
- <p className="public-note">The hosted workspace uses sample course information and browser-local feedback. Do not submit real confidential student records.</p>
+export const metadata = createPublicPageMetadata({
+  title: 'Terms of Use',
+  description: 'Terms for using the CoursePulse Student and Teacher course-feedback workspace.',
+  path: '/terms'
+});
+export default function TermsPage(){return <PublicPage eyebrow="Terms" title="Terms of use" description="A simple guide to using the CoursePulse course-feedback workspace.">
+ <section><h2>1. Purpose and limits</h2><p>CoursePulse provides Student and Teacher access to a single-college course-feedback workspace. It supports course enrolment visibility, feedback forms, aggregate reporting and exports. It is a demonstration workspace, not an institution-approved student-record or grading system.</p></section>
+ <section><h2>2. Student and Teacher accounts</h2><p>Students may create an account with their name, username, password and programme. No email address or verification message is needed for Student registration. Teacher access is provided by invitation and uses the credentials supplied for that account. Keep your sign-in details private and do not share your password or sign-in codes.</p></section>
+ <section><h2>3. Feedback submissions</h2><p>Submit honest and respectful feedback only for forms you are eligible to complete. New feedback answers are stored separately from student sign-in details, and the application uses a separate eligibility record to enforce course access and one-time submission. This design does not guarantee absolute anonymity. Do not include names, roll numbers, contact information, passwords or confidential information in free-text comments.</p></section>
+ <section><h2>4. Reports and exports</h2><p>Teacher reports are based on aggregate feedback. Groups with fewer than five responses and free-text answers are excluded from ordinary analytics and exports. A missing graph or suppressed group may mean there are not enough reportable responses to show the result. Reports are not a substitute for an official institutional evaluation or decision process.</p></section>
+ <section><h2>5. Data, retention and requests</h2><p>Account, course, enrolment and feedback data are stored in the connected services used by the workspace. Feedback retention is configured per form within the supported 30-to-730-day range. Users may submit a data-deletion request through the workspace; a request is reviewed and does not automatically remove a Supabase Authentication account.</p></section>
+ <section><h2>6. Availability and changes</h2><p>CoursePulse may be updated, reset or temporarily unavailable. Access to a course or form depends on the published course, the user's enrolment or Teacher assignment, account status and form availability.</p></section>
+ <p className="public-note">Use CoursePulse only as permitted by the institution operating the workspace. Do not submit real confidential student records or information you are not authorised to share.</p>
 </PublicPage>; }

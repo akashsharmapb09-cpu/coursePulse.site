@@ -1,102 +1,92 @@
 # CoursePulse — College Project Submission Report
 
-**Project:** CoursePulse (.site college demonstration application)  
-**Repository:** `akashsharmapb09-cpu/coursePulse.site`  
-**Implementation branch:** `feat/master-prompt-completion`  
-**Current feature head reviewed:** `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`  
-**Public deployment:** https://coursepulse-site.vercel.app  
-**Report date:** 2 November 2026
+**Project:** CoursePulse (.site single-college course-feedback workspace)  
+**Repository:** https://github.com/akashsharmapb09-cpu/coursePulse.site  
+**Implementation branch:** `fix/student-course-loading-demo`  
+**Public URL:** https://coursepulse-site.vercel.app  
+**Report reviewed:** 28 November 2026
+
+> This report describes the implemented application and its documented architecture. A Git branch, passing CI run and production deployment are separate facts. Before a live demonstration, verify that Vercel Production is READY for the exact commit being presented.
 
 ## 1. Project overview
 
-CoursePulse is a web-based course feedback and academic feedback-management application. It separates student, instructor and administrator capabilities and uses database-enforced authorization and aggregate-only reporting to reduce access to individual feedback answers.
+CoursePulse is a single-college course-feedback workspace. Students submit feedback for courses in which they are enrolled; Teachers manage their own or assigned courses and review aggregate feedback reports. The public account model is Student and Teacher. Public self-registration creates Student accounts only; Teacher access is provisioned separately. Admin/HOD is not a public signup option or a public Student/Teacher role.
 
-The application is built with Next.js App Router, React, TypeScript, Supabase Auth, PostgreSQL Row Level Security (RLS), Prisma schema tooling, Zod validation and CSV/XLS/XLSX/PDF export libraries.
+The application uses Next.js App Router, React, TypeScript, Tailwind CSS, Supabase Auth and PostgreSQL with Row Level Security (RLS), server-side route guards, database RPCs, Zod validation, Prisma schema tooling and report-export libraries.
 
 ## 2. Implemented capabilities
 
-### Student experience
-- Sign-up/sign-in and password recovery/reset flows.
-- View courses and feedback forms only when enrolled and eligible.
-- Submit eligible feedback once and view pending/completed state.
-- Support for rating, numeric, single-choice, multiple-choice, checkbox, Yes/No and text questions.
-- Update own display name and submit an account-deletion request.
+### Student workspace
+- Register with full name, username, academic programme and password. Student self-registration does not ask for an email address or send an email-confirmation message.
+- Sign in with username and password.
+- View published courses and open feedback forms only when enrolled and eligible.
+- Submit validated feedback once per eligible form; review pending/completed state and submission history.
+- Update permitted profile information, change a password while signed in and submit an account/data-deletion request.
 
-### Instructor experience
-- Access owned or assigned courses.
-- Create/edit/archive/republish courses and create/edit/open/close feedback forms.
-- Configure deadlines and question categories, reorder questions and restore form-definition versions.
-- View aggregate analytics with date, course, semester, department and question-category filters.
-- Download CSV, XLS, XLSX and PDF aggregate reports.
+### Teacher workspace
+- Sign in using the provisioned demo username or registered college email and password; access only owned or explicitly assigned courses.
+- Manage course information and feedback-form lifecycle (create, edit, open/close and deadlines).
+- Build structured question sets, use question categories, reorder questions and restore saved form versions.
+- View filtered aggregate analytics, rating distributions and weekly response trends.
+- Compare two selected courses and export aggregate reports as CSV, Excel-compatible XLS, XLSX or PDF.
+- Use teacher notifications/inbox and view eligible feedback progress for assigned courses.
 
-### Administrator experience
-- MFA-gated administrative workspace and privileged RPCs (TOTP AAL2).
-- Manage users, roles, suspension, courses, departments, semesters, student enrollments and instructor assignments.
-- Review audit history, institution overview, low-participation alerts and account-deletion requests.
+### Privileged academic operations
+Where an active, authorized administrative account is available, the internal administrative workspace supports academic catalogue and access-management operations, audit review and data-deletion request review. Privileged actions require server-side authorization and MFA assurance (AAL2). Admin/HOD is not exposed as a public role choice.
 
-### Privacy and security design
-- RLS enabled on all 10 exposed public tables at the time of the latest schema inspection.
-- New answer records are stored separately from the private eligibility ledger and do not contain student identifiers or eligibility references.
-- Instructors and administrators use aggregate RPCs rather than direct access to raw answer rows.
-- Small aggregate cohorts are suppressed below five responses.
-- Same-origin checks and database-backed per-user rate limits cover sensitive mutations and selected analytics/export paths.
-- A daily retention-cleanup cron is configured; two successful executions have been recorded.
-- Security and privacy documentation explicitly notes that aggregate suppression is not a proof of cryptographic anonymity and that timing/re-identification risks still need independent review.
+## 3. Feedback data and privacy design
 
-## 3. Deployment and automated verification
+New Student submissions are validated by the application and written through the `submit_anonymous_feedback` database RPC. New answer records are stored in `public.anonymous_submissions` with a feedback-form reference, answer payload and date-level receipt; they do not contain the Student's user ID, username or email. A separate private `private.feedback_eligibility` record controls form eligibility and duplicate-submission prevention.
 
-The current feature head is deployed to the Vercel Production target:
-- Deployment: `dpl_ETbYkFQdiTeJ7QB6dm5bPeeYQK7i`
-- Deployment state: `READY`
-- Production alias: https://coursepulse-site.vercel.app
-- Git source: `feat/master-prompt-completion`, commit `cd4a5332c497d17d5c5d221cb20689bb8e46c22a`
+This is an identity-separation design, not a guarantee of absolute or cryptographic anonymity. Course/form context, dates, small cohorts and free-text content can still create re-identification risks. Students should not include names, roll numbers, emails, phone numbers or other identifying information in comments.
 
-GitHub Actions PR validation run #385 passed for the PR merge candidate, which included the current feature head:
-- `npm ci`: PASS
-- `npm audit --audit-level=moderate`: PASS, zero reported vulnerabilities
-- Prisma schema validation: PASS
-- TypeScript typecheck: PASS
-- Vitest: 34 test files / 130 tests PASS
-- Next.js production build: PASS, 19/19 static pages generated
+The legacy `public.responses` table remains for compatibility and contains a student identifier column; it was empty at the anonymous-storage cutover. New submissions use the separate answer store. Do not describe the entire historical database as cryptographically anonymous.
 
-Selected rollback-only database integration checks have passed for enrollment/form eligibility, one-time submission and duplicate prevention, direct answer/eligibility access denial, instructor course scoping, five-response aggregation suppression, weekly trends and free-text exclusion.
+Teacher analytics and ordinary exports use aggregate database functions rather than raw answer rows. Question groups and rating bins with fewer than five responses are suppressed, and free-text answers are excluded from ordinary analytics and exports. The five-response rule reduces small-cohort disclosure but does not, by itself, eliminate repeated-query differencing, complementary suppression or contextual re-identification.
 
-The live Supabase project has 36 migration-history entries through `20261102102457_coursepulse_private_fk_indexes`. The latest additive migration adds indexes to two private foreign-key columns. The subsequent performance advisor run no longer reports unindexed foreign keys.
+Feedback-form retention is configurable within the supported 30-to-730-day range. A scheduled cleanup process removes expired answer records and old rate-limit buckets. An account/data-deletion request is reviewed through the workspace; submission of a request does not automatically delete a Supabase Authentication identity.
 
-## 4. Important limitations and outstanding acceptance gates
+## 4. Security and operational controls
 
-A READY deployment and passing CI do not establish complete real-user operation. The following remain open and must not be represented as completed:
+- Supabase Auth manages credentials and signed-in sessions. Student and Teacher identities are checked against protected server-side profile data.
+- RLS and course-scoped database functions restrict Student enrollments and Teacher ownership/assignment.
+- New answer data and the eligibility ledger are separate; direct Data API access to those protected resources is denied.
+- Feedback submission validates the form and answers, consumes eligibility and inserts the anonymous answer in one transaction.
+- Sensitive mutations use same-origin checks and per-user rate limits where configured.
+- Middleware applies a nonce-based Content Security Policy.
+- Privileged administrative actions require AAL2 and are audit logged.
 
-1. **Real-browser acceptance:** Root, login, signup, privacy routes and end-to-end student/instructor/admin journeys have not been independently verified in a real browser during this review. CI uses placeholder Supabase values and does not authenticate real users.
-2. **Isolated staging:** Vercel Preview and Production currently share the same Supabase project. Write-based E2E tests must run against a disposable QA database, never against the college demo database. No Supabase development branch currently exists. A new branch was quoted at USD $0.01344/hour; it requires owner approval before creation.
-3. **Supabase Auth leaked-password protection:** Security Advisor reports this disabled. Supabase documentation states the feature is available on Pro and above; the connected organization is on the Free plan. The project owner/institution must upgrade or record explicit risk acceptance.
-4. **Auth provider settings:** Verify the actual Supabase Site URL and allowed redirect URLs, then test signup confirmation and password reset end to end.
-5. **Administrator MFA:** One active administrator has a verified TOTP factor. Fresh sign-in proving AAL2 and the recovery path still need browser verification.
-6. **Accessibility and devices:** WCAG 2.2 AA, keyboard/screen-reader checks, color contrast, touch targets and the full mobile/tablet/desktop viewport matrix remain unverified.
-7. **Performance:** No Lighthouse/Core Web Vitals or query-performance report has been produced. A two-second load target must not be claimed without measurement.
-8. **Security/privacy adversarial testing:** Full student/instructor/admin RLS matrix, cross-resource IDOR, XSS/CSRF, distributed abuse, statistical differencing and independent re-identification review remain open.
-9. **Backup and recovery:** No isolated backup/restore drill evidence is available.
-10. **Institution/legal decisions:** Institution/controller identity, approved support contact, jurisdiction, privacy/terms/cookie wording, legal basis, retention schedule, consent/minor policy and accessibility contact must be supplied and approved by the institution. This report does not invent legal approval.
-11. **Account deletion:** The application records and audits requests, but the institution's authorized Supabase owner must perform and verify Auth-user deletion before a request is marked completed.
+These controls are implementation safeguards, not a claim of completed independent penetration testing or legal certification.
 
-At the 2 November 2026 snapshot, the live database contains one active ADMIN profile and one STUDENT profile, but no INSTRUCTOR profile; one course (`cse111`) is ARCHIVED; one feedback form is closed; there are zero departments, semesters, student-course enrollments, instructor-course assignments, legacy responses or anonymous submissions. No college roster has been loaded. Do not use real student information until Auth redirects are verified, institutional approval is signed and the outstanding release gates are complete.
+## 5. Demonstration and test-data safety
 
-## 5. Submission and demonstration guidance
+The current production workspace is an active demonstration environment with existing Student/Teacher demo identities, four sample courses and feedback records. It is not an empty QA database. Do not reset production, bulk-replace its demo records, or fabricate submissions to cross the minimum-five reporting threshold.
 
-For a supervised college demonstration:
-- Use the public URL above.
-- Demonstrate the public landing page, authentication UI, and role-specific workflows only with approved test accounts and synthetic data in an isolated QA environment.
-- Do not create fake student records in the production Supabase project.
-- Do not distribute administrator credentials or secrets in a report or presentation.
-- Explain the privacy separation, RLS and aggregate suppression as design controls, while acknowledging their stated limitations.
+Vercel Preview currently shares the production Supabase project. Treat Preview writes as production writes. Use a separate disposable Supabase QA project for synthetic accounts, test submissions, authenticated browser E2E, role-matrix tests and destructive testing. Follow [docs/SEEDING.md](./SEEDING.md) and [docs/COLLEGE-ONBOARDING-RUNBOOK.md](./COLLEGE-ONBOARDING-RUNBOOK.md).
 
-## 6. Release verdict
+For a demonstration, explain that the Student submits feedback, the server keeps new answer records separate from Student identity, and the Teacher sees only reportable aggregates. A zero/empty graph can be the correct privacy-preserving result when a selected group has fewer than five responses or filters leave no reportable data.
 
-**Implementation status: Substantially implemented.**  
-**Deployment status: Vercel Production READY.**  
-**Automated CI status: PASS (34 test files / 130 tests).**  
-**College/institution acceptance status: NOT YET SIGNED OFF.**
+## 6. Outstanding acceptance gates
 
-The project is deployable and can be presented as a working implementation, but it is not honestly certifiable as having every master-prompt requirement fully completed until the browser, security, accessibility, operational and institution-owner gates above are evidenced.
+The following items must be verified or accepted by the institution before real student data is used:
 
-Pull Request #2 remains open and draft. The feature branch has not been merged into `main`.
+1. Run Student and Teacher end-to-end flows against a disposable QA Supabase project, including eligibility, duplicate prevention, course scoping and report exports.
+2. Complete browser acceptance for Chromium, Firefox and WebKit on the exact release commit; verify responsive layout, keyboard navigation, accessible labels, error states and screen-reader behaviour.
+3. Complete the full database RLS/IDOR and abuse/security test matrix, including statistical differencing and independent re-identification review.
+4. Verify backup/restore, scheduled retention-cleanup history and incident response ownership.
+5. Have the institution approve the privacy notice, terms, support contact, retention schedule, lawful purpose, minor/student consent approach and account-deletion process. Current public notices are informational technical drafts, not institutional legal approval.
+6. Review the Supabase region `us-east-1` (United States) and explicitly accept the data-residency implications.
+7. The prior security review flagged Supabase Auth leaked-password protection as disabled. The project owner must verify its current status in Auth settings and resolve or formally accept the risk.
+8. Verify the exact Vercel Production deployment is READY and is built from the commit used for the demonstration. CI success alone does not prove a deployment is live.
+9. Confirm an authorized owner/admin is available for Teacher provisioning and privileged operations. Do not bypass provisioning controls or insert Auth users directly in SQL.
+
+Student username-based accounts do not have email-based password recovery. A signed-in user can change a password through account security controls; a user who has lost access must contact the approved support channel. The workspace records deletion requests, but actual Auth-user deletion requires a separate authorized owner operation.
+
+## 7. Submission verdict
+
+**Project status:** A broad and functional Student/Teacher feedback workspace with server-side submissions, course management and privacy-aware aggregate reporting.  
+**Privacy status:** Identity separation and minimum-five suppression are implemented; absolute anonymity is not claimed.  
+**Institutional readiness:** Requires the acceptance gates above and institution sign-off before real student records are used.  
+**Release status:** Check the linked GitHub Actions run and Vercel deployment details for the exact commit before claiming the latest branch changes are live.
+
+CoursePulse can be presented as a working academic project demonstration. It should not be represented as an institution-approved production student-record system until the institution has completed its approval and technical acceptance.

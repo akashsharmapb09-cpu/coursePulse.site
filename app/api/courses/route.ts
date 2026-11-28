@@ -10,7 +10,7 @@ export async function GET() {
   const auth = await getCurrentUser(supabase);
   if (!auth) return jsonError('Unauthorized', 401);
   const { data, error } = await supabase.from('courses')
-    .select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)')
+    .select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters!courses_semester_id_fkey(id,name),department:departments!courses_department_id_fkey(id,name,code)')
     .order('created_at', { ascending: false });
   if (error) return jsonError('Unable to load courses.', 500);
   let courses=data??[];
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     title: parsed.data.title,
     description: parsed.data.description,
     status: 'PUBLISHED'
-  }).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').single();
+  }).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters!courses_semester_id_fkey(id,name),department:departments!courses_department_id_fkey(id,name,code)').single();
   if (error) return jsonError('Course could not be created. Check your role and try again.', 403);
   return NextResponse.json({ course: data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -71,7 +71,7 @@ export async function PATCH(request:NextRequest) {
   const parsed=courseUpdateInput.safeParse(body);
   if(!parsed.success) return jsonError(parsed.error.issues[0]?.message??'Invalid course update.');
   const {id,...updates}=parsed.data;
-  const {data,error}=await supabase.from('courses').update(updates).eq('id',id).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters(id,name),department:departments(id,name,code)').single();
+  const {data,error}=await supabase.from('courses').update(updates).eq('id',id).select('id,course_code,title,description,status,created_at,instructor_id,semester_id,semester:semesters!courses_semester_id_fkey(id,name),department:departments!courses_department_id_fkey(id,name,code)').single();
   if(error||!data) return jsonError('Course could not be updated. Check course ownership.',403);
   return NextResponse.json({course:data},{headers:{'Cache-Control':'no-store'}});
 }

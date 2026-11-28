@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (assuranceError || assurance?.currentLevel !== 'aal2') return jsonError('Complete administrator multi-factor authentication before using this report.', 403);
   }
-  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 30, 3600);
+  const rateLimit = await checkReadRateLimit(supabase, 'analytics:query', 60, 3600);
   if (rateLimit) return rateLimit;
   const params=request.nextUrl.searchParams;
   const courseId=params.get('course_id');

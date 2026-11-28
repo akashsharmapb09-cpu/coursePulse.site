@@ -19,6 +19,11 @@ describe('student course instructor directory',()=>{
     expect(migration).not.toMatch(/u\.email/i);
   });
 
+  it('disambiguates tenant-safe course foreign keys for semester and department embeds',()=>{
+    expect(route).toContain('semester:semesters!courses_semester_id_fkey(id,name)');
+    expect(route).toContain('department:departments!courses_department_id_fkey(id,name,code)');
+  });
+
   it('uses the restricted RPC only for student course cards',()=>{
     expect(route).toContain("auth.profile.role==='STUDENT'");
     expect(route).toContain("supabase.rpc('get_student_course_instructors')");

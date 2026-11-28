@@ -69,18 +69,20 @@ describe('single-college CoursePulse deployment', () => {
   });
 
   it('preserves Student signup and makes Teacher college-email sign-in visible', () => {
-    expect(authForm).toContain('instructorEmailSignIn');
-    expect(authForm).toContain("['INSTRUCTOR','ADMIN'].includes(instructorProfile.role)");
+    expect(authForm).toContain('teacherEmailSignIn');
+    expect(authForm).toContain("teacherProfile.role !== 'INSTRUCTOR'");
+    expect(authForm).not.toContain("['INSTRUCTOR','ADMIN']");
     expect(loginPage).toContain('Student & Teacher sign in');
     expect(publicHeader).toContain('Student / Teacher sign in');
   });
 
-  it('preserves HOD-managed Student/Teacher invites and Teacher workspace tools', () => {
+  it('preserves HOD-managed invites and Teacher workspace tools without a roster shortcut', () => {
     expect(teacherInviteRoute).toContain("role: z.enum(['STUDENT', 'INSTRUCTOR'])");
     expect(teacherInviteFunction).toContain('const isTeacher = profile.role === "INSTRUCTOR"');
     expect(teacherInviteFunction).toContain('Teachers can invite students only.');
     expect(dashboard).toContain('TeacherInbox');
-    expect(dashboard).toContain('TeacherRoster');
+    expect(dashboard).not.toContain('Class rosters');
+    expect(dashboard).not.toContain('Assigned student rosters');
     expect(dashboard).toContain("profile.role==='INSTRUCTOR'");
     expect(dashboard).toContain('Analytics');
     expect(dashboard).not.toContain('OrganizationSettings');

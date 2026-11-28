@@ -1,32 +1,42 @@
-# CoursePulse email and password sign-in
+# CoursePulse authentication and account provisioning
 
-The login page exposes email and password authentication only.
+The current public access model exposes **Student** and **Teacher** sign-in. Public self-registration creates Student accounts only. Teacher access is provided through an invitation or an approved provisioning process. Admin/HOD is not a public signup choice and cannot enter the Student/Teacher dashboard.
 
-- Existing users sign in with their email address and password.
-- New users can create Student accounts with email confirmation.
-- Protected Admin registration requires the server-verified administrator signup code.
-- Google OAuth and mobile/SMS sign-in are not offered in the CoursePulse login interface.
+## Student username authentication
 
-## Email confirmation
+- Students register with full name, a unique username, programme and password.
+- No email address or phone number is requested for Student registration.
+- The browser invokes the `student-username-auth` Supabase Edge Function for registration/login.
+- The Edge Function uses Supabase Auth server-side to create a confirmed internal identity and return a session. Its reserved `.invalid` identifier is an internal authentication detail; it is not displayed to the Student and is not used to send email.
+- Student login uses the username and password.
+- Username registration and login attempts are rate-limited. Password recovery is not email-based; a signed-in user can change a password through account security controls.
 
-New account confirmation returns through the application callback at `/auth/confirm`. Student sign-up continues to `/dashboard`; protected Admin sign-up continues through `/auth/complete` before opening the dashboard.
+## Teacher authentication
 
-Set `NEXT_PUBLIC_APP_URL` to the canonical application URL for the relevant Vercel environment. Add the matching `/auth/confirm` callback URL to Supabase Authentication → URL Configuration.
+- Teacher accounts are provisioned through the approved invitation process rather than public self-registration.
+- The sign-in form accepts the provisioned demo username or registered college email and password, then checks the profile is an active `INSTRUCTOR`.
+- The client does not set its own role. Role and active-account checks are resolved from protected profile data by the server/application.
+- Do not reset, delete or replace a Teacher account until the replacement identity is confirmed and course ownership/assignments have been transferred safely.
 
-## Protected administrator registration
+## Session and authorization boundaries
 
-- The signup screen offers **Student** and **Admin** account types. Student is the default.
-- Admin registration requires the shared code. The server validates it; the browser never assigns the role directly.
-- The Vercel project must have the encrypted server-only environment variable `ADMIN_SIGNUP_CODE` set for Production, Preview, and Development. Never use a `NEXT_PUBLIC_` prefix for this secret.
-- The admin verification cookie is HTTP-only, signed, short-lived, and bound to the email address when applicable.
-- After email confirmation, the authenticated server flow calls the database function `claim_admin_signup`, which verifies the code hash in a private table and upgrades only that account to Admin.
-- Existing Admin sign-in does not ask for the signup code.
-- Keep the database migration `20261104190000_admin_signup_code_guard.sql` in sync with the live Supabase project.
+- Supabase Auth owns credentials and issues the session.
+- Supabase SSR stores session state in essential first-party cookies.
+- The dashboard and protected API routes verify the authenticated user and active Student/Teacher role.
+- Student course/form access is scoped by published status, enrolment and eligibility.
+- Teacher access is scoped to owned or explicitly assigned courses.
+- Privileged administrative actions, where enabled in backend operations, require server-side authorization and MFA assurance. They are not available through public signup.
+
+## Provider policy
+
+Google OAuth and mobile/SMS sign-in are not offered in the current CoursePulse login interface. Never place Supabase service-role keys, admin secrets or internal credentials in client code or repository files.
 
 ## Verification checklist
 
-- [ ] Email/password sign-in works for an existing account.
-- [ ] Student registration sends an email confirmation.
-- [ ] Admin registration rejects an incorrect code.
-- [ ] Admin registration succeeds only after server-side code validation and identity confirmation.
-- [ ] Existing email/password login remains available after signup.
+- [ ] Student registration creates a Student identity without sending email.
+- [ ] Student username/password sign-in returns a valid Supabase session.
+- [ ] Teacher sign-in accepts only an active Teacher/INSTRUCTOR profile.
+- [ ] Suspended/inactive accounts cannot access workspace APIs.
+- [ ] A Student cannot elevate their role or access another student's course data.
+- [ ] A Teacher cannot access a course outside their ownership/assignment scope.
+- [ ] Sign-out and password change operate through Supabase Auth.

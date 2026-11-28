@@ -1,7 +1,7 @@
 import { CookieSettingsLink } from '@/components/cookie-consent';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, LayoutDashboard } from 'lucide-react';
 
 const links = [
   { href: '/#how-it-works', label: 'How it works' },
@@ -37,6 +37,15 @@ export function PublicHeader() {
       <Link style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }} className="button primary text-xs sm:text-sm whitespace-nowrap" href="/signup">
         <span className="hidden sm:inline">Create account</span>
         <span className="sm:hidden">Sign up</span>
+      </Link>
+      <Link
+        href="/dashboard"
+        aria-label="Open workspace"
+        title="Open workspace"
+        style={{ minHeight: 44, width: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+        className="rounded-xl border border-[#d8e4da] bg-white text-[#456052] transition-colors hover:bg-[#f3f7f4]"
+      >
+        <LayoutDashboard size={17} aria-hidden="true"/>
       </Link>
     </div>
   </header>;

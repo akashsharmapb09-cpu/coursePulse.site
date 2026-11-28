@@ -1,13 +1,14 @@
 import Link from 'next/link';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
 import { Github, Mail, MessageSquare, HelpCircle } from 'lucide-react';
 
-export const metadata = {
+export const metadata = createPublicPageMetadata({
   title: 'Contact and support',
   description: 'How to contact CoursePulse for account help, report issues, and find assistance.',
-  robots: { index: false, follow: false },
-  alternates: { canonical: '/contact' }
-};
+  path: '/contact',
+  robots: { index: false, follow: false }
+});
 
 export default function ContactPage() {
   return (
@@ -17,8 +18,8 @@ export default function ContactPage() {
       description="Need assistance with your account, have feedback, or want to report a technical issue? Here is how to reach out."
     >
       <section>
-        <h2>Project Repository & Issue Tracker</h2>
-        <p>CoursePulse is developed as an open academic course feedback initiative. You can view project updates, report technical issues, or suggest improvements directly on GitHub:</p>
+        <h2>Source Repository & Issue Tracker</h2>
+        <p>CoursePulse is an open academic course feedback portal. You can follow CoursePulse updates, report technical issues, or suggest improvements directly on GitHub:</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a
             href="https://github.com/akashsharmapb09-cpu/coursePulse.site/issues"
@@ -43,7 +44,7 @@ export default function ContactPage() {
         <h2>Student & Teacher Account Support</h2>
         <p>Students sign in with their academic username, and Teachers sign in using their registered college email credentials. If you experience difficulty signing in, need a password reset, or request account updates:</p>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#506257]">
-          <li>Reach out to your assigned course instructor or department HOD.</li>
+          <li>Reach out to your assigned Teacher or department office.</li>
           <li>For technical support, submit an inquiry via the <a className="inline-link" href="https://github.com/akashsharmapb09-cpu/coursePulse.site/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a> with non-sensitive reproduction steps.</li>
           <li>Never share your password, secret codes, or sensitive feedback submissions when submitting an inquiry.</li>
         </ul>
