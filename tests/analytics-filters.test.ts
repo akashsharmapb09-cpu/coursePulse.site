@@ -37,6 +37,15 @@ describe('filtered aggregate analytics',()=>{
     expect(readRateMigration).toContain("'analytics:query','exports:download'");
     expect(readRateMigration).toContain('private.consume_api_rate_limit');
   });
+  it('renders filter-aware course rating and reportable submission graphs',()=>{
+    expect(dashboard).toContain('Average rating by course');
+    expect(dashboard).toContain('Reportable submissions by course');
+    expect(dashboard).toContain('course-analytics-chart-grid');
+    expect(dashboard).toContain('role="img" aria-label="Average rating by course on a five-point scale"');
+    expect(dashboard).toContain('role="img" aria-label="Reportable submissions by course"');
+    expect(dashboard).toContain('courseReportSummaries.map(course=>');
+    expect(dashboard).toContain('course.rating_answers');
+  });
   it('clears stale dashboard errors when navigating between tabs',()=>{
     expect(dashboard).toMatch(/async function changeTab\(next: typeof tab\) \{ setError\(''\); setTab\(next\);/);
   });
