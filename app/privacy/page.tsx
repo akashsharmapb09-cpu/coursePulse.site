@@ -40,7 +40,7 @@ export default function PrivacyPage() {
     </section>
     <section>
       <h2>7. Passwords and account assistance</h2>
-      <p>Student username-based accounts do not use email-based password recovery. A signed-in user can change their password through the account security controls; users who have lost access should use the support channel shared by their college or the CoursePulse contact route. Never share your password or sign-in codes with anyone.</p>
+      <p>There is no email-based password recovery for username-based Student accounts. A signed-in user can change their password through the account security controls; users who have lost access should use the support channel shared by their college or the CoursePulse contact route. Never share your password or sign-in codes with anyone.</p>
     </section>
     <section>
       <h2>8. Hosting and third-party services</h2>
