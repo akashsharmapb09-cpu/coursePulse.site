@@ -16,7 +16,7 @@ export default function AboutPage() {
     </section>
     <section>
       <h2>Student and Teacher access</h2>
-      <p>Students create an account with their name, a unique username, a programme and a password. For Student registration, no email address or verification message is needed. Teacher access is provisioned by invitation; Teachers sign in with the credential provided for their account, which may be a demo username or registered college email.</p>
+      <p>Students create an account with their name, choose a unique username, a programme and a password. For Student registration, no email address or verification message is needed. Teacher access is provisioned by invitation; Teachers sign in with the credential provided for their account, which may be a demo username or registered college email.</p>
     </section>
     <section>
       <h2>How feedback works</h2>
