@@ -16,6 +16,10 @@ const contact = readFileSync(resolve(root, 'app/contact/page.tsx'), 'utf8');
 const sitemap = readFileSync(resolve(root, 'app/sitemap.ts'), 'utf8');
 
 describe('public SEO metadata', () => {
+  it('uses the canonical CoursePulse production host as the default metadata base', () => {
+    expect(layout).toContain("process.env.NEXT_PUBLIC_APP_URL || 'https://coursepulse-site.vercel.app'");
+  });
+
   it('uses one shared CoursePulse suffix in the site title template', () => {
     expect(layout).toContain("template: '%s | CoursePulse'");
   });
