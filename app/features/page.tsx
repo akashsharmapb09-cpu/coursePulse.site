@@ -1,29 +1,44 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BarChart3, MessageSquareText, ShieldCheck } from 'lucide-react';
+import { BarChart3, BellRing, BookOpen, FileBarChart, MessageSquareText, ShieldCheck } from 'lucide-react';
 import { PublicPage } from '@/components/public-site';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/features' },
   title: 'Features',
-  description: 'Student accounts, anonymous course feedback and simple course-level results in one focused platform.'
+  description: 'Student feedback, assigned-course management, privacy-protected analytics, course comparison and reporting.'
 };
 
 const features = [
   {
     icon: MessageSquareText,
-    title: 'Anonymous feedback',
-    text: 'Students can rate teaching clarity, course pace, learning resources, and their overall course experience without attaching account identity to a browser-stored response.'
+    title: 'Eligible student feedback',
+    text: 'Students see published courses and open feedback forms for courses in which they are enrolled. Forms support structured questions, categories and submission validation.'
+  },
+  {
+    icon: BookOpen,
+    title: 'Teacher course workspace',
+    text: 'Invited Teachers manage their assigned courses, create and update feedback forms, organise question categories, set deadlines and review form versions.'
   },
   {
     icon: BarChart3,
-    title: 'Easy-to-read results',
-    text: 'Course-level averages and response counts turn feedback saved in the current browser into a simple summary.'
+    title: 'Privacy-protected analytics',
+    text: 'Review filtered course aggregates, average ratings, rating distributions and response trends. Question groups and rating bins below five responses are suppressed.'
+  },
+  {
+    icon: FileBarChart,
+    title: 'Compare and export reports',
+    text: 'Compare two selected courses and export the same aggregate reporting data as CSV, Excel-compatible XLS, XLSX or PDF. Raw answers and free-text comments are not included in ordinary reports.'
   },
   {
     icon: ShieldCheck,
-    title: 'Student-only accounts',
-    text: 'Students create an account with their name, username, password and programme, such as B.Tech, M.Tech, BBA or B.Com. Public registration is for students only.'
+    title: 'Role and data boundaries',
+    text: 'Student and Teacher access is checked on the server. New feedback answer records are stored separately from student sign-in details, and database policies scope data to the signed-in role and course.'
+  },
+  {
+    icon: BellRing,
+    title: 'Feedback reminders',
+    text: 'Students can see their pending and completed feedback forms. Reminder options help them keep track of due feedback without changing their course eligibility.'
   }
 ];
 
@@ -31,10 +46,10 @@ export default function FeaturesPage() {
   return (
     <PublicPage
       eyebrow="Platform features"
-      title="The essentials for course feedback."
-      description="CoursePulse keeps the student journey focused on registration, feedback, reminders and results, without extra college-management steps."
+      title="A connected course-feedback workflow."
+      description="CoursePulse links student submissions to Teacher course management and aggregate reporting, while keeping feedback answers separate from account identity."
     >
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {features.map(({ icon: Icon, title, text }) => (
           <article key={title} className="rounded-2xl border border-[#e2ebe3] bg-white p-6">
             <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#edf5ef] text-[#477956]">
