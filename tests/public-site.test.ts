@@ -23,6 +23,7 @@ const consent = read('components/cookie-consent.tsx');
 const terms = read('app/terms/page.tsx');
 const prisma = read('prisma/schema.prisma');
 const thankYou = read('app/feedback/thank-you/page.tsx');
+const responseRoute = read('app/api/responses/route.ts');
 
 describe('CoursePulse email-free student account experience', () => {
   it('confirms server-side anonymous feedback storage on the thank-you page', () => {
@@ -124,7 +125,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(workspace).toContain('<StudentAccountControl />');
   });
 
-  it('keeps feedback anonymous and separate from the student account profile', () => {
+  it('keeps the legacy browser demo separate from authenticated feedback submissions', () => {
     expect(workspace).toContain('coursepulse-college-demo-responses-v1');
     expect(workspace).toContain('window.localStorage');
     expect(workspace).toContain('Submit feedback');
@@ -134,6 +135,11 @@ describe('CoursePulse email-free student account experience', () => {
     expect(dashboard).toContain('supabase.auth.getUser()');
     expect(dashboard).not.toContain('<PublicWorkspace />');
     expect(workspace).not.toContain('supabase.from');
+    expect(responseRoute).toContain("auth.profile.role !== 'STUDENT'");
+    expect(responseRoute).toContain("supabase.rpc('submit_anonymous_feedback'");
+    expect(privacy).toContain('answer record does not contain the Student\'s user ID, username or email');
+    expect(privacy).toContain('not a guarantee of absolute or cryptographic anonymity');
+    expect(privacy).not.toContain('coursepulse-college-demo-responses-v1');
   });
 
   it('updates project, features, privacy, cookie and terms information', () => {
@@ -152,5 +158,8 @@ describe('CoursePulse email-free student account experience', () => {
     expect(publicSite).toContain('Student / Teacher sign in');
     expect(consent).toContain('essential first-party session cookies');
     expect(consent).toContain('only after you opt in');
+    expect(consent).not.toContain('saves demo feedback');
+    expect(cookies).toContain('It is not a feedback-answer store');
+    expect(terms).toContain('Groups with fewer than five responses');
   });
 });
