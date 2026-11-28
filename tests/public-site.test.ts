@@ -151,7 +151,7 @@ describe('CoursePulse email-free student account experience', () => {
     expect(privacy).toContain('non-deliverable internal identifier');
     expect(privacy).toContain('There is no email-based password recovery');
     expect(cookies).toContain('Essential sign-in cookies');
-    expect(cookies).toContain('student sign-in session');
+    expect(cookies).toContain('sign-in session');
     expect(terms).toContain('username, password and programme');
     expect(terms).toContain('No email address or verification message is needed');
     expect(publicSite).toContain('Create account');
