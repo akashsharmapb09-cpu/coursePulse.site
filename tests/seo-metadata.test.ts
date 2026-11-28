@@ -31,7 +31,7 @@ describe('public SEO metadata', () => {
 
   it('keeps individual page titles free of a repeated brand suffix', () => {
     for (const [name, page] of Object.entries(pages)) {
-      expect(page.source, name).not.toMatch(/title:\\s*['"][^'"]*\\|\\s*CoursePulse/);
+      expect(page.source, name).not.toMatch(/title:\s*['"][^'"]*\|\s*CoursePulse/);
     }
   });
 
