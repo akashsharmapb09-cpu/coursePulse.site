@@ -31,7 +31,7 @@ export default function PrivacyPage() {
     <section>
       <h2>5. Storage, retention and deletion requests</h2>
       <p>Student identity, account profile, course catalogue, enrolment and feedback-form records are stored in the connected Supabase services. New feedback answers are stored separately as described above. Feedback-form retention is configurable within the supported 30-to-730-day range, and a scheduled cleanup process removes expired answer records and rate-limit data.</p>
-      <p>You can submit an account/data-deletion request from the workspace. Requests are reviewed through the application's administrative process; submitting a request does not automatically delete a Supabase Authentication account. Browser site data clearing may remove your local cookie preference or sign-in session, but it does not delete your server-side account or feedback submissions.</p>
+      <p>You can submit an account/data-deletion request from the workspace. Requests are reviewed through an authorised review workflow; submitting a request does not automatically delete a Supabase Authentication account. Browser site data clearing may remove your local cookie preference or sign-in session, but it does not delete your server-side account or feedback submissions.</p>
     </section>
     <section>
       <h2>6. Essential cookies and optional analytics</h2>
