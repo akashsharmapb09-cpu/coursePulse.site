@@ -55,7 +55,7 @@ describe('public CoursePulse role model', () => {
     expect(privacy).not.toMatch(/HOD|Admin/i);
     expect(support).toContain('your enrollment');
     expect(support).not.toMatch(/HOD|Admin/i);
-    expect(terms).toContain('CoursePulse provides Student and Teacher access.');
+    expect(terms).toContain('CoursePulse provides Student and Teacher access to a single-college course-feedback workspace.');
     expect(terms).not.toMatch(/HOD|Admin/i);
   });
 });
