@@ -32,8 +32,8 @@ const features = [
   },
   {
     icon: ShieldCheck,
-    title: 'Role and data boundaries',
-    text: 'Student and Teacher access is checked on the server. New feedback answer records are stored separately from student sign-in details, and database policies scope data to the signed-in role and course.'
+    title: 'Student-only accounts and role boundaries',
+    text: 'Student and Teacher access is checked on the server. Students register with their name, username, password and programme; Teacher access is invitation-provisioned. The server checks role and course permissions for protected requests.'
   },
   {
     icon: BellRing,
