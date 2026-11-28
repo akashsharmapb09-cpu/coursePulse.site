@@ -43,8 +43,11 @@ describe('filtered aggregate analytics',()=>{
     expect(dashboard).toContain('course-analytics-chart-grid');
     expect(dashboard).toContain('role="img" aria-label="Average rating by course on a five-point scale"');
     expect(dashboard).toContain('role="img" aria-label="Reportable submissions by course"');
-    expect(dashboard).toContain('courseReportSummaries.map(course=>');
+    expect(dashboard).toContain('analyticsGraphCourses.map(course=>');
     expect(dashboard).toContain('course.rating_answers');
+    expect(dashboard).toContain('Awaiting at least 5 reportable answers');
+    expect(dashboard).toContain('No reportable submissions yet · minimum 5 per group');
+    expect(dashboard).not.toContain("courseReportSummaries.length>0&&<section className=\"course-report-summary\"");
   });
   it('clears stale dashboard errors when navigating between tabs',()=>{
     expect(dashboard).toMatch(/async function changeTab\(next: typeof tab\) \{ setError\(''\); setTab\(next\);/);
