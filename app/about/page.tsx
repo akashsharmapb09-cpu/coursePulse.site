@@ -4,29 +4,29 @@ import { PublicPage } from '@/components/public-site';
 
 export const metadata: Metadata = {
   title: 'About CoursePulse',
-  description: 'Learn about CoursePulse, a platform for student accounts and course feedback.',
+  description: 'Learn about CoursePulse, its Student and Teacher workspace, feedback workflow and privacy-protected reports.',
   alternates: { canonical: '/about' }
 };
 
 export default function AboutPage() {
-  return <PublicPage eyebrow="About CoursePulse" title="Course feedback, without the extra complexity." description="CoursePulse gives students a simple way to create an account, choose their programme, and share course feedback.">
+  return <PublicPage eyebrow="About CoursePulse" title="Course feedback, with a clearer path from student voice to teaching insight." description="CoursePulse is a single-college workspace for eligible student feedback, course management and privacy-protected reporting.">
     <section>
       <h2>Why CoursePulse exists</h2>
-      <p>CoursePulse gives students one simple place to create a student profile and share their experience of a course. Its structured feedback workflow helps collect and summarise course experiences.</p>
+      <p>CoursePulse gives a college workspace a structured way to collect course feedback and turn it into useful course-level summaries. Students see the courses and forms for which they are eligible. Teachers manage their assigned courses and use aggregate reports to understand feedback patterns.</p>
     </section>
     <section>
-      <h2>Create a student account</h2>
-      <p>Students enter their name, choose a unique username, select their programme—such as B.Tech, M.Tech, BBA, B.Com, BCA, MBA, or another course—and create a password. No email address or verification message is used. New self-registrations create Student accounts. Teacher access is provided through invitation.</p>
+      <h2>Student and Teacher access</h2>
+      <p>Students create an account with their name, a unique username, a programme and a password. For Student registration, no email address or verification message is needed. Teacher access is provisioned by invitation; Teachers sign in with the credential provided for their account, which may be a demo username or registered college email.</p>
     </section>
     <section>
-      <h2>What you can do</h2>
-      <p>Open the workspace, rate the overall experience, teaching clarity, class pace, and learning resources, then review the course-level summary. The Results page can also export the responses saved in your browser as a CSV file.</p>
+      <h2>How feedback works</h2>
+      <p>Students can open forms attached to published courses in which they are enrolled, complete structured questions and submit eligible feedback once. Submission is handled by the application server and stored in the connected Supabase database. New answer records are kept separate from student sign-in details, while a private eligibility record supports course access and duplicate-submission prevention.</p>
     </section>
     <section>
-      <h2>About the demo feedback data</h2>
-      <p>Student account details are stored by the connected Supabase service. Feedback in the current version is stored separately in the current browser only; it is not linked to the student's account or synchronised with visitors on other devices. Course and faculty details are sample data and can be replaced with your college information.</p>
+      <h2>Teacher reports</h2>
+      <p>Teachers can manage their assigned courses and feedback forms, use question categories and deadlines, review filtered aggregate analytics, compare courses, and export reportable summaries. The reporting service does not return raw answer rows or free-text comments. Question groups and rating bins with fewer than five responses are suppressed.</p>
     </section>
-    <p className="public-note">CoursePulse is not an official college feedback or student-record system. Please do not enter private or confidential information.</p>
-    <p><Link className="inline-link" href="/signup">Create a student account</Link>, read the <Link className="inline-link" href="/privacy">Privacy Policy</Link>, or <Link className="inline-link" href="/cookies">review cookie and browser-storage information</Link>.</p>
+    <p className="public-note">CoursePulse is a demonstration workspace, not an institution-approved student-record system or legal privacy certification. Do not include identifying or confidential information in free-text feedback.</p>
+    <p><Link className="inline-link" href="/signup">Create a student account</Link>, read the <Link className="inline-link" href="/privacy">Privacy Policy</Link>, or <Link className="inline-link" href="/cookies">review cookie information</Link>.</p>
   </PublicPage>;
 }
