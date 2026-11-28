@@ -17,7 +17,7 @@ export default function SupportPage() {
     >
       <section>
         <h2>Where are my courses or feedback forms?</h2>
-        <p>Students see published courses and open feedback forms only when they are enrolled and eligible. If a course or form is missing, ask the Teacher or department office that manages your course to check publication and enrolment. Teachers can view courses they own or have been assigned.</p>
+        <p>Students see published courses and open feedback forms only when they are enrolled and eligible. If a course or form is missing, ask the Teacher or department office that manages your course to check publication and your enrollment. Teachers can view courses they own or have been assigned.</p>
       </section>
       <section>
         <h2>Why are my graphs or results empty?</h2>
