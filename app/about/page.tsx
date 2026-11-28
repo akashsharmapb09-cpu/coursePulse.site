@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import Link from 'next/link';
 import { PublicPage } from '@/components/public-site';
 
-export const metadata: Metadata = {
+export const metadata = createPublicPageMetadata({
   title: 'About CoursePulse',
   description: 'Learn about CoursePulse, its Student and Teacher workspace, feedback workflow and privacy-protected reports.',
-  alternates: { canonical: '/about' }
-};
+  path: '/about'
+});
 
 export default function AboutPage() {
   return <PublicPage eyebrow="About CoursePulse" title="Course feedback, with a clearer path from student voice to teaching insight." description="CoursePulse is a single-college workspace for eligible student feedback, course management and privacy-protected reporting.">

@@ -1,13 +1,14 @@
 import Link from 'next/link';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
 import { Github, Mail, MessageSquare, HelpCircle } from 'lucide-react';
 
-export const metadata = {
+export const metadata = createPublicPageMetadata({
   title: 'Contact and support',
   description: 'How to contact CoursePulse for account help, report issues, and find assistance.',
-  robots: { index: false, follow: false },
-  alternates: { canonical: '/contact' }
-};
+  path: '/contact',
+  robots: { index: false, follow: false }
+});
 
 export default function ContactPage() {
   return (

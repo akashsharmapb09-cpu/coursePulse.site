@@ -1,6 +1,10 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
-export const metadata:Metadata={alternates:{canonical:'/terms'},title:'Terms of Use',description:'Terms for using the CoursePulse Student and Teacher course-feedback workspace.'};
+export const metadata = createPublicPageMetadata({
+  title: 'Terms of Use',
+  description: 'Terms for using the CoursePulse Student and Teacher course-feedback workspace.',
+  path: '/terms'
+});
 export default function TermsPage(){return <PublicPage eyebrow="Terms" title="Terms of use" description="A simple guide to using the CoursePulse course-feedback workspace.">
  <section><h2>1. Purpose and limits</h2><p>CoursePulse provides Student and Teacher access to a single-college course-feedback workspace. It supports course enrolment visibility, feedback forms, aggregate reporting and exports. It is a demonstration workspace, not an institution-approved student-record or grading system.</p></section>
  <section><h2>2. Student and Teacher accounts</h2><p>Students may create an account with their name, username, password and programme. No email address or verification message is needed for Student registration. Teacher access is provided by invitation and uses the credentials supplied for that account. Keep your sign-in details private and do not share your password or sign-in codes.</p></section>

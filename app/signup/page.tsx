@@ -1,15 +1,16 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { redirect } from 'next/navigation';
 import { Activity } from 'lucide-react';
 import { StudentAuthForm } from '@/components/student-auth-form';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = {
+export const metadata = createPublicPageMetadata({
   title: 'Create student account',
   description: 'Register for CoursePulse using your name, username and college programme. No email address is needed.',
+  path: '/signup',
   robots: { index: false, follow: false }
-};
+});
 
 export default async function SignupPage() {
   const supabase = await createClient();

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/privacy' },
+export const metadata = createPublicPageMetadata({
   title: 'Privacy Policy',
-  description: 'How CoursePulse handles Student and Teacher accounts, separately stored feedback answers, aggregate reports and browser preferences.'
-};
+  description: 'How CoursePulse handles Student and Teacher accounts, separately stored feedback answers, aggregate reports and browser preferences.',
+  path: '/privacy'
+});
 
 export default function PrivacyPage() {
   return <PublicPage eyebrow="Privacy" title="Privacy Policy" description="This notice explains the information used by CoursePulse when people create accounts, manage courses and submit feedback.">

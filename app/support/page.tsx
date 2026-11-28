@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import Link from 'next/link';
 import { PublicPage } from '@/components/public-site';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/support' },
+export const metadata = createPublicPageMetadata({
   title: 'Support',
-  description: 'Help with CoursePulse accounts, course access, feedback submission and Teacher analytics.'
-};
+  description: 'Help with CoursePulse accounts, course access, feedback submission and Teacher analytics.',
+  path: '/support'
+});
 
 export default function SupportPage() {
   return (

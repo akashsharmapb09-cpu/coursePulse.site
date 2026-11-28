@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import Link from 'next/link';
 import { BarChart3, BellRing, BookOpen, FileBarChart, MessageSquareText, ShieldCheck } from 'lucide-react';
 import { PublicPage } from '@/components/public-site';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/features' },
+export const metadata = createPublicPageMetadata({
   title: 'Features',
-  description: 'Student feedback, assigned-course management, privacy-protected analytics, course comparison and reporting.'
-};
+  description: 'Student feedback, assigned-course management, privacy-protected analytics, course comparison and reporting.',
+  path: '/features'
+});
 
 const features = [
   {

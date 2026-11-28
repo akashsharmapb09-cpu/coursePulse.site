@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
+import { createPublicPageMetadata } from '@/lib/public-page-metadata';
 import { PublicPage } from '@/components/public-site';
 import { CookieSettingsLink } from '@/components/cookie-consent';
 
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-  alternates: { canonical: '/cookies' },
+export const metadata = createPublicPageMetadata({
   title: 'Cookie Policy',
-  description: 'How CoursePulse uses essential sign-in session cookies, local consent preferences and optional public-page analytics.'
-};
+  description: 'How CoursePulse uses essential sign-in session cookies, local consent preferences and optional public-page analytics.',
+  path: '/cookies',
+  robots: { index: false, follow: true }
+});
 
 export default function CookiesPage() {
   return <PublicPage eyebrow="Cookies and browser storage" title="Cookie Policy" description="A clear explanation of the sign-in session, browser-stored consent preference and optional analytics used by CoursePulse.">
